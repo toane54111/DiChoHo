@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="#FFFFFF"
+        android:elevation="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <!-- Nút quay lại -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnBack"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#F5F5F5"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="←"
+                android:textSize="18sp"
+                android:textColor="#212121" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Title -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:text="AI Chef"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#212121" />
+
+        <!-- Icon AI -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🤖"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+
+    <!-- Nội dung cuộn -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/header">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Card thời tiết -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <!-- Ảnh nền (dynamic) -->
+                    <ImageView
+                        android:id="@+id/imgWeatherBg"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/bg_weather_default"
+                        android:contentDescription="Weather background" />
+
+                    <!-- Lớp phủ tối để chữ dễ đọc -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="#50000000" />
+
+                    <!-- Nội dung -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="20dp">
+
+                        <!-- Icon thời tiết -->
+                        <LinearLayout
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            android:gravity="center"
+                            android:background="@drawable/bg_weather_icon_transparent">
+
+                            <TextView
+                                android:id="@+id/tvWeatherIcon"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🌧️"
+                                android:textSize="32sp" />
+
+                        </LinearLayout>
+
+                        <!-- Thông tin thời tiết -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvWeatherTemp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--°C"
+                                android:textSize="28sp"
+                                android:textStyle="bold"
+                                android:textColor="#FFFFFF" />
+
+                            <TextView
+                                android:id="@+id/tvWeatherDesc"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Đang tải..."
+                                android:textSize="14sp"
+                                android:textColor="#E0E0E0" />
+
+                            <TextView
+                                android:id="@+id/tvWeatherCity"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="📍 ..."
+                                android:textSize="12sp"
+                                android:textColor="#BDBDBD" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </RelativeLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Tiêu đề gợi ý -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Gợi ý cho bạn hôm nay 🍽️"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#212121" />
+
+            <!-- Card món ăn chính -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#FFFFFF">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Ảnh món ăn -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="180dp">
+
+                        <ImageView
+                            android:id="@+id/imgMonAn"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/lauthai"
+                            android:contentDescription="Ảnh món ăn" />
+
+                        <!-- Badge -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="12dp"
+                            android:background="@drawable/bg_badge_ai"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingBottom="6dp"
+                            android:text="🤖 AI Gợi ý"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </RelativeLayout>
+
+                    <!-- Thông tin món ăn -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <!-- Tên món -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🍲"
+                                android:textSize="24sp" />
+
+                            <TextView
+                                android:id="@+id/tvRecipeName"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:text="Đang gợi ý..."
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="#212121" />
+
+                        </LinearLayout>
+
+                        <!-- Mô tả -->
+                        <TextView
+                            android:id="@+id/tvRecipeDesc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="AI đang phân tích thời tiết và gợi ý món ăn phù hợp..."
+                            android:textSize="14sp"
+                            android:textColor="#757575"
+                            android:lineSpacingExtra="4dp" />
+
+                        <!-- Đường kẻ -->
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginBottom="16dp"
+                            android:background="#EEEEEE" />
+
+                        <!-- Tiêu đề nguyên liệu -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Nguyên liệu cần mua"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#212121" />
+
+                        <!-- Danh sách nguyên liệu (dynamic) -->
+                        <LinearLayout
+                            android:id="@+id/layoutIngredients"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical">
+
+                            <!-- Sẽ được populate từ API -->
+                            <TextView
+                                android:id="@+id/tvIngredientLoading"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Đang tải nguyên liệu..."
+                                android:textSize="14sp"
+                                android:textColor="#9E9E9E"
+                                android:gravity="center"
+                                android:padding="16dp" />
+
+                        </LinearLayout>
+
+                        <!-- Tổng tiền + Nút thêm -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <!-- Tổng tiền -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Tổng nguyên liệu"
+                                    android:textSize="12sp"
+                                    android:textColor="#757575" />
+
+                                <TextView
+                                    android:id="@+id/tvTotalCost"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="~0đ"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#F44336" />
+
+                            </LinearLayout>
+
+                            <!-- Nút thêm vào giỏ -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnThemVaoGio"
+                                android:layout_width="wrap_content"
+                                android:layout_height="48dp"
+                                android:text="Thêm vào giỏ"
+                                android:textSize="14sp"
+                                app:cornerRadius="24dp"
+                                app:backgroundTint="#4CAF50"
+                                app:icon="@android:drawable/ic_input_add"
+                                app:iconGravity="textStart" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Nút đổi món -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDoiMon"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:text="Doi mon an khac"
+                android:textSize="14sp"
+                android:textColor="#FF5722"
+                android:visibility="gone"
+                app:cornerRadius="24dp"
+                app:strokeColor="#FF5722"
+                app:strokeWidth="1dp"
+                app:icon="@android:drawable/ic_menu_rotate"
+                app:iconGravity="textStart"
+                app:iconTint="#FF5722" />
+
+            <!-- Khoảng trống cuối -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="24dp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</RelativeLayout>

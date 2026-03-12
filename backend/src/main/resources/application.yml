@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gomarket-backend
+
+  # Database - PostgreSQL + pgvector
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gomarket?stringtype=unspecified
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Load secret keys from application-secret.yml
+  profiles:
+    include: secret
+
+# API Keys - Đọc từ application-secret.yml hoặc environment variables
+api:
+  openweather:
+    key: ${OPENWEATHER_KEY:CHANGE_ME}
+    url: https://api.openweathermap.org/data/2.5/weather
+
+  # OpenRouter - LLM gợi ý món ăn
+  openrouter:
+    key: ${OPENROUTER_KEY:CHANGE_ME}
+    url: https://openrouter.ai/api/v1/chat/completions
+    model: google/gemini-2.0-flash-001
+
+  # Image search: dùng Google Images scraping, không cần API key
+
+# Ollama - Local Embedding (bge-m3, đa ngôn ngữ, 1024 chiều)
+ollama:
+  embedding:
+    url: http://localhost:11434/api/embeddings
+    model: bge-m3
+
+# Logging
+logging:
+  level:
+    com.gomarket: DEBUG
+    org.springframework.web: INFO
