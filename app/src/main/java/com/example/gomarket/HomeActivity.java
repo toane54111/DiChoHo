@@ -222,7 +222,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         searchBar.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
+            Intent intent = new Intent(HomeActivity.this, IngredientSearchActivity.class);
             startActivity(intent);
         });
 
