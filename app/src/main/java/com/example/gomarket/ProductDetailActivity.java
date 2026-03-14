@@ -106,10 +106,39 @@ public class ProductDetailActivity extends AppCompatActivity {
         btnAddToCart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Ưu tiên dữ liệu từ API, fallback sang dữ liệu local nếu API chưa load
+                int productId   = (int) getIntent().getLongExtra("product_id", -1);
+                double price    = getIntent().getDoubleExtra("price", 0);
+                String imageUrl = getIntent().getStringExtra("image_url");
+
+                // Fallback: parse price từ chuỗi giaKhuyenMai ("50.000đ" → 50000.0)
+                if (price == 0 && giaKM != null) {
+                    try {
+                        String cleaned = giaKM.replaceAll("[^\\d]", "");
+                        if (!cleaned.isEmpty()) price = Double.parseDouble(cleaned);
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                // Fallback: nếu không có productId từ API, dùng hashCode của tên sản phẩm
+                if (productId == -1 && tenSP != null) {
+                    productId = Math.abs(tenSP.hashCode()) % 100000;
+                }
+
+                if (tenSP == null || tenSP.isEmpty()) {
+                    Toast.makeText(ProductDetailActivity.this,
+                            "Không thể thêm sản phẩm này vào giỏ!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                com.example.gomarket.model.OrderItem item =
+                        new com.example.gomarket.model.OrderItem(productId, tenSP, quantity, price, imageUrl);
+                CartActivity.addToCart(item);
+
                 Toast.makeText(ProductDetailActivity.this,
-                        "Đã thêm " + quantity + " " + tenSP + " vào giỏ hàng!",
+                        "Đã thêm " + quantity + " " + tenSP + " vào giỏ hàng! 🛒",
                         Toast.LENGTH_SHORT).show();
             }
         });
     }
 }
+

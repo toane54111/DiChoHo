@@ -45,6 +45,14 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         holder.tvProductPrice.setText(String.format("%,.0fđ", item.getPrice()));
         holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
 
+        // Load ảnh sản phẩm bằng Glide
+        com.bumptech.glide.Glide.with(holder.imgProduct.getContext())
+                .load(item.getImageUrl())
+                .placeholder(R.drawable.img)
+                .error(R.drawable.img)
+                .centerCrop()
+                .into(holder.imgProduct);
+
         holder.btnMinus.setOnClickListener(v -> {
             int qty = item.getQuantity();
             if (qty > 1) {

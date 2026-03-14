@@ -20,13 +20,21 @@ public class OrderRequest {
     @SerializedName("items")
     private List<OrderItemRequest> items;
 
-    public OrderRequest(int userId, String deliveryAddress, double latitude, double longitude, List<OrderItemRequest> items) {
+    @SerializedName("paymentMethod")
+    private String paymentMethod = "COD";
+
+    public OrderRequest(int userId, String deliveryAddress, double latitude, double longitude,
+                        List<OrderItemRequest> items, String paymentMethod) {
         this.userId = userId;
         this.deliveryAddress = deliveryAddress;
         this.latitude = latitude;
         this.longitude = longitude;
         this.items = items;
+        this.paymentMethod = paymentMethod;
     }
+
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public String getPaymentMethod() { return paymentMethod; }
 
     public static class OrderItemRequest {
         @SerializedName("product_id")

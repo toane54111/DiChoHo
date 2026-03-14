@@ -48,19 +48,47 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Map Placeholder -->
+            <!-- Map Section -->
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:background="#1A237E">
+                android:layout_height="220dp"
+                android:background="#E0E0E0">
+
+                <org.osmdroid.views.MapView
+                    android:id="@+id/map"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <!-- Overlay to block map interaction and show a "View Full Map" button -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="#1A000000"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnViewFullMap"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Xem bản đồ lớn"
+                        android:visibility="gone"
+                        android:textColor="@color/white" />
+                </LinearLayout>
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:id="@+id/tvGpsStatus"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="📍 Bản đồ lộ trình"
-                    android:textSize="18sp"
-                    android:textColor="@color/white" />
+                    android:background="#80FF0000"
+                    android:textColor="#FFFFFF"
+                    android:text="⚠️ Mất tín hiệu GPS từ Shopper"
+                    android:gravity="center"
+                    android:padding="4dp"
+                    android:visibility="gone"
+                    android:textStyle="bold"/>
             </FrameLayout>
 
             <!-- Status Stepper -->

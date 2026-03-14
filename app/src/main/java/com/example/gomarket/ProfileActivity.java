@@ -49,8 +49,10 @@ public class ProfileActivity extends AppCompatActivity {
         btnAddress.setOnClickListener(v ->
                 Toast.makeText(this, "Địa chỉ của tôi", Toast.LENGTH_SHORT).show());
 
-        btnWallet.setOnClickListener(v ->
-                Toast.makeText(this, "Ví của tôi", Toast.LENGTH_SHORT).show());
+        btnWallet.setOnClickListener(v -> {
+            Intent intent = new Intent(this, WalletActivity.class);
+            startActivity(intent);
+        });
 
         btnOrderHistory.setOnClickListener(v -> {
             Intent intent = new Intent(this, OrderListActivity.class);

@@ -6,53 +6,31 @@
     android:background="#000000"
     android:orientation="vertical">
 
-    <!-- Map Area (dark blue) -->
+    <!-- Map Area -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="#1B263B">
-        <!-- Center Pin -->
-        <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:src="@android:drawable/ic_menu_mylocation"
-            app:tint="#FF0000" />
         
-        <!-- Bottom Left Shopper Avatar -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_gravity="center_vertical|start"
-            android:layout_marginStart="40dp"
-            android:layout_marginTop="30dp"
-            app:cardCornerRadius="18dp"
-            app:cardBackgroundColor="#8D6E63">
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="center"
-                android:src="@android:drawable/ic_menu_myplaces"
-                app:tint="#FFFFFF"/>
-        </androidx.cardview.widget.CardView>
+        <org.osmdroid.views.MapView
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
-        <!-- Bottom Right Avatar -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_gravity="center_vertical|end"
-            android:layout_marginEnd="30dp"
-            app:cardCornerRadius="18dp"
-            app:cardBackgroundColor="#5C6BC0">
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="center"
-                android:src="@android:drawable/ic_menu_myplaces"
-                app:tint="#FFFFFF"/>
-        </androidx.cardview.widget.CardView>
+        <TextView
+            android:id="@+id/tvGpsStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#80FF0000"
+            android:textColor="#FFFFFF"
+            android:text="⚠️ Mất tín hiệu GPS từ Shopper"
+            android:gravity="center"
+            android:padding="8dp"
+            android:visibility="gone"
+            android:textStyle="bold"/>
     </FrameLayout>
+
 
     <!-- Bottom Info Card -->
     <LinearLayout

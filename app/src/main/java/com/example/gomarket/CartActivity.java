@@ -126,7 +126,9 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
                 Toast.makeText(this, "Giỏ hàng trống!", Toast.LENGTH_SHORT).show();
                 return;
             }
-            createOrder();
+            // Chuyển sang CheckoutActivity thay vì đặt hàng trực tiếp
+            Intent intent = new Intent(CartActivity.this, CheckoutActivity.class);
+            startActivity(intent);
         });
     }
 
@@ -143,7 +145,8 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
                 session.getUserId(),
                 "Địa chỉ giao hàng", // TODO: lấy từ user
                 10.7769, 106.7009, // TODO: lấy GPS thật
-                items
+                items,
+                "COD"
         );
 
         apiService.createOrder(request).enqueue(new Callback<Order>() {

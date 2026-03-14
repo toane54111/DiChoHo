@@ -58,7 +58,12 @@ public class OrderPollingService extends Service {
 
         createNotificationChannel();
         Notification notification = buildNotification("Đang theo dõi đơn hàng #" + currentOrderId);
-        startForeground(NOTIFICATION_ID, notification);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+        } else {
+            startForeground(NOTIFICATION_ID, notification);
+        }
 
         startPolling();
 
@@ -82,6 +87,11 @@ public class OrderPollingService extends Service {
 
         handler.post(pollingRunnable);
     }
+
+    public static final String ACTION_SHOPPER_LOCATION_UPDATED = "com.gomarket.SHOPPER_LOCATION_UPDATED";
+    public static final String EXTRA_SHOPPER_LAT = "shopper_lat";
+    public static final String EXTRA_SHOPPER_LNG = "shopper_lng";
+    public static final String EXTRA_SHOPPER_STALE = "shopper_stale";
 
     private void checkOrderStatus() {
         apiService.getOrder(currentOrderId).enqueue(new Callback<Order>() {
@@ -110,12 +120,52 @@ public class OrderPollingService extends Service {
                             stopSelf();
                         }
                     }
+
+                    // Nếu đang giao hàng, lấy GPS liên tục
+                    if ("DELIVERING".equals(newStatus) || "DELIVERING".equals(lastKnownStatus)) {
+                        checkShopperLocation();
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<Order> call, Throwable t) {
                 Log.e(TAG, "Polling failed: " + t.getMessage());
+            }
+        });
+    }
+
+    private void checkShopperLocation() {
+        apiService.getOrderLocation(currentOrderId).enqueue(new Callback<com.example.gomarket.model.LocationResponse>() {
+            @Override
+            public void onResponse(Call<com.example.gomarket.model.LocationResponse> call, Response<com.example.gomarket.model.LocationResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    com.example.gomarket.model.LocationResponse loc = response.body();
+                    
+                    boolean isStale = false;
+                    try {
+                        if (loc.getLocationUpdatedAt() != null) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                java.time.LocalDateTime updatedTime = java.time.LocalDateTime.parse(loc.getLocationUpdatedAt());
+                                long secondsAgo = java.time.temporal.ChronoUnit.SECONDS.between(updatedTime, java.time.LocalDateTime.now());
+                                isStale = secondsAgo > 60; // Quá 60s -> Stale
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Parse time error", e);
+                    }
+
+                    Intent intent = new Intent(ACTION_SHOPPER_LOCATION_UPDATED);
+                    intent.putExtra(EXTRA_SHOPPER_LAT, loc.getShopperLat());
+                    intent.putExtra(EXTRA_SHOPPER_LNG, loc.getShopperLng());
+                    intent.putExtra(EXTRA_SHOPPER_STALE, isStale);
+                    sendBroadcast(intent);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<com.example.gomarket.model.LocationResponse> call, Throwable t) {
+                Log.e(TAG, "Lỗi lấy location: " + t.getMessage());
             }
         });
     }

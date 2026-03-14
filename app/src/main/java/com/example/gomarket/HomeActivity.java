@@ -46,6 +46,9 @@ public class HomeActivity extends AppCompatActivity {
     private ApiService apiService;
     private List<Product> apiProducts = new ArrayList<>();
 
+    // Badge giỏ hàng
+    private TextView tvCartBadge;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +73,7 @@ public class HomeActivity extends AppCompatActivity {
         searchBar = findViewById(R.id.searchBar);
         tvGreeting = findViewById(R.id.tvGreeting);
         tvAddress = findViewById(R.id.tvAddress);
+        tvCartBadge = findViewById(R.id.tvCartBadge);
 
         // Categories
         categoryVegetable = findViewById(R.id.categoryVegetable);
@@ -213,6 +217,7 @@ public class HomeActivity extends AppCompatActivity {
                     Product apiProduct = apiProducts.get(position);
                     intent.putExtra("product_id", apiProduct.getId());
                     intent.putExtra("price", apiProduct.getPrice());
+                    intent.putExtra("image_url", apiProduct.getImageUrl()); // truyền URL ảnh cho Glide
                 }
 
                 startActivity(intent);
@@ -277,5 +282,18 @@ public class HomeActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadUserGreeting(); // Cập nhật tên khi quay lại
+        updateCartBadge();  // Cập nhật badge giỏ hàng
+    }
+
+    private void updateCartBadge() {
+        if (tvCartBadge == null) return;
+        int size = CartActivity.getCartSize();
+        if (size > 0) {
+            tvCartBadge.setVisibility(View.VISIBLE);
+            tvCartBadge.setText(size > 99 ? "99+" : String.valueOf(size));
+        } else {
+            tvCartBadge.setVisibility(View.GONE);
+        }
     }
 }
+

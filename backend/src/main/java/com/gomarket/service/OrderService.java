@@ -7,7 +7,9 @@ import com.gomarket.model.Product;
 import com.gomarket.repository.OrderRepository;
 import com.gomarket.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +24,7 @@ public class OrderService {
         this.productRepository = productRepository;
     }
 
+    @Transactional
     public Order createOrder(OrderRequest request) {
         Order order = new Order();
         order.setUserId(request.getUser_id());
@@ -30,6 +33,8 @@ public class OrderService {
         order.setLongitude(request.getLongitude());
         order.setStatus("PENDING");
         order.setShopperName("Nguyễn Văn A"); // Demo
+        order.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "COD");
+        order.setNotes(request.getNotes());
 
         List<OrderItem> items = new ArrayList<>();
         double total = 0;
@@ -40,7 +45,6 @@ public class OrderService {
             item.setProductId(itemReq.getProduct_id());
             item.setQuantity(itemReq.getQuantity());
 
-            // Tìm thông tin sản phẩm
             Product product = productRepository.findById(itemReq.getProduct_id()).orElse(null);
             if (product != null) {
                 item.setProductName(product.getName());
@@ -74,5 +78,15 @@ public class OrderService {
         Order order = getOrder(id);
         order.setStatus(status);
         return orderRepository.save(order);
+    }
+
+    /** Plan 2: Shipper cập nhật tọa độ GPS */
+    @Transactional
+    public void updateLocation(Long orderId, Double lat, Double lng) {
+        Order order = getOrder(orderId);
+        order.setShopperLat(lat);
+        order.setShopperLng(lng);
+        order.setLocationUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
     }
 }

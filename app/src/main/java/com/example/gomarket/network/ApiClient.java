@@ -19,6 +19,7 @@ public class ApiClient {
     // Emulator: 10.0.2.2 maps to host machine's localhost
     // Thay bằng IP server thật khi deploy
     private static final String BASE_URL = "http://10.0.2.2:8080/api/";
+    //private static final String BASE_URL = "http://192.168.100.182:8080/api/";
 
     private static Retrofit retrofit = null;
     private static ApiService apiService = null;
