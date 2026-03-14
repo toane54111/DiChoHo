@@ -8,6 +8,8 @@ public class OrderRequest {
     private double latitude;
     private double longitude;
     private List<OrderItemRequest> items;
+    private String paymentMethod = "COD"; // COD | WALLET | QR
+    private String notes;
 
     public static class OrderItemRequest {
         private Long product_id;
@@ -29,4 +31,8 @@ public class OrderRequest {
     public void setLongitude(double longitude) { this.longitude = longitude; }
     public List<OrderItemRequest> getItems() { return items; }
     public void setItems(List<OrderItemRequest> items) { this.items = items; }
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 }

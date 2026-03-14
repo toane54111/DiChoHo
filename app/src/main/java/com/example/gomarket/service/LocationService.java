@@ -17,6 +17,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import com.example.gomarket.R;
+import com.example.gomarket.network.ApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -36,6 +37,7 @@ public class LocationService extends Service {
 
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
+    private int deliveryOrderId = -1; // Đơn hàng đang giao
 
     @Override
     public void onCreate() {
@@ -52,28 +54,56 @@ public class LocationService extends Service {
                 for (Location location : locationResult.getLocations()) {
                     Log.d(TAG, "Location: " + location.getLatitude() + ", " + location.getLongitude());
 
-                    // Gửi broadcast với tọa độ mới
+                    // Gửi broadcast với tọa độ mới (cho AIChef/local use)
                     Intent broadcastIntent = new Intent(ACTION_LOCATION_UPDATED);
                     broadcastIntent.putExtra(EXTRA_LATITUDE, location.getLatitude());
                     broadcastIntent.putExtra(EXTRA_LONGITUDE, location.getLongitude());
                     sendBroadcast(broadcastIntent);
+
+                    // Push lên backend nếu đang giao đơn
+                    if (deliveryOrderId > 0) {
+                        pushLocationToBackend(location.getLatitude(), location.getLongitude());
+                    }
                 }
             }
         };
     }
 
+    private void pushLocationToBackend(double lat, double lng) {
+        java.util.Map<String, Double> body = new java.util.HashMap<>();
+        body.put("shopperLat", lat);
+        body.put("shopperLng", lng);
+        ApiClient.getApiService(this)
+                 .updateOrderLocation(deliveryOrderId, body)
+                 .enqueue(new retrofit2.Callback<Void>() {
+                     @Override
+                     public void onResponse(retrofit2.Call<Void> call, retrofit2.Response<Void> response) {}
+                     @Override
+                     public void onFailure(retrofit2.Call<Void> call, Throwable t) {}
+                 });
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "LocationService started");
+        if (intent != null) {
+            deliveryOrderId = intent.getIntExtra("delivery_order_id", -1);
+        }
+        Log.d(TAG, "LocationService started. Order: " + deliveryOrderId);
 
         createNotificationChannel();
         Notification notification = buildNotification();
-        startForeground(NOTIFICATION_ID, notification);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+        } else {
+            startForeground(NOTIFICATION_ID, notification);
+        }
 
         startLocationUpdates();
 
         return START_STICKY;
     }
+
 
     private void startLocationUpdates() {
         LocationRequest locationRequest = new LocationRequest.Builder(

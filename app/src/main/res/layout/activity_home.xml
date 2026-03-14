@@ -111,25 +111,44 @@
 
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- Nút giỏ hàng -->
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/btnCart"
+                    <!-- Nút giỏ hàng + badge -->
+                    <FrameLayout
                         android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        app:cardCornerRadius="20dp"
-                        app:cardElevation="2dp"
-                        app:cardBackgroundColor="#FFFFFF"
-                        android:clickable="true"
-                        android:focusable="true">
+                        android:layout_height="40dp">
 
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnCart"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="2dp"
+                            app:cardBackgroundColor="#FFFFFF"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:text="🛒"
+                                android:textSize="18sp" />
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Badge số lượng giỏ hàng -->
                         <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:id="@+id/tvCartBadge"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="top|end"
+                            android:background="@drawable/bg_badge_red"
                             android:gravity="center"
-                            android:text="🛒"
-                            android:textSize="18sp" />
+                            android:textColor="#FFFFFF"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
 
-                    </com.google.android.material.card.MaterialCardView>
+                    </FrameLayout>
 
                 </LinearLayout>
 
