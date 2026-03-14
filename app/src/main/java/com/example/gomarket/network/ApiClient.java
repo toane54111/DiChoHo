@@ -5,6 +5,7 @@ import android.content.Context;
 import com.example.gomarket.util.SessionManager;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -18,7 +19,7 @@ public class ApiClient {
 
     // Emulator: 10.0.2.2 maps to host machine's localhost
     // Thay bằng IP server thật khi deploy
-    private static final String BASE_URL = "http://10.0.2.2:8080/api/";
+    private static final String BASE_URL = "http://172.23.116.239:8080/api/";
 
     private static Retrofit retrofit = null;
     private static ApiService apiService = null;
@@ -33,6 +34,9 @@ public class ApiClient {
 
             // Auth interceptor
             OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(5, TimeUnit.SECONDS)
+                    .readTimeout(5, TimeUnit.SECONDS)
+                    .writeTimeout(5, TimeUnit.SECONDS)
                     .addInterceptor(loggingInterceptor)
                     .addInterceptor(new Interceptor() {
                         @Override

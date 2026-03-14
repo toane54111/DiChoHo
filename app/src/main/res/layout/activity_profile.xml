@@ -562,7 +562,7 @@
             app:backgroundTint="#FFFFFF"
             app:strokeColor="#F44336"
             app:strokeWidth="1dp"
-            style="@style/Widget.Material3.Button.OutlinedButton" />
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
         <!-- Phiên bản -->
         <TextView

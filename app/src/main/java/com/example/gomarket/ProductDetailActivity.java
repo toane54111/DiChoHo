@@ -29,7 +29,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_product_detail);
 
         // Ánh xạ view
-        imgProduct = findViewById(R.id.imgProduct);
+        imgProduct = findViewById(R.id.id_anh_san_pham); // Trỏ đúng vào ImageView
         btnBack = findViewById(R.id.btnBack);
         btnFavorite = findViewById(R.id.btnFavorite);
         tvHeart = findViewById(R.id.tvHeart);
