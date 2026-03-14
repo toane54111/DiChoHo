@@ -103,8 +103,13 @@ public class WalletActivity extends AppCompatActivity {
                             "Nạp " + String.format("%,d", amount) + "đ thành công! 💰",
                             Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(WalletActivity.this,
-                            "Nạp tiền thất bại!", Toast.LENGTH_SHORT).show();
+                    String errorMsg = "Nạp tiền thất bại!";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg = response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    Toast.makeText(WalletActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
                 }
             }
 
