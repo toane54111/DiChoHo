@@ -195,8 +195,15 @@ public class CheckoutActivity extends AppCompatActivity {
                 } else {
                     btnConfirm.setEnabled(true);
                     btnConfirm.setText("Xác nhận đặt hàng");
-                    Toast.makeText(CheckoutActivity.this,
-                            "Đặt hàng thất bại. Vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+                    String errorMsg = "Đặt hàng thất bại. Vui lòng thử lại!";
+                    try {
+                        String errorBody = response.errorBody().string();
+                        org.json.JSONObject json = new org.json.JSONObject(errorBody);
+                        if (json.has("error")) {
+                            errorMsg = json.getString("error");
+                        }
+                    } catch (Exception ignored) {}
+                    Toast.makeText(CheckoutActivity.this, errorMsg, Toast.LENGTH_LONG).show();
                 }
             }
 

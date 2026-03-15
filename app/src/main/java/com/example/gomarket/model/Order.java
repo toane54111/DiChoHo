@@ -8,16 +8,16 @@ public class Order {
     @SerializedName("id")
     private int id;
 
-    @SerializedName("user_id")
+    @SerializedName("userId")
     private int userId;
 
     @SerializedName("status")
     private String status; // PENDING, ACCEPTED, SHOPPING, DELIVERING, COMPLETED
 
-    @SerializedName("total_price")
+    @SerializedName("totalPrice")
     private double totalPrice;
 
-    @SerializedName("delivery_address")
+    @SerializedName("deliveryAddress")
     private String deliveryAddress;
 
     @SerializedName("latitude")
@@ -29,10 +29,10 @@ public class Order {
     @SerializedName("items")
     private List<OrderItem> items;
 
-    @SerializedName("created_at")
+    @SerializedName("createdAt")
     private String createdAt;
 
-    @SerializedName("shopper_name")
+    @SerializedName("shopperName")
     private String shopperName;
 
     public Order() {}

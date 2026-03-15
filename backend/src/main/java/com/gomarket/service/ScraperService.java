@@ -4,16 +4,19 @@ import com.gomarket.model.Product;
 import com.gomarket.model.Shop;
 import com.gomarket.repository.ProductRepository;
 import com.gomarket.repository.ShopRepository;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.gomarket.repository.OrderRepository;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class ScraperService {
@@ -22,144 +25,265 @@ public class ScraperService {
 
     private final ProductRepository productRepository;
     private final ShopRepository shopRepository;
+    private final OrderRepository orderRepository;
 
-    public ScraperService(ProductRepository productRepository, ShopRepository shopRepository) {
+    public ScraperService(ProductRepository productRepository, ShopRepository shopRepository,
+                          OrderRepository orderRepository) {
         this.productRepository = productRepository;
         this.shopRepository = shopRepository;
+        this.orderRepository = orderRepository;
     }
 
     /**
-     * Cào dữ liệu sản phẩm từ Bách Hóa Xanh
-     * URL pattern: https://www.bachhoaxanh.com/{category}
+     * Import dữ liệu Bách Hóa Xanh từ file CSV trong resources/data/
+     * Mỗi file CSV = 1 category (tên file = tên category)
+     * Xóa data cũ trước khi import
      */
-    public int scrapeCategory(String categoryUrl, String categoryName, Shop shop) {
+    @Transactional
+    public void seedSampleData() {
+        long existingCount = productRepository.count();
+
+        // Kiểm tra xem data đã dùng ảnh local chưa
+        boolean needReimport = false;
+        if (existingCount > 0) {
+            // Nếu còn sản phẩm với URL CDN cũ → cần re-import với ảnh local
+            long cdnCount = productRepository.findAll().stream()
+                    .filter(p -> p.getImageUrl() != null && p.getImageUrl().startsWith("http"))
+                    .count();
+            if (cdnCount > 0) {
+                log.info("Phát hiện {} sản phẩm dùng ảnh CDN cũ, re-import với ảnh local...", cdnCount);
+                needReimport = true;
+            } else if (existingCount >= 200) {
+                log.info("Database đã có {} sản phẩm (ảnh local), bỏ qua import.", existingCount);
+                return;
+            }
+        }
+
+        // Xóa data cũ để import data BHX mới với ảnh local
+        // Xóa theo thứ tự FK: orders → products → shops
+        if (existingCount > 0) {
+            log.info("Xóa {} sản phẩm cũ để import data Bách Hóa Xanh (ảnh local)...", existingCount);
+            orderRepository.deleteAll();   // Xóa orders trước (tham chiếu products)
+            productRepository.deleteAll(); // Rồi products (tham chiếu shops)
+            shopRepository.deleteAll();    // Cuối cùng shops
+        }
+
+        // Tạo 3 shop Bách Hóa Xanh ở các quận khác nhau
+        Shop shop1 = shopRepository.save(new Shop(
+                "Bách Hóa Xanh - Q.1",
+                "123 Nguyễn Trãi, Q.1, TP.HCM",
+                10.7717, 106.6934,
+                "Siêu thị mini"
+        ));
+        Shop shop2 = shopRepository.save(new Shop(
+                "Bách Hóa Xanh - Q.3",
+                "456 Lý Thường Kiệt, Q.3, TP.HCM",
+                10.7830, 106.6825,
+                "Siêu thị mini"
+        ));
+        Shop shop3 = shopRepository.save(new Shop(
+                "Bách Hóa Xanh - Gò Vấp",
+                "789 Quang Trung, Gò Vấp, TP.HCM",
+                10.8386, 106.6652,
+                "Siêu thị mini"
+        ));
+
+        Shop[] shops = {shop1, shop2, shop3};
+        Random random = new Random(42); // Fixed seed for reproducibility
+
+        // Danh sách file CSV và category tương ứng
+        String[][] csvFiles = {
+                {"data/Thịt heo.csv", "Thịt heo"},
+                {"data/Thịt bò.csv", "Thịt bò"},
+                {"data/Thịt gà vịt.csv", "Thịt gà & vịt"},
+                {"data/Cá Hải sản.csv", "Cá & Hải sản"},
+                {"data/Rau Lá.csv", "Rau lá"},
+                {"data/Củ quả.csv", "Củ quả"},
+                {"data/Nấm.csv", "Nấm"},
+                {"data/Trái cây.csv", "Trái cây"},
+                {"data/Trứng gà vịt cút.csv", "Trứng"},
+        };
+
+        int totalImported = 0;
+
+        for (String[] csvInfo : csvFiles) {
+            String filePath = csvInfo[0];
+            String category = csvInfo[1];
+
+            try {
+                int count = importCsvFile(filePath, category, shops, random);
+                totalImported += count;
+                log.info("Imported {} sản phẩm từ category: {}", count, category);
+            } catch (Exception e) {
+                log.error("Lỗi import file {}: {}", filePath, e.getMessage());
+            }
+        }
+
+        log.info("=== HOÀN TẤT IMPORT: {} sản phẩm từ Bách Hóa Xanh ===", totalImported);
+    }
+
+    /**
+     * Import 1 file CSV vào database
+     */
+    private int importCsvFile(String classpathFile, String category, Shop[] shops, Random random)
+            throws IOException {
+
+        ClassPathResource resource = new ClassPathResource(classpathFile);
+        if (!resource.exists()) {
+            log.warn("File không tồn tại: {}", classpathFile);
+            return 0;
+        }
+
         int count = 0;
-        try {
-            Document doc = Jsoup.connect(categoryUrl)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                    .timeout(15000)
-                    .get();
 
-            // Selector cho Bách Hóa Xanh
-            Elements productElements = doc.select(".productList .item, .cate_pro .item");
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
 
-            for (Element el : productElements) {
+            // Đọc header để xác định format
+            String headerLine = reader.readLine();
+            if (headerLine == null) return 0;
+
+            boolean isFormatB = headerLine.contains("Giá gốc") &&
+                    headerLine.indexOf("Giá gốc") < headerLine.indexOf("Giá hiện tại");
+
+            // Format A: Name, URL, Image, CurrentPrice, Unit, OriginalPrice, Discount
+            // Format B: Name, URL, Image, OriginalPrice, CurrentPrice, Discount, Unit
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
                 try {
-                    String name = el.select(".item_name, .productName").text().trim();
-                    String priceText = el.select(".item_price, .productPrice").text()
-                            .replaceAll("[^0-9]", "");
-                    String imageUrl = el.select("img").attr("src");
+                    List<String> fields = parseCsvLine(line);
+                    if (fields.size() < 5) continue;
+
+                    String name = cleanField(fields.get(0));
+                    // fields.get(1) = URL sản phẩm (bỏ qua)
+                    // Chuyển URL CDN → local path: /product-images/filename.jpg
+                    String rawImageUrl = cleanField(fields.get(2));
+                    String imageUrl = convertToLocalImagePath(rawImageUrl);
+
+                    double currentPrice;
+                    double originalPrice;
+                    String unit;
+
+                    if (isFormatB) {
+                        // Format B: index 3=OriginalPrice, 4=CurrentPrice, 5=Discount, 6=Unit
+                        originalPrice = parsePrice(fields.get(3));
+                        currentPrice = parsePrice(fields.get(4));
+                        unit = fields.size() > 6 ? cleanField(fields.get(6)) : "";
+                    } else {
+                        // Format A: index 3=CurrentPrice, 4=Unit, 5=OriginalPrice, 6=Discount
+                        currentPrice = parsePrice(fields.get(3));
+                        unit = cleanField(fields.get(4));
+                        originalPrice = fields.size() > 5 ? parsePrice(fields.get(5)) : 0;
+                    }
 
                     if (name.isEmpty()) continue;
 
-                    double price = 0;
-                    if (!priceText.isEmpty()) {
-                        price = Double.parseDouble(priceText);
+                    // Nếu không có giá gốc, dùng giá hiện tại làm giá gốc
+                    if (originalPrice <= 0) {
+                        originalPrice = currentPrice;
+                    }
+                    // Nếu không có giá hiện tại, dùng giá gốc
+                    if (currentPrice <= 0) {
+                        currentPrice = originalPrice;
                     }
 
-                    Product product = new Product(
-                            name, price, "phần", categoryName,
-                            imageUrl, "", shop
-                    );
+                    // Skip nếu không có giá
+                    if (currentPrice <= 0) continue;
+
+                    // Random shop cho mỗi sản phẩm
+                    Shop shop = shops[random.nextInt(shops.length)];
+
+                    // Tạo description tự động
+                    String description = name + " tươi ngon từ Bách Hóa Xanh, đảm bảo chất lượng và an toàn vệ sinh thực phẩm.";
+
+                    Product product = new Product();
+                    product.setName(name);
+                    product.setPrice(currentPrice);
+                    product.setOriginalPrice(originalPrice);
+                    product.setUnit(unit.isEmpty() ? "phần" : unit);
+                    product.setCategory(category);
+                    product.setImageUrl(imageUrl);
+                    product.setDescription(description);
+                    product.setShop(shop);
+                    product.setCreatedAt(LocalDateTime.now());
+
                     productRepository.save(product);
                     count++;
+
                 } catch (Exception e) {
-                    log.warn("Failed to parse product: {}", e.getMessage());
+                    log.warn("Lỗi parse dòng CSV: {} - {}", line.substring(0, Math.min(50, line.length())), e.getMessage());
                 }
             }
-
-            log.info("Scraped {} products from category: {}", count, categoryName);
-        } catch (Exception e) {
-            log.error("Failed to scrape {}: {}", categoryUrl, e.getMessage());
         }
 
         return count;
     }
 
     /**
-     * Cào tất cả danh mục chính
+     * Parse một dòng CSV có quoted fields (xử lý dấu phẩy trong quotes)
      */
-    public int scrapeAll() {
-        // Tạo shop mặc định
-        Shop shop = new Shop(
-                "Bách Hóa Xanh - Q.1",
-                "123 Nguyễn Trãi, Q.1, TP.HCM",
-                10.7717, 106.6934,
-                "Siêu thị mini"
-        );
-        shop = shopRepository.save(shop);
+    private List<String> parseCsvLine(String line) {
+        List<String> fields = new ArrayList<>();
+        Pattern pattern = Pattern.compile("\"([^\"]*)\"|([^,]+)");
+        Matcher matcher = pattern.matcher(line);
 
-        int total = 0;
-
-        String[][] categories = {
-                {"https://www.bachhoaxanh.com/rau-cu", "Rau củ"},
-                {"https://www.bachhoaxanh.com/thit-tuoi-song", "Thịt"},
-                {"https://www.bachhoaxanh.com/hai-san", "Hải sản"},
-                {"https://www.bachhoaxanh.com/trai-cay", "Trái cây"},
-                {"https://www.bachhoaxanh.com/gia-vi", "Gia vị"},
-        };
-
-        for (String[] cat : categories) {
-            total += scrapeCategory(cat[0], cat[1], shop);
+        while (matcher.find()) {
+            if (matcher.group(1) != null) {
+                fields.add(matcher.group(1));
+            } else {
+                fields.add(matcher.group(2).trim());
+            }
         }
 
-        log.info("Total scraped products: {}", total);
-        return total;
+        return fields;
     }
 
     /**
-     * Tạo dữ liệu mẫu nếu scraping thất bại
+     * Parse giá từ string, bỏ dấu phẩy và ký tự không phải số
      */
-    public void seedSampleData() {
-        if (productRepository.count() > 0) {
-            log.info("Database already has data, skipping seed");
-            return;
+    private double parsePrice(String priceStr) {
+        if (priceStr == null || priceStr.isEmpty()) return 0;
+        String cleaned = priceStr.replaceAll("[^0-9.]", "");
+        if (cleaned.isEmpty()) return 0;
+        try {
+            return Double.parseDouble(cleaned);
+        } catch (NumberFormatException e) {
+            return 0;
         }
-
-        // Tạo shops
-        Shop shop1 = shopRepository.save(new Shop("Bách Hóa Xanh - Q.1", "123 Nguyễn Trãi, Q.1", 10.7717, 106.6934, "Siêu thị"));
-        Shop shop2 = shopRepository.save(new Shop("Bách Hóa Xanh - Q.3", "456 Lý Thường Kiệt, Q.3", 10.7830, 106.6825, "Siêu thị"));
-        Shop shop3 = shopRepository.save(new Shop("Chợ Bến Thành", "Chợ Bến Thành, Q.1", 10.7725, 106.6981, "Chợ truyền thống"));
-
-        // Rau củ
-        seedProduct("Rau muống", 8000, "bó", "Rau củ", shop1);
-        seedProduct("Cà chua", 15000, "kg", "Rau củ", shop1);
-        seedProduct("Hành tây", 12000, "kg", "Rau củ", shop2);
-        seedProduct("Nấm kim châm", 18000, "gói", "Rau củ", shop1);
-        seedProduct("Khoai tây", 20000, "kg", "Rau củ", shop2);
-
-        // Thịt
-        seedProduct("Thịt bò Úc", 280000, "kg", "Thịt", shop1);
-        seedProduct("Ba chỉ bò Mỹ", 320000, "kg", "Thịt", shop2);
-        seedProduct("Thịt heo nạc vai", 95000, "kg", "Thịt", shop1);
-        seedProduct("Sườn non heo", 120000, "kg", "Thịt", shop3);
-        seedProduct("Gà ta nguyên con", 85000, "con", "Thịt", shop3);
-
-        // Hải sản
-        seedProduct("Tôm sú", 180000, "kg", "Hải sản", shop3);
-        seedProduct("Mực ống", 150000, "kg", "Hải sản", shop3);
-        seedProduct("Cá hồi phi lê", 350000, "kg", "Hải sản", shop1);
-        seedProduct("Nghêu", 45000, "kg", "Hải sản", shop3);
-
-        // Trái cây
-        seedProduct("Táo Mỹ", 65000, "kg", "Trái cây", shop1);
-        seedProduct("Chuối già", 25000, "nải", "Trái cây", shop2);
-        seedProduct("Nho xanh Úc", 120000, "kg", "Trái cây", shop1);
-        seedProduct("Xoài cát Hòa Lộc", 55000, "kg", "Trái cây", shop3);
-
-        // Gia vị
-        seedProduct("Sả", 5000, "bó", "Gia vị", shop3);
-        seedProduct("Ớt hiểm", 30000, "kg", "Gia vị", shop3);
-        seedProduct("Nước mắm Phú Quốc", 35000, "chai", "Gia vị", shop1);
-        seedProduct("Nước cốt dừa", 18000, "hộp", "Gia vị", shop2);
-        seedProduct("Lá chanh", 3000, "bó", "Gia vị", shop3);
-
-        log.info("Seeded {} sample products", productRepository.count());
     }
 
-    private void seedProduct(String name, double price, String unit, String category, Shop shop) {
-        Product p = new Product(name, price, unit, category, "", name, shop);
-        p.setOriginalPrice(price * 1.15); // Giá gốc cao hơn 15%
-        productRepository.save(p);
+    /**
+     * Chuyển URL CDN (https://cdnv2.tgdd.vn/.../filename.jpg) → local path (/product-images/filename.jpg)
+     * Ảnh đã được tải về thư mục static/product-images/
+     */
+    private String convertToLocalImagePath(String cdnUrl) {
+        if (cdnUrl == null || cdnUrl.isEmpty()) return "";
+        // Lấy filename từ URL
+        int lastSlash = cdnUrl.lastIndexOf('/');
+        if (lastSlash >= 0 && lastSlash < cdnUrl.length() - 1) {
+            String filename = cdnUrl.substring(lastSlash + 1);
+            return "/product-images/" + filename;
+        }
+        return cdnUrl; // fallback giữ nguyên URL gốc
+    }
+
+    /**
+     * Clean field value - bỏ quotes thừa và trim
+     */
+    private String cleanField(String field) {
+        if (field == null) return "";
+        return field.replace("\"", "").trim();
+    }
+
+    /**
+     * Cào dữ liệu sản phẩm từ Bách Hóa Xanh (giữ lại cho tương lai)
+     */
+    public int scrapeAll() {
+        log.info("Scraping disabled - using CSV import instead");
+        return 0;
     }
 }

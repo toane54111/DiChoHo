@@ -12,20 +12,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gomarket.adapter.CartAdapter;
-import com.example.gomarket.model.Order;
 import com.example.gomarket.model.OrderItem;
-import com.example.gomarket.model.OrderRequest;
-import com.example.gomarket.network.ApiClient;
-import com.example.gomarket.network.ApiService;
-import com.example.gomarket.util.SessionManager;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class CartActivity extends AppCompatActivity implements CartAdapter.OnCartItemListener {
 
@@ -129,54 +120,6 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
             // Chuyển sang CheckoutActivity thay vì đặt hàng trực tiếp
             Intent intent = new Intent(CartActivity.this, CheckoutActivity.class);
             startActivity(intent);
-        });
-    }
-
-    private void createOrder() {
-        SessionManager session = new SessionManager(this);
-        ApiService apiService = ApiClient.getApiService(this);
-
-        List<OrderRequest.OrderItemRequest> items = new ArrayList<>();
-        for (OrderItem item : cartItems) {
-            items.add(new OrderRequest.OrderItemRequest(item.getProductId(), item.getQuantity()));
-        }
-
-        OrderRequest request = new OrderRequest(
-                session.getUserId(),
-                "Địa chỉ giao hàng", // TODO: lấy từ user
-                10.7769, 106.7009, // TODO: lấy GPS thật
-                items,
-                "COD"
-        );
-
-        apiService.createOrder(request).enqueue(new Callback<Order>() {
-            @Override
-            public void onResponse(Call<Order> call, Response<Order> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Order order = response.body();
-                    Toast.makeText(CartActivity.this,
-                            "Đặt hàng thành công! Đơn #" + order.getId(),
-                            Toast.LENGTH_LONG).show();
-                    clearCart();
-
-                    // Chuyển sang OrderTrackingActivity
-                    Intent intent = new Intent(CartActivity.this, OrderTrackingActivity.class);
-                    intent.putExtra("order_id", order.getId());
-                    startActivity(intent);
-                    finish();
-                } else {
-                    Toast.makeText(CartActivity.this,
-                            "Đặt hàng thất bại. Vui lòng thử lại!",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Order> call, Throwable t) {
-                Toast.makeText(CartActivity.this,
-                        "Lỗi kết nối: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-            }
         });
     }
 

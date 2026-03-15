@@ -12,7 +12,7 @@ public class Product {
     @SerializedName("price")
     private double price;
 
-    @SerializedName("original_price")
+    @SerializedName("originalPrice")
     private double originalPrice;
 
     @SerializedName("unit")
@@ -21,7 +21,7 @@ public class Product {
     @SerializedName("category")
     private String category;
 
-    @SerializedName("image_url")
+    @SerializedName("imageUrl")
     private String imageUrl;
 
     @SerializedName("description")

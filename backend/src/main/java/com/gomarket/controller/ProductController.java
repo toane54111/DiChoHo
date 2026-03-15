@@ -42,6 +42,30 @@ public class ProductController {
     }
 
     /**
+     * GET /api/products/by-category?name=Thịt heo
+     * Lấy sản phẩm theo danh mục (dùng query param, tránh lỗi URL encode với ký tự đặc biệt)
+     */
+    @GetMapping("/by-category")
+    public ResponseEntity<List<Product>> getByCategoryQuery(@RequestParam("name") String category) {
+        List<Product> products = productRepository.findByCategory(category);
+        return ResponseEntity.ok(products);
+    }
+
+    /**
+     * GET /api/products/categories
+     * Lấy danh sách tất cả categories có trong DB
+     */
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getAllCategories() {
+        List<String> categories = productRepository.findAll().stream()
+                .map(Product::getCategory)
+                .distinct()
+                .sorted()
+                .toList();
+        return ResponseEntity.ok(categories);
+    }
+
+    /**
      * GET /api/products
      * Lấy tất cả sản phẩm
      */

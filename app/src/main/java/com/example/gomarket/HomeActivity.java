@@ -4,12 +4,15 @@ import android.content.Intent;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.gomarket.model.Product;
@@ -38,9 +41,14 @@ public class HomeActivity extends AppCompatActivity {
     private MaterialCardView btnNotification, btnCart, searchBar, bannerSuggest;
     private TextView tvGreeting, tvAddress;
 
-    // Categories
-    private LinearLayout categoryVegetable, categoryMeat, categorySeafood, categoryFruit;
-    private MaterialCardView btnDiChoGanNha, btnShopNoiBat;
+    // Categories - Row 1
+    private LinearLayout categoryRauLa, categoryThitHeo, categoryCaHaiSan, categoryTraiCay;
+    // Categories - Row 2
+    private LinearLayout categoryRow2;
+    private LinearLayout categoryCuQua, categoryThitBo, categoryThitGa, categoryXemThem;
+
+    private MaterialCardView btnDiChoGanNha, btnShopNoiBat, btnSeeMoreProducts;
+    private TextView tvSeeAll;
 
     // API
     private ApiService apiService;
@@ -48,6 +56,19 @@ public class HomeActivity extends AppCompatActivity {
 
     // Badge giỏ hàng
     private TextView tvCartBadge;
+
+    // Tất cả categories từ BHX data
+    private static final String[][] ALL_CATEGORIES = {
+            {"Rau lá", "🥬", "#E8F5E9"},
+            {"Thịt heo", "🥩", "#FFEBEE"},
+            {"Cá & Hải sản", "🐟", "#E3F2FD"},
+            {"Trái cây", "🍎", "#FFF3E0"},
+            {"Củ quả", "🥕", "#FFF8E1"},
+            {"Thịt bò", "🥩", "#FCE4EC"},
+            {"Thịt gà & vịt", "🍗", "#FBE9E7"},
+            {"Nấm", "🍄", "#F3E5F5"},
+            {"Trứng", "🥚", "#FFFDE7"},
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +83,7 @@ public class HomeActivity extends AppCompatActivity {
         setupGridView();
         setupClickListeners();
 
-        // Load sản phẩm từ API (sẽ cập nhật GridView khi có data)
+        // Load sản phẩm từ API
         loadProductsFromApi();
     }
 
@@ -75,11 +96,18 @@ public class HomeActivity extends AppCompatActivity {
         tvAddress = findViewById(R.id.tvAddress);
         tvCartBadge = findViewById(R.id.tvCartBadge);
 
-        // Categories
-        categoryVegetable = findViewById(R.id.categoryVegetable);
-        categoryMeat = findViewById(R.id.categoryMeat);
-        categorySeafood = findViewById(R.id.categorySeafood);
-        categoryFruit = findViewById(R.id.categoryFruit);
+        // Categories - Row 1
+        categoryRauLa = findViewById(R.id.categoryVegetable);
+        categoryThitHeo = findViewById(R.id.categoryMeat);
+        categoryCaHaiSan = findViewById(R.id.categorySeafood);
+        categoryTraiCay = findViewById(R.id.categoryFruit);
+
+        // Categories - Row 2
+        categoryRow2 = findViewById(R.id.categoryRow2);
+        categoryCuQua = findViewById(R.id.categoryCuQua);
+        categoryThitBo = findViewById(R.id.categoryThitBo);
+        categoryThitGa = findViewById(R.id.categoryThitGa);
+        categoryXemThem = findViewById(R.id.categoryXemThem);
 
         // Bottom Navigation
         navHome = findViewById(R.id.navHome);
@@ -90,9 +118,12 @@ public class HomeActivity extends AppCompatActivity {
         btnDiChoGanNha = findViewById(R.id.btnDiChoGanNha);
         btnShopNoiBat = findViewById(R.id.btnShopNoiBat);
         bannerSuggest = findViewById(R.id.bannerSuggest);
+
+        // Sản phẩm nổi bật - xem tất cả
+        tvSeeAll = findViewById(R.id.tvSeeAll);
+        btnSeeMoreProducts = findViewById(R.id.btnSeeMoreProducts);
     }
 
-    // ─── HIỂN THỊ TÊN USER TỪ SESSION ───
     private void loadUserGreeting() {
         SessionManager session = new SessionManager(this);
         String name = session.getUserName();
@@ -112,7 +143,6 @@ public class HomeActivity extends AppCompatActivity {
                     apiProducts = response.body();
                     updateGridWithApiProducts();
                 }
-                // Nếu API thất bại, giữ data hardcoded
             }
 
             @Override
@@ -122,60 +152,60 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
+    private static final int HOME_PRODUCT_LIMIT = 8; // Chỉ hiển thị 8 sản phẩm nổi bật trên Home
+
     private void updateGridWithApiProducts() {
         danhSachSanPham.clear();
 
-        // Ảnh mặc định theo tên sản phẩm
-        for (Product p : apiProducts) {
-            int image = getProductImage(p.getName());
+        // Chỉ lấy tối đa HOME_PRODUCT_LIMIT sản phẩm cho trang chủ
+        int limit = Math.min(apiProducts.size(), HOME_PRODUCT_LIMIT);
+        for (int i = 0; i < limit; i++) {
+            Product p = apiProducts.get(i);
+            int image = R.drawable.img; // fallback
             String giaGoc = String.format("%,.0fđ", p.getOriginalPrice());
             String giaKM = String.format("%,.0fđ", p.getPrice());
+            String imageUrl = p.getImageUrl();
+
             danhSachSanPham.add(new SanPham(
-                    p.getName(), giaGoc, giaKM, p.getDescription(), image
+                    p.getName(), giaGoc, giaKM, p.getDescription(), image, imageUrl
             ));
         }
 
         adapter.notifyDataSetChanged();
+        setGridViewHeightBasedOnChildren(gridViewProducts, 2);
     }
 
-    // ─── LOAD SẢN PHẨM THEO DANH MỤC ───
-    private void loadProductsByCategory(String category) {
-        Toast.makeText(this, "Đang tải: " + category + "...", Toast.LENGTH_SHORT).show();
+    /**
+     * Fix GridView inside ScrollView: tính chiều cao dựa trên số item
+     */
+    private void setGridViewHeightBasedOnChildren(GridView gridView, int numColumns) {
+        ListAdapter listAdapter = gridView.getAdapter();
+        if (listAdapter == null) return;
 
-        apiService.getByCategory(category).enqueue(new Callback<List<Product>>() {
-            @Override
-            public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    apiProducts = response.body();
-                    updateGridWithApiProducts();
-                    Toast.makeText(HomeActivity.this,
-                            "Đã tải " + apiProducts.size() + " sản phẩm " + category,
-                            Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(HomeActivity.this,
-                            "Không tìm thấy sản phẩm " + category,
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
+        int totalHeight = 0;
+        int items = listAdapter.getCount();
+        int rows = (int) Math.ceil((double) items / numColumns);
 
-            @Override
-            public void onFailure(Call<List<Product>> call, Throwable t) {
-                Toast.makeText(HomeActivity.this,
-                        "Lỗi kết nối server", Toast.LENGTH_SHORT).show();
-            }
-        });
+        for (int i = 0; i < rows; i++) {
+            View listItem = listAdapter.getView(i * numColumns, null, gridView);
+            listItem.measure(
+                    View.MeasureSpec.makeMeasureSpec(gridView.getWidth(), View.MeasureSpec.AT_MOST),
+                    View.MeasureSpec.UNSPECIFIED
+            );
+            totalHeight += listItem.getMeasuredHeight();
+        }
+
+        ViewGroup.LayoutParams params = gridView.getLayoutParams();
+        params.height = totalHeight + (gridView.getVerticalSpacing() * (rows - 1)) + gridView.getPaddingTop() + gridView.getPaddingBottom();
+        gridView.setLayoutParams(params);
+        gridView.requestLayout();
     }
 
-    // ─── MAP ẢNH LOCAL CHO SẢN PHẨM ───
-    private int getProductImage(String productName) {
-        String name = productName.toLowerCase();
-        if (name.contains("táo")) return R.drawable.apple;
-        if (name.contains("chuối")) return R.drawable.banana;
-        if (name.contains("cherry")) return R.drawable.cherry;
-        if (name.contains("nho")) return R.drawable.grapes;
-        if (name.contains("xoài") || name.contains("chôm")) return R.drawable.date;
-        // Default
-        return R.drawable.img;
+    // ─── MỞ TRANG DANH MỤC ───
+    private void openCategory(String category) {
+        Intent intent = new Intent(this, CategoryProductsActivity.class);
+        intent.putExtra("category_name", category);
+        startActivity(intent);
     }
 
     // ─── DATA HARDCODED (FALLBACK) ───
@@ -200,28 +230,28 @@ public class HomeActivity extends AppCompatActivity {
         adapter = new SanPhamAdapter(this, danhSachSanPham);
         gridViewProducts.setAdapter(adapter);
 
-        gridViewProducts.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                SanPham sp = danhSachSanPham.get(position);
+        // Fix GridView height inside ScrollView
+        gridViewProducts.post(() -> setGridViewHeightBasedOnChildren(gridViewProducts, 2));
 
-                Intent intent = new Intent(HomeActivity.this, ProductDetailActivity.class);
-                intent.putExtra("tenSanPham", sp.getTenSanPham());
-                intent.putExtra("giaGoc", sp.getGiaGoc());
-                intent.putExtra("giaKhuyenMai", sp.getGiaKhuyenMai());
-                intent.putExtra("moTa", sp.getMoTa());
-                intent.putExtra("hinhAnh", sp.getHinhAnh());
+        gridViewProducts.setOnItemClickListener((parent, view, position, id) -> {
+            SanPham sp = danhSachSanPham.get(position);
 
-                // Truyền thêm product ID từ API nếu có
-                if (position < apiProducts.size()) {
-                    Product apiProduct = apiProducts.get(position);
-                    intent.putExtra("product_id", apiProduct.getId());
-                    intent.putExtra("price", apiProduct.getPrice());
-                    intent.putExtra("image_url", apiProduct.getImageUrl()); // truyền URL ảnh cho Glide
-                }
+            Intent intent = new Intent(HomeActivity.this, ProductDetailActivity.class);
+            intent.putExtra("tenSanPham", sp.getTenSanPham());
+            intent.putExtra("giaGoc", sp.getGiaGoc());
+            intent.putExtra("giaKhuyenMai", sp.getGiaKhuyenMai());
+            intent.putExtra("moTa", sp.getMoTa());
+            intent.putExtra("hinhAnh", sp.getHinhAnh());
 
-                startActivity(intent);
+            // Truyền thêm product ID + imageUrl từ API nếu có
+            if (position < apiProducts.size()) {
+                Product apiProduct = apiProducts.get(position);
+                intent.putExtra("product_id", apiProduct.getId());
+                intent.putExtra("price", apiProduct.getPrice());
+                intent.putExtra("image_url", apiProduct.getImageUrl());
             }
+
+            startActivity(intent);
         });
     }
 
@@ -239,15 +269,23 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Categories → load sản phẩm từ API theo danh mục
-        categoryVegetable.setOnClickListener(v -> loadProductsByCategory("Rau củ"));
-        categoryMeat.setOnClickListener(v -> loadProductsByCategory("Thịt"));
-        categorySeafood.setOnClickListener(v -> loadProductsByCategory("Hải sản"));
-        categoryFruit.setOnClickListener(v -> loadProductsByCategory("Trái cây"));
+        // Categories Row 1 → mở trang danh mục riêng
+        categoryRauLa.setOnClickListener(v -> openCategory("Rau lá"));
+        categoryThitHeo.setOnClickListener(v -> openCategory("Thịt heo"));
+        categoryCaHaiSan.setOnClickListener(v -> openCategory("Cá & Hải sản"));
+        categoryTraiCay.setOnClickListener(v -> openCategory("Trái cây"));
+
+        // Categories Row 2
+        categoryCuQua.setOnClickListener(v -> openCategory("Củ quả"));
+        categoryThitBo.setOnClickListener(v -> openCategory("Thịt bò"));
+        categoryThitGa.setOnClickListener(v -> openCategory("Thịt gà & vịt"));
+
+        // Xem thêm → hiện dialog chọn tất cả categories
+        categoryXemThem.setOnClickListener(v -> showAllCategoriesDialog());
 
         // Bottom Navigation
         navHome.setOnClickListener(v ->
-                Toast.makeText(this, "Đang ở Home", Toast.LENGTH_SHORT).show());
+                Toast.makeText(this, "Đang ở Trang chủ", Toast.LENGTH_SHORT).show());
 
         navOrders.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, OrderListActivity.class);
@@ -276,13 +314,41 @@ public class HomeActivity extends AppCompatActivity {
             Intent intent = new Intent(HomeActivity.this, AIChefActivity.class);
             startActivity(intent);
         });
+
+        // "Xem tất cả" + "Xem thêm sản phẩm" → mở AllProductsActivity
+        View.OnClickListener openAllProducts = v -> {
+            Intent intent = new Intent(HomeActivity.this, AllProductsActivity.class);
+            startActivity(intent);
+        };
+        tvSeeAll.setOnClickListener(openAllProducts);
+        btnSeeMoreProducts.setOnClickListener(openAllProducts);
+    }
+
+    /**
+     * Hiện dialog chọn tất cả categories
+     */
+    private void showAllCategoriesDialog() {
+        String[] categoryNames = new String[ALL_CATEGORIES.length];
+        String[] categoryEmojis = new String[ALL_CATEGORIES.length];
+        for (int i = 0; i < ALL_CATEGORIES.length; i++) {
+            categoryEmojis[i] = ALL_CATEGORIES[i][1];
+            categoryNames[i] = ALL_CATEGORIES[i][1] + "  " + ALL_CATEGORIES[i][0];
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Chọn danh mục")
+                .setItems(categoryNames, (dialog, which) -> {
+                    openCategory(ALL_CATEGORIES[which][0]);
+                })
+                .setNegativeButton("Đóng", null)
+                .show();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadUserGreeting(); // Cập nhật tên khi quay lại
-        updateCartBadge();  // Cập nhật badge giỏ hàng
+        loadUserGreeting();
+        updateCartBadge();
     }
 
     private void updateCartBadge() {
@@ -296,4 +362,3 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 }
-

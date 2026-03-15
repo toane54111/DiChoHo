@@ -9,6 +9,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DecodeFormat;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
+import com.example.gomarket.network.ApiClient;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
@@ -54,7 +59,23 @@ public class ProductDetailActivity extends AppCompatActivity {
         tvGiaGoc.setText(giaGoc);
         tvGiaKhuyenMai.setText(giaKM);
         tvMoTa.setText(moTa);
-        imgProduct.setImageResource(hinhAnh);
+
+        // Ưu tiên ảnh URL từ API, fallback sang drawable local
+        String apiImageUrl = ApiClient.getFullImageUrl(getIntent().getStringExtra("image_url"));
+        if (apiImageUrl != null && !apiImageUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(apiImageUrl)
+                    .apply(new RequestOptions()
+                            .format(DecodeFormat.PREFER_RGB_565)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .centerCrop())
+                    .thumbnail(0.1f)
+                    .placeholder(R.drawable.img)
+                    .error(hinhAnh)
+                    .into(imgProduct);
+        } else {
+            imgProduct.setImageResource(hinhAnh);
+        }
 
         // Gạch ngang giá gốc
         tvGiaGoc.setPaintFlags(tvGiaGoc.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
@@ -107,7 +128,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Ưu tiên dữ liệu từ API, fallback sang dữ liệu local nếu API chưa load
-                int productId   = (int) getIntent().getLongExtra("product_id", -1);
+                int productId   = getIntent().getIntExtra("product_id", -1);
                 double price    = getIntent().getDoubleExtra("price", 0);
                 String imageUrl = getIntent().getStringExtra("image_url");
 

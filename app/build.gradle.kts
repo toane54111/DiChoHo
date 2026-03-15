@@ -63,9 +63,8 @@ dependencies {
     implementation("org.osmdroid:osmdroid-android:6.1.18")
     implementation("androidx.preference:preference:1.2.1")
 
-    // Glide - Image Loading
+    // Glide - Image Loading (không cần compiler vì không dùng @GlideModule)
     implementation("com.github.bumptech.glide:glide:4.16.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

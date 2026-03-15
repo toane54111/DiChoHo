@@ -174,9 +174,16 @@ public class AIChefActivity extends AppCompatActivity {
             startService(serviceIntent);
         }
 
-        // Fetch weather ngay (nhanh), recipe sẽ load sau
+        // Fetch weather ngay (nhanh), recipe chờ GPS xong mới gọi
         fetchWeatherFirst();
-        fetchRecipeSuggestion();
+
+        // Fallback: nếu GPS quá lâu (5s), gọi recipe với tọa độ mặc định
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (!hasReceivedLocation) {
+                hasReceivedLocation = true;
+                fetchRecipeSuggestion();
+            }
+        }, 5000);
     }
 
     /**

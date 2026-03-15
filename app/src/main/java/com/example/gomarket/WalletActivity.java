@@ -1,9 +1,7 @@
 package com.example.gomarket;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -11,12 +9,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.gomarket.adapter.TransactionAdapter;
 import com.example.gomarket.model.Wallet;
+import com.example.gomarket.model.WalletTransaction;
 import com.example.gomarket.network.ApiClient;
 import com.example.gomarket.network.ApiService;
 import com.example.gomarket.util.SessionManager;
 import com.google.android.material.button.MaterialButton;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -27,12 +29,15 @@ public class WalletActivity extends AppCompatActivity {
 
     private TextView tvBack, tvBalance, tvBalanceLabel;
     private MaterialButton btnTopUp50, btnTopUp100, btnTopUp200, btnTopUp500;
-    private LinearLayout layoutTopUp;
     private RecyclerView rvTransactions;
+    private TextView tvEmptyTransactions;
 
     private ApiService apiService;
     private SessionManager session;
     private long userId;
+
+    private List<WalletTransaction> transactionList = new ArrayList<>();
+    private TransactionAdapter transactionAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,13 +49,13 @@ public class WalletActivity extends AppCompatActivity {
         userId = session.getUserId();
 
         initViews();
-        loadBalance();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadBalance(); // Reload khi quay lại sau QR
+        loadBalance();
+        loadTransactions();
     }
 
     private void initViews() {
@@ -61,6 +66,14 @@ public class WalletActivity extends AppCompatActivity {
         btnTopUp100 = findViewById(R.id.btnTopUp100);
         btnTopUp200 = findViewById(R.id.btnTopUp200);
         btnTopUp500 = findViewById(R.id.btnTopUp500);
+        rvTransactions = findViewById(R.id.rvTransactions);
+        tvEmptyTransactions = findViewById(R.id.tvEmptyTransactions);
+
+        // Setup RecyclerView
+        transactionAdapter = new TransactionAdapter(transactionList);
+        rvTransactions.setLayoutManager(new LinearLayoutManager(this));
+        rvTransactions.setAdapter(transactionAdapter);
+        rvTransactions.setNestedScrollingEnabled(false);
 
         tvBack.setOnClickListener(v -> finish());
 
@@ -76,17 +89,46 @@ public class WalletActivity extends AppCompatActivity {
             public void onResponse(Call<Wallet> call, Response<Wallet> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     long balance = response.body().getBalance();
-                    tvBalance.setText(String.format("%,dđ", balance));
+                    tvBalance.setText(String.format("%,d", balance) + "d");
                 } else {
-                    tvBalance.setText("0đ");
+                    tvBalance.setText("0d");
                 }
             }
 
             @Override
             public void onFailure(Call<Wallet> call, Throwable t) {
-                tvBalance.setText("Lỗi kết nối");
+                tvBalance.setText("Loi ket noi");
                 Toast.makeText(WalletActivity.this,
-                        "Không thể tải ví: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        "Khong the tai vi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadTransactions() {
+        apiService.getWalletTransactions(userId).enqueue(new Callback<List<WalletTransaction>>() {
+            @Override
+            public void onResponse(Call<List<WalletTransaction>> call,
+                                   Response<List<WalletTransaction>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    transactionList.clear();
+                    transactionList.addAll(response.body());
+                    transactionAdapter.notifyDataSetChanged();
+
+                    if (transactionList.isEmpty()) {
+                        tvEmptyTransactions.setVisibility(View.VISIBLE);
+                        rvTransactions.setVisibility(View.GONE);
+                    } else {
+                        tvEmptyTransactions.setVisibility(View.GONE);
+                        rvTransactions.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<WalletTransaction>> call, Throwable t) {
+                tvEmptyTransactions.setVisibility(View.VISIBLE);
+                tvEmptyTransactions.setText("Khong the tai lich su");
+                rvTransactions.setVisibility(View.GONE);
             }
         });
     }
@@ -98,12 +140,13 @@ public class WalletActivity extends AppCompatActivity {
             public void onResponse(Call<Wallet> call, Response<Wallet> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     long balance = response.body().getBalance();
-                    tvBalance.setText(String.format("%,dđ", balance));
+                    tvBalance.setText(String.format("%,d", balance) + "d");
                     Toast.makeText(WalletActivity.this,
-                            "Nạp " + String.format("%,d", amount) + "đ thành công! 💰",
+                            "Nap " + String.format("%,d", amount) + "d thanh cong!",
                             Toast.LENGTH_SHORT).show();
+                    loadTransactions(); // Refresh lịch sử
                 } else {
-                    String errorMsg = "Nạp tiền thất bại!";
+                    String errorMsg = "Nap tien that bai!";
                     try {
                         if (response.errorBody() != null) {
                             errorMsg = response.errorBody().string();
@@ -116,7 +159,7 @@ public class WalletActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<Wallet> call, Throwable t) {
                 Toast.makeText(WalletActivity.this,
-                        "Lỗi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        "Loi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

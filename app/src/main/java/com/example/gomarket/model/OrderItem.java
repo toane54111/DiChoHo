@@ -6,10 +6,10 @@ public class OrderItem {
     @SerializedName("id")
     private int id;
 
-    @SerializedName("product_id")
+    @SerializedName("productId")
     private int productId;
 
-    @SerializedName("product_name")
+    @SerializedName("productName")
     private String productName;
 
     @SerializedName("quantity")
@@ -18,7 +18,7 @@ public class OrderItem {
     @SerializedName("price")
     private double price;
 
-    @SerializedName("image_url")
+    @SerializedName("imageUrl")
     private String imageUrl;
 
     public OrderItem() {}

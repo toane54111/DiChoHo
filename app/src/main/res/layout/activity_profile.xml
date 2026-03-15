@@ -62,6 +62,15 @@
                     android:textStyle="bold"
                     android:textColor="#FFFFFF" />
 
+                <!-- Số điện thoại -->
+                <TextView
+                    android:id="@+id/tvPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textSize="14sp"
+                    android:textColor="#E8F5E9" />
+
                 <!-- Trạng thái xác thực -->
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -122,9 +131,10 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tvStatOrders"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="15"
+                        android:text="--"
                         android:textSize="28sp"
                         android:textStyle="bold"
                         android:textColor="#4CAF50" />
@@ -146,42 +156,31 @@
                     android:layout_gravity="center"
                     android:background="#E0E0E0" />
 
-                <!-- Đánh giá -->
+                <!-- Số dư ví -->
                 <LinearLayout
+                    android:id="@+id/statWallet"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:orientation="vertical">
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tvStatBalance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="4.8"
-                            android:textSize="28sp"
-                            android:textStyle="bold"
-                            android:textColor="#FF9800" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:text="⭐"
-                            android:textSize="20sp" />
-
-                    </LinearLayout>
+                        android:text="--"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="#FF9800" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Đánh giá"
+                        android:text="Số dư ví"
                         android:textSize="14sp"
                         android:textColor="#757575" />
 
@@ -194,7 +193,7 @@
                     android:layout_gravity="center"
                     android:background="#E0E0E0" />
 
-                <!-- Điểm thưởng -->
+                <!-- Đơn hoàn thành -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -203,18 +202,19 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tvStatCompleted"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="250"
+                        android:text="--"
                         android:textSize="28sp"
                         android:textStyle="bold"
-                        android:textColor="#E91E63" />
+                        android:textColor="#2196F3" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Điểm"
+                        android:text="Hoàn thành"
                         android:textSize="14sp"
                         android:textColor="#757575" />
 

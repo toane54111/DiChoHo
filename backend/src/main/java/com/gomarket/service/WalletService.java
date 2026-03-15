@@ -65,9 +65,11 @@ public class WalletService {
         wallet.setBalance(wallet.getBalance() - amount);
         walletRepository.save(wallet);
 
+        String desc = orderId != null
+                ? "Thanh toán đơn hàng #" + orderId
+                : "Thanh toán đơn hàng";
         transactionRepository.save(new WalletTransaction(
-                wallet.getId(), "PAYMENT", -amount,
-                "Thanh toán đơn hàng #" + orderId, orderId));
+                wallet.getId(), "PAYMENT", -amount, desc, orderId));
     }
 
     /** Hoàn tiền khi hủy đơn */
