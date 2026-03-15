@@ -1,5 +1,6 @@
 package com.example.gomarket;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -106,10 +106,14 @@ public class SearchActivity extends AppCompatActivity {
 
     private void performSearch(String query) {
         if (query == null || query.trim().isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập từ khóa tìm kiếm", Toast.LENGTH_SHORT).show();
             return;
         }
-        Toast.makeText(this, "Đang tìm kiếm: " + query, Toast.LENGTH_SHORT).show();
+        // Chuyển sang màn kết quả món ăn
+        Intent intent = new Intent(SearchActivity.this, DishResultActivity.class);
+        ArrayList<String> ingredients = new ArrayList<>();
+        ingredients.add(query.trim());
+        intent.putStringArrayListExtra("USER_INGREDIENTS", ingredients);
+        startActivity(intent);
     }
 
     // --- Adapters (reusable UI components) ---
