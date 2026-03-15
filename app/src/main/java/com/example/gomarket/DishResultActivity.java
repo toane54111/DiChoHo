@@ -8,7 +8,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,21 +31,23 @@ public class DishResultActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dish_result);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-        toolbar.setNavigationOnClickListener(v -> finish());
+        View btnBackWrap = findViewById(R.id.btnBackWrap);
+        if (btnBackWrap != null) btnBackWrap.setOnClickListener(v -> finish());
 
         rvDishResults = findViewById(R.id.rvDishResults);
         tvNoResult = findViewById(R.id.tvNoResult);
         progressBar = findViewById(R.id.progressBar);
+        TextView tvSubtitle = findViewById(R.id.tvSubtitle);
 
         // Get Input from Search Activity
         ArrayList<String> userIngredients = getIntent().getStringArrayListExtra("USER_INGREDIENTS");
         if (userIngredients == null) {
             userIngredients = new ArrayList<>();
+        }
+
+        final String searchQuery = userIngredients.isEmpty() ? "" : userIngredients.get(0);
+        if (tvSubtitle != null) {
+            tvSubtitle.setText(searchQuery.isEmpty() ? "Nhập từ khóa để xem gợi ý" : "Đang tải...");
         }
 
         rvDishResults.setLayoutManager(new LinearLayoutManager(this));
@@ -212,14 +213,22 @@ public class DishResultActivity extends AppCompatActivity {
 
         progressBar.setVisibility(View.GONE);
 
+        String q = userIngredients.isEmpty() ? "" : userIngredients.get(0);
+        TextView st = findViewById(R.id.tvSubtitle);
+        if (st != null) st.setText(matchedRecipes.size() + " món phù hợp với \"" + q + "\"");
+
         if (matchedRecipes.isEmpty()) {
             tvNoResult.setVisibility(View.VISIBLE);
             rvDishResults.setVisibility(View.GONE);
+            View bottomBar = findViewById(R.id.bottomBar);
+            if (bottomBar != null) bottomBar.setVisibility(View.GONE);
         } else {
             tvNoResult.setVisibility(View.GONE);
             rvDishResults.setVisibility(View.VISIBLE);
             adapter = new DishAdapter(this, matchedRecipes, userIngredients);
             rvDishResults.setAdapter(adapter);
+            TextView tvBottomSummary = findViewById(R.id.tvBottomSummary);
+            if (tvBottomSummary != null) tvBottomSummary.setText("Chọn món để nhờ shopper mua nguyên liệu");
         }
     }
 }

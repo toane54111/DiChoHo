@@ -2,192 +2,201 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardShopper"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="6dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="6dp"
+    app:cardElevation="4dp"
     app:strokeWidth="0dp"
     app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical">
+        android:orientation="vertical"
+        android:padding="14dp">
 
-        <!-- Avatar with Online Badge -->
         <FrameLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/ivAvatar"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/avatar_placeholder"
-                app:shapeAppearanceOverlay="@style/CircleImageView"/>
+            <!-- Badge Phù hợp nhất (ẩn mặc định, bật cho item 0) -->
+            <TextView
+                android:id="@+id/badgePhuHop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:background="@drawable/bg_trending_chip"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="Phù hợp nhất"
+                android:textColor="#008F4C"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible"/>
 
-            <!-- Online Status Indicator -->
-            <View
-                android:id="@+id/onlineIndicator"
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:layout_gravity="bottom|end"
-                android:background="@drawable/bg_online_indicator"/>
-
-        </FrameLayout>
-
-        <!-- Shopper Info -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginStart="14dp">
-
-            <!-- Name Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <TextView
-                    android:id="@+id/tvShopperName"
+                <FrameLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Nguyễn Minh"
-                    android:fontFamily="sans-serif"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:textColor="#212121"/>
+                    android:layout_height="wrap_content">
 
-                <!-- Verified Badge -->
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginStart="6dp"
-                    android:src="@drawable/ic_verified"
-                    app:tint="#00B14F"/>
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/ivAvatar"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/avatar_placeholder"
+                        app:shapeAppearanceOverlay="@style/CircleImageView"/>
 
-            </LinearLayout>
+                    <View
+                        android:id="@+id/onlineIndicator"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/bg_online_indicator"/>
+                </FrameLayout>
 
-            <!-- Rating Row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="4dp">
-
-                <!-- Star Rating -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/bg_rating_badge"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="2dp">
-
-                    <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:src="@drawable/ic_star"/>
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
 
                     <TextView
-                        android:id="@+id/tvRating"
+                        android:id="@+id/tvShopperName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="4.9"
+                        android:fontFamily="sans-serif"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#212121"
+                        tools:text="Nguyễn Thị Lan"/>
+
+                    <TextView
+                        android:id="@+id/tvLocation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="sans-serif"
+                        android:textSize="13sp"
+                        android:textColor="#5E5E5E"
+                        tools:text="Đang ở chợ Bến Thành • cách 1.2km"/>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="4dp">
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_star"
+                            android:contentDescription="@null"/>
+                        <TextView
+                            android:id="@+id/tvRating"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="2dp"
+                            android:fontFamily="sans-serif"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="#00B14F"
+                            tools:text="4.9"/>
+                        <TextView
+                            android:id="@+id/tvOrders"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:fontFamily="sans-serif"
+                            android:textSize="12sp"
+                            android:textColor="#5E5E5E"
+                            tools:text="(312 đơn)"/>
+                    </LinearLayout>
+
+                    <!-- Skill chips -->
+                    <LinearLayout
+                        android:id="@+id/containerSkills"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="6dp">
+
+                        <TextView
+                            android:id="@+id/skill1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_ingredient_have"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="4dp"
+                            android:textColor="#008F4C"
+                            android:textSize="11sp"
+                            android:layout_marginEnd="6dp"
+                            android:visibility="gone"
+                            tools:text="Chọn thịt tươi giỏi"
+                            tools:visibility="visible"/>
+
+                        <TextView
+                            android:id="@+id/skill2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_ingredient_have"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="4dp"
+                            android:textColor="#008F4C"
+                            android:textSize="11sp"
+                            android:visibility="gone"
+                            tools:text="Quen chợ Bến Thành"
+                            tools:visibility="visible"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvFastDelivery"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:fontFamily="sans-serif"
                         android:textSize="12sp"
-                        android:textColor="#00B14F"
-                        android:layout_marginStart="4dp"/>
-
-                </LinearLayout>
-
-                <!-- Orders Count -->
-                <TextView
-                    android:id="@+id/tvOrders"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="• 320 đơn"
-                    android:fontFamily="sans-serif"
-                    android:textSize="12sp"
-                    android:textColor="#5E5E5E"
-                    android:layout_marginStart="10dp"/>
-
-            </LinearLayout>
-
-            <!-- Vehicle & Distance Row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="6dp">
-
-                <!-- Vehicle Type Badge -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/bg_vehicle_badge"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="4dp">
-
-                    <ImageView
-                        android:id="@+id/ivVehicle"
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_vehicle"/>
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:text="Giao nhanh"
+                        tools:visibility="visible"/>
 
                     <TextView
-                        android:id="@+id/tvVehicle"
+                        android:id="@+id/tvShipFee"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Xe máy"
+                        android:layout_marginTop="2dp"
                         android:fontFamily="sans-serif"
                         android:textSize="12sp"
                         android:textColor="#5E5E5E"
-                        android:layout_marginStart="4dp"/>
-
+                        tools:text="Phí ship ~15.000₫ • 20-30 phút"/>
                 </LinearLayout>
 
-                <!-- Distance -->
                 <TextView
-                    android:id="@+id/tvDistance"
+                    android:id="@+id/btnSelect"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="• Cách bạn 1.2 km"
-                    android:fontFamily="sans-serif"
-                    android:textSize="12sp"
-                    android:textColor="#008F4C"
-                    android:layout_marginStart="10dp"/>
-
+                    android:text="Chọn ngay →"
+                    android:textColor="#00B14F"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:paddingVertical="8dp"
+                    android:paddingHorizontal="4dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"/>
             </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Select Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSelect"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="Chọn"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:backgroundTint="#00B14F"
-            app:cornerRadius="20dp"
-            app:elevation="2dp"/>
-
+        </FrameLayout>
     </LinearLayout>
-
 </com.google.android.material.card.MaterialCardView>
