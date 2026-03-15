@@ -104,9 +104,9 @@ public class ChatActivity extends AppCompatActivity {
         btnImagePicker.setOnClickListener(v -> openImagePicker());
 
         // Quick replies listeners
-        findViewById(R.id.quickReply1).setOnClickListener(v -> sendQuickReply("Còn hàng không?"));
-        findViewById(R.id.quickReply2).setOnClickListener(v -> sendQuickReply("Giá bao nhiêu?"));
-        findViewById(R.id.quickReply3).setOnClickListener(v -> sendQuickReply("Mua giúp mình"));
+        findViewById(R.id.quickReply1).setOnClickListener(v -> sendQuickReply("Được, lấy đi chị"));
+        findViewById(R.id.quickReply2).setOnClickListener(v -> sendQuickReply("Không cần món đó"));
+        findViewById(R.id.quickReply3).setOnClickListener(v -> sendQuickReply("Thay thế"));
         findViewById(R.id.quickReply4).setOnClickListener(v -> sendQuickReply("Cảm ơn bạn"));
     }
 
@@ -132,6 +132,30 @@ public class ChatActivity extends AppCompatActivity {
                     .into(ivShopperAvatar);
         } else {
             ivShopperAvatar.setImageResource(R.drawable.avatar_placeholder);
+        }
+
+        // Đơn hàng: hiển thị nguyên liệu cần mua từ intent
+        ArrayList<String> missing = getIntent().getStringArrayListExtra("MISSING_INGREDIENTS");
+        View orderSection = findViewById(R.id.orderSection);
+        if (missing != null && !missing.isEmpty()) {
+            if (orderSection != null) orderSection.setVisibility(View.VISIBLE);
+            TextView chip1 = findViewById(R.id.orderChip1);
+            TextView chip2 = findViewById(R.id.orderChip2);
+            TextView chipMore = findViewById(R.id.orderChipMore);
+            if (chip1 != null && missing.size() > 0) {
+                chip1.setVisibility(View.VISIBLE);
+                chip1.setText(missing.get(0) + " 1kg");
+            }
+            if (chip2 != null && missing.size() > 1) {
+                chip2.setVisibility(View.VISIBLE);
+                chip2.setText(missing.get(1) + " 1 bó");
+            }
+            if (chipMore != null && missing.size() > 2) {
+                chipMore.setVisibility(View.VISIBLE);
+                chipMore.setText("+" + (missing.size() - 2) + " món khác");
+            }
+        } else {
+            if (orderSection != null) orderSection.setVisibility(View.GONE);
         }
 
         messageList = new ArrayList<>();
