@@ -49,7 +49,8 @@ public class DishAdapter extends RecyclerView.Adapter<DishAdapter.DishViewHolder
         // Load image (using placeholder for now)
         Glide.with(context)
                 .load(recipe.getImageUrl())
-                .placeholder(R.drawable.ic_launcher_background)
+                .placeholder(R.drawable.dish_placeholder)
+                .error(R.drawable.dish_placeholder)
                 .into(holder.ivDishImage);
 
         // Format ingredients
