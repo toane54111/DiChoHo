@@ -5,11 +5,12 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -44,42 +45,53 @@ public class DishAdapter extends RecyclerView.Adapter<DishAdapter.DishViewHolder
         RecipeModel recipe = recipeList.get(position);
 
         holder.tvDishName.setText(recipe.getName());
-        holder.tvCookTime.setText("Thời gian nấu: " + recipe.getCookTime() + " phút");
+        holder.tvCookTime.setText(recipe.getCookTime() + " phút nấu");
 
-        // Load image (using placeholder for now)
+        // Tag: Phổ biến / Dễ làm (luân phiên theo vị trí)
+        holder.tvTag.setVisibility(View.VISIBLE);
+        holder.tvTag.setText(position % 2 == 0 ? "Phổ biến" : "Dễ làm");
+
         Glide.with(context)
                 .load(recipe.getImageUrl())
                 .placeholder(R.drawable.dish_placeholder)
                 .error(R.drawable.dish_placeholder)
+                .centerCrop()
                 .into(holder.ivDishImage);
 
-        // Format ingredients
-        String allIngredients = String.join(", ", recipe.getIngredients());
-        holder.tvIngredients.setText(allIngredients);
-
-        // Calculate missing ingredients
+        // Tính nguyên liệu đã có / thiếu
         List<String> missing = new ArrayList<>();
         for (String reqIngredient : recipe.getIngredients()) {
             boolean found = false;
             for (String userIng : userIngredients) {
-                if (reqIngredient.toLowerCase().contains(userIng.toLowerCase()) || 
-                    userIng.toLowerCase().contains(reqIngredient.toLowerCase())) {
+                if (reqIngredient.toLowerCase().contains(userIng.toLowerCase()) ||
+                        userIng.toLowerCase().contains(reqIngredient.toLowerCase())) {
                     found = true;
                     break;
                 }
             }
-            if (!found) {
-                missing.add(reqIngredient);
-            }
+            if (!found) missing.add(reqIngredient);
         }
 
+        int total = recipe.getIngredients().size();
+        int haveCount = total - missing.size();
+
         if (missing.isEmpty()) {
-            holder.tvMissingIngredients.setText("Không thiếu gì cả!");
-            holder.tvMissingIngredients.setTextColor(context.getResources().getColor(android.R.color.holo_green_dark));
+            holder.tvIngredientStatus.setText("Đã có đủ " + total + "/" + total + " nguyên liệu");
+            holder.tvIngredientStatus.setTextColor(ContextCompat.getColor(context, R.color.primary_dark));
+            holder.icIngredientStatus.setVisibility(View.VISIBLE);
+            holder.tvCookNow.setVisibility(View.VISIBLE);
+            holder.progressIngredients.setVisibility(View.GONE);
+            holder.tvMissingHint.setVisibility(View.GONE);
             holder.btnAskShopper.setVisibility(View.GONE);
         } else {
-            holder.tvMissingIngredients.setText(String.join(", ", missing));
-            holder.tvMissingIngredients.setTextColor(context.getResources().getColor(android.R.color.holo_red_dark));
+            holder.tvIngredientStatus.setText("Có " + haveCount + "/" + total);
+            holder.tvIngredientStatus.setTextColor(ContextCompat.getColor(context, R.color.primary_dark));
+            holder.icIngredientStatus.setVisibility(View.VISIBLE);
+            holder.tvCookNow.setVisibility(View.GONE);
+            holder.progressIngredients.setVisibility(View.VISIBLE);
+            holder.progressIngredients.setProgress(total > 0 ? (haveCount * 100 / total) : 0);
+            holder.tvMissingHint.setVisibility(View.VISIBLE);
+            holder.tvMissingHint.setText("+ Cần mua " + missing.size());
             holder.btnAskShopper.setVisibility(View.VISIBLE);
         }
 
@@ -97,17 +109,22 @@ public class DishAdapter extends RecyclerView.Adapter<DishAdapter.DishViewHolder
     }
 
     public static class DishViewHolder extends RecyclerView.ViewHolder {
-        ImageView ivDishImage;
-        TextView tvDishName, tvIngredients, tvMissingIngredients, tvCookTime;
-        Button btnAskShopper;
+        ImageView ivDishImage, icIngredientStatus;
+        TextView tvDishName, tvCookTime, tvTag, tvIngredientStatus, tvCookNow, tvMissingHint;
+        ProgressBar progressIngredients;
+        View btnAskShopper;
 
         public DishViewHolder(@NonNull View itemView) {
             super(itemView);
             ivDishImage = itemView.findViewById(R.id.ivDishImage);
             tvDishName = itemView.findViewById(R.id.tvDishName);
-            tvIngredients = itemView.findViewById(R.id.tvIngredients);
-            tvMissingIngredients = itemView.findViewById(R.id.tvMissingIngredients);
             tvCookTime = itemView.findViewById(R.id.tvCookTime);
+            tvTag = itemView.findViewById(R.id.tvTag);
+            icIngredientStatus = itemView.findViewById(R.id.icIngredientStatus);
+            tvIngredientStatus = itemView.findViewById(R.id.tvIngredientStatus);
+            tvCookNow = itemView.findViewById(R.id.tvCookNow);
+            progressIngredients = itemView.findViewById(R.id.progressIngredients);
+            tvMissingHint = itemView.findViewById(R.id.tvMissingHint);
             btnAskShopper = itemView.findViewById(R.id.btnAskShopper);
         }
     }

@@ -1,106 +1,161 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginVertical="6dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="6dp"
+    app:cardElevation="4dp"
     app:cardBackgroundColor="@android:color/white"
     app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:padding="12dp">
 
-        <ImageView
-            android:id="@+id/ivDishImage"
-            android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/dish_placeholder"
-            android:contentDescription="@null" />
+        <!-- Ảnh món - bo góc trái -->
+        <FrameLayout
+            android:layout_width="88dp"
+            android:layout_height="88dp">
 
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivDishImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/dish_placeholder"
+                app:shapeAppearanceOverlay="@style/RoundedCorner12"
+                android:contentDescription="@null"/>
+        </FrameLayout>
+
+        <!-- Nội dung bên phải -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@android:color/white">
+            android:layout_marginStart="12dp">
 
             <TextView
                 android:id="@+id/tvDishName"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Gà xào cà chua"
                 android:fontFamily="sans-serif"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nguyên liệu:"
-                android:fontFamily="sans-serif"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_secondary"
-                android:layout_marginTop="8dp"/>
-
-            <TextView
-                android:id="@+id/tvIngredients"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif"
-                android:textSize="13sp"
                 android:textColor="@color/text_primary"
-                android:text="Gà, cà chua, hành" />
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Bún Bò Huế"/>
+
+            <!-- Dòng: giờ nấu + tag (Phổ biến / Dễ làm) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_clock"
+                    android:contentDescription="@null"/>
+                <TextView
+                    android:id="@+id/tvCookTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:fontFamily="sans-serif"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    tools:text="35 phút nấu"/>
+
+                <TextView
+                    android:id="@+id/tvTag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:fontFamily="sans-serif"
+                    android:textSize="11sp"
+                    android:textColor="#00B14F"
+                    tools:text="Phổ biến"/>
+            </LinearLayout>
+
+            <!-- Trạng thái nguyên liệu: Đã có đủ 5/5 hoặc Có 3/5 + Cần mua 2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="6dp">
+
+                <ImageView
+                    android:id="@+id/icIngredientStatus"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_verified"
+                    app:tint="#00B14F"
+                    android:contentDescription="@null"/>
+                <TextView
+                    android:id="@+id/tvIngredientStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:fontFamily="sans-serif"
+                    android:textSize="12sp"
+                    android:textColor="#008F4C"
+                    tools:text="Đã có đủ 5/5 nguyên liệu"/>
+                <TextView
+                    android:id="@+id/tvCookNow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:fontFamily="sans-serif"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#00B14F"
+                    android:visibility="gone"
+                    tools:text="Nấu ngay!"/>
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progressIngredients"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_marginTop="4dp"
+                android:progressTint="#00B14F"
+                android:progressBackgroundTint="#E0E0E0"
+                android:max="100"
+                android:progress="60"
+                android:visibility="gone"/>
 
             <TextView
+                android:id="@+id/tvMissingHint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Bạn còn thiếu:"
+                android:layout_marginTop="2dp"
                 android:fontFamily="sans-serif"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#C62828"
-                android:layout_marginTop="8dp"/>
-
-            <TextView
-                android:id="@+id/tvMissingIngredients"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif"
-                android:textSize="13sp"
-                android:textColor="#E57373"
-                android:text="Hành" />
-
-            <TextView
-                android:id="@+id/tvCookTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif"
-                android:textSize="13sp"
-                android:textColor="@color/text_secondary"
-                android:text="Thời gian nấu: 25 phút"
-                android:layout_marginTop="8dp"/>
+                android:textSize="11sp"
+                android:textColor="#E65100"
+                android:visibility="gone"
+                tools:text="+ Cần mua 2"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAskShopper"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingVertical="12dp"
-                android:layout_marginTop="14dp"
+                android:layout_height="36dp"
+                android:layout_marginTop="8dp"
                 android:text="NHỜ SHOPPER MUA"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/white"
+                android:textColor="#FFFFFF"
                 app:backgroundTint="@color/primary"
-                app:cornerRadius="12dp"
-                app:elevation="2dp" />
-
+                app:cornerRadius="10dp"/>
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
