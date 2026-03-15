@@ -120,7 +120,6 @@ public class LoginActivity extends AppCompatActivity {
                             user.getToken(), user.getId(),
                             user.getFullName(), user.getPhone(), user.getRole()
                     );
-
                     Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                     finish();
@@ -133,9 +132,10 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(Call<User> call, Throwable t) {
                 btnLogin.setEnabled(true);
                 btnLogin.setText("Đăng nhập");
-                // Fallback offline khi chưa có server
+                android.util.Log.e("LoginActivity", "API login failed: " + t.getMessage(), t);
+                // Fallback offline khi không kết nối được server
                 sessionManager.saveLogin("demo_token", 1, "Người dùng", phone, "BUYER");
-                Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, "Đăng nhập offline (không kết nối server)", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                 finish();
             }
