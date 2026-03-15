@@ -69,7 +69,8 @@ public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperV
 
         Glide.with(context)
                 .load(shopper.getAvatarUrl())
-                .placeholder(R.drawable.ic_launcher_background)
+                .placeholder(R.drawable.avatar_placeholder)
+                .error(R.drawable.avatar_placeholder)
                 .circleCrop()
                 .into(holder.ivAvatar);
 
