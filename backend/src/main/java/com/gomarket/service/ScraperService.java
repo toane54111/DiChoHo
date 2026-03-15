@@ -11,6 +11,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -26,6 +29,9 @@ public class ScraperService {
     private final ProductRepository productRepository;
     private final ShopRepository shopRepository;
     private final OrderRepository orderRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public ScraperService(ProductRepository productRepository, ShopRepository shopRepository,
                           OrderRepository orderRepository) {
@@ -53,7 +59,7 @@ public class ScraperService {
             if (cdnCount > 0) {
                 log.info("Phát hiện {} sản phẩm dùng ảnh CDN cũ, re-import với ảnh local...", cdnCount);
                 needReimport = true;
-            } else if (existingCount >= 200) {
+            } else if (existingCount >= 1000) {
                 log.info("Database đã có {} sản phẩm (ảnh local), bỏ qua import.", existingCount);
                 return;
             }
@@ -66,6 +72,12 @@ public class ScraperService {
             orderRepository.deleteAll();   // Xóa orders trước (tham chiếu products)
             productRepository.deleteAll(); // Rồi products (tham chiếu shops)
             shopRepository.deleteAll();    // Cuối cùng shops
+
+            // Reset sequences để ID bắt đầu lại từ 1
+            entityManager.createNativeQuery("ALTER SEQUENCE products_id_seq RESTART WITH 1").executeUpdate();
+            entityManager.createNativeQuery("ALTER SEQUENCE shops_id_seq RESTART WITH 1").executeUpdate();
+            entityManager.createNativeQuery("ALTER SEQUENCE orders_id_seq RESTART WITH 1").executeUpdate();
+            log.info("Đã reset sequences về 1");
         }
 
         // Tạo 3 shop Bách Hóa Xanh ở các quận khác nhau
@@ -93,6 +105,7 @@ public class ScraperService {
 
         // Danh sách file CSV và category tương ứng
         String[][] csvFiles = {
+                // === Thực phẩm tươi sống (9 categories cũ) ===
                 {"data/Thịt heo.csv", "Thịt heo"},
                 {"data/Thịt bò.csv", "Thịt bò"},
                 {"data/Thịt gà vịt.csv", "Thịt gà & vịt"},
@@ -102,6 +115,48 @@ public class ScraperService {
                 {"data/Nấm.csv", "Nấm"},
                 {"data/Trái cây.csv", "Trái cây"},
                 {"data/Trứng gà vịt cút.csv", "Trứng"},
+
+                // === Dầu ăn, nước chấm, gia vị (12 sub-categories) ===
+                {"data/botnghe_toi_hoi_que.csv", "Bột nghệ, tỏi, hồi, quế"},
+                {"data/dau_an__1_.csv", "Dầu ăn"},
+                {"data/dauhao_giam_bo.csv", "Dầu hào, giấm, bơ"},
+                {"data/duong__1_.csv", "Đường"},
+                {"data/giavinemsan.csv", "Gia vị nêm sẵn"},
+                {"data/hat_nem__1_.csv", "Hạt nêm"},
+                {"data/muoi.csv", "Muối"},
+                {"data/nuoc_mam__1_.csv", "Nước mắm"},
+                {"data/nuoc_tuong__1_.csv", "Nước tương"},
+                {"data/nuoccham_mam.csv", "Nước chấm, mắm"},
+                {"data/tieu_sate_otbot.csv", "Tiêu, sa tế, ớt bột"},
+                {"data/tuong_ot_den_mayonaise.csv", "Tương ớt, đen, mayonnaise"},
+
+                // === Gạo, bột, đồ khô (15 sub-categories) ===
+                {"data/Heo_bo_pate_hop.csv", "Heo, bò, pate hộp"},
+                {"data/banhphong_banhda.csv", "Bánh phồng, bánh đa"},
+                {"data/banhtrang.csv", "Bánh tráng"},
+                {"data/bot_cac_loai.csv", "Bột các loại"},
+                {"data/ca_hop.csv", "Cá hộp"},
+                {"data/camam_duamam.csv", "Cà mắm, dưa mắm"},
+                {"data/chao.csv", "Chao"},
+                {"data/dau_nam_dokho.csv", "Đậu, nấm đồ khô"},
+                {"data/do_chay_cac_loai.csv", "Đồ chay các loại"},
+                {"data/gao_nep.csv", "Gạo, nếp"},
+                {"data/mi_hutieu_chay.csv", "Mì, hủ tiếu chay"},
+                {"data/ngucoc_yenmach.csv", "Ngũ cốc, yến mạch"},
+                {"data/nuoc_cot_dua_lon.csv", "Nước cốt dừa lon"},
+                {"data/rong_bien.csv", "Rong biển"},
+                {"data/xuc_xich.csv", "Xúc xích"},
+
+                // === Mì, miến, cháo, phở (9 sub-categories) ===
+                {"data/banhgao_hanquoc.csv", "Bánh gạo Hàn Quốc"},
+                {"data/bun_cac_loai.csv", "Bún các loại"},
+                {"data/chaogoi_chaotuoi.csv", "Cháo gói, cháo tươi"},
+                {"data/hutieu_mien.csv", "Hủ tiếu, miến"},
+                {"data/mi_an_lien.csv", "Mì ăn liền"},
+                {"data/mi_y_mi_trung.csv", "Mì Ý, mì trứng"},
+                {"data/mien_pho_hutieu_kho.csv", "Miến, phở, hủ tiếu khô"},
+                {"data/nui_cac_loai.csv", "Nui các loại"},
+                {"data/pho_bun_an_lien.csv", "Phở, bún ăn liền"},
         };
 
         int totalImported = 0;

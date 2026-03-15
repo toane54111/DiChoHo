@@ -32,6 +32,12 @@ public class AuthService {
         return UserResponse.fromUser(user, token);
     }
 
+    public UserResponse getProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+        return UserResponse.fromUser(user, null);
+    }
+
     public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByPhone(request.getPhone())) {
             throw new RuntimeException("Số điện thoại đã được đăng ký");

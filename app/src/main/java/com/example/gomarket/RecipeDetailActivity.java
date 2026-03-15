@@ -215,33 +215,47 @@ public class RecipeDetailActivity extends AppCompatActivity {
             // Xóa giỏ hàng cũ trước khi thêm nguyên liệu mới từ công thức
             CartActivity.clearCart();
 
-            for (Recipe.Ingredient ingredient : recipe.getIngredients()) {
-                double price = 0;
-                int productId;
-                String imageUrl = "";
-                if (ingredient.getMatchedProduct() != null) {
-                    price = ingredient.getMatchedProduct().getPrice();
-                    productId = ingredient.getMatchedProduct().getId();
-                    imageUrl = ingredient.getMatchedProduct().getImageUrl() != null
-                            ? ingredient.getMatchedProduct().getImageUrl() : "";
-                } else {
-                    price = recipe.getTotalCost() / recipe.getIngredients().size();
-                    // Dùng hash ổn định cho ingredient không có matched product
-                    productId = Math.abs(ingredient.getName().hashCode()) % 100000;
-                }
+            int addedCount = 0;
+            int skippedCount = 0;
 
-                OrderItem item = new OrderItem(
-                        productId,
-                        ingredient.getName(),
-                        1,
-                        price,
-                        imageUrl
-                );
-                CartActivity.addToCart(item);
+            for (Recipe.Ingredient ingredient : recipe.getIngredients()) {
+                // Chỉ thêm nguyên liệu có sản phẩm tương ứng trong DB (còn hàng)
+                if (ingredient.getMatchedProduct() != null) {
+                    double price = ingredient.getMatchedProduct().getPrice();
+                    int productId = ingredient.getMatchedProduct().getId();
+                    String imageUrl = ingredient.getMatchedProduct().getImageUrl() != null
+                            ? ingredient.getMatchedProduct().getImageUrl() : "";
+
+                    OrderItem item = new OrderItem(
+                            productId,
+                            ingredient.getName(),
+                            1,
+                            price,
+                            imageUrl
+                    );
+                    CartActivity.addToCart(item);
+                    addedCount++;
+                } else {
+                    // Nguyên liệu hết hàng → bỏ qua, không thêm vào giỏ
+                    skippedCount++;
+                }
             }
-            Toast.makeText(this,
-                    "Đã thêm " + recipe.getIngredients().size() + " nguyên liệu vào giỏ!",
-                    Toast.LENGTH_SHORT).show();
+
+            if (addedCount > 0 && skippedCount > 0) {
+                Toast.makeText(this,
+                        "Đã thêm " + addedCount + " nguyên liệu vào giỏ! ("
+                                + skippedCount + " nguyên liệu hết hàng)",
+                        Toast.LENGTH_LONG).show();
+            } else if (addedCount > 0) {
+                Toast.makeText(this,
+                        "Đã thêm " + addedCount + " nguyên liệu vào giỏ!",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this,
+                        "Không có nguyên liệu nào còn hàng để thêm vào giỏ!",
+                        Toast.LENGTH_SHORT).show();
+                return; // Không mở CartActivity nếu không có gì để thêm
+            }
         }
     }
 }

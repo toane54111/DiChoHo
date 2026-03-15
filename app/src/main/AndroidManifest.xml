@@ -52,6 +52,7 @@
         <activity android:name=".WalletActivity" android:exported="false" />
         <activity android:name=".CategoryProductsActivity" android:exported="false" />
         <activity android:name=".AllProductsActivity" android:exported="false" />
+        <activity android:name=".ProductSearchResultActivity" android:exported="false" />
         <!-- MainActivity removed - LoginActivity is the launcher -->
         <activity android:name=".ListViewTestActivity" android:exported="false" />
 

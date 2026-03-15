@@ -416,8 +416,8 @@ public class AIChefActivity extends AppCompatActivity {
             tvPrice.setTextSize(14);
             tvPrice.setTypeface(null, Typeface.BOLD);
         } else {
-            tvPrice.setText("Het hang");
-            tvPrice.setTextColor(0xFFBDBDBD);
+            tvPrice.setText("Hết hàng");
+            tvPrice.setTextColor(0xFFE53935);
             tvPrice.setTextSize(12);
             tvPrice.setTypeface(null, Typeface.ITALIC);
         }

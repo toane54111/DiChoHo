@@ -2,13 +2,16 @@ package com.example.gomarket;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.gomarket.model.Order;
+import com.example.gomarket.model.User;
 import com.example.gomarket.model.Wallet;
 import com.example.gomarket.network.ApiClient;
 import com.example.gomarket.network.ApiService;
@@ -25,7 +28,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     private LinearLayout btnPersonalInfo, btnAddress, btnWallet, btnOrderHistory, btnSettings, btnHelp;
     private MaterialButton btnLogout;
-    private TextView tvName, tvPhone;
+    private TextView tvName, tvPhone, tvEmail, tvRole, tvRoleIcon;
     private TextView tvStatOrders, tvStatBalance, tvStatCompleted;
     private LinearLayout statWallet;
     private SessionManager sessionManager;
@@ -47,12 +50,16 @@ public class ProfileActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        loadProfileFromServer();
         loadStats();
     }
 
     private void initViews() {
         tvName = findViewById(R.id.tvName);
         tvPhone = findViewById(R.id.tvPhone);
+        tvEmail = findViewById(R.id.tvEmail);
+        tvRole = findViewById(R.id.tvRole);
+        tvRoleIcon = findViewById(R.id.tvRoleIcon);
         tvStatOrders = findViewById(R.id.tvStatOrders);
         tvStatBalance = findViewById(R.id.tvStatBalance);
         tvStatCompleted = findViewById(R.id.tvStatCompleted);
@@ -76,6 +83,55 @@ public class ProfileActivity extends AppCompatActivity {
         if (!phone.isEmpty()) {
             tvPhone.setText(phone);
         }
+
+        // Hiển thị email
+        String email = sessionManager.getUserEmail();
+        if (email != null && !email.isEmpty()) {
+            tvEmail.setText(email);
+            tvEmail.setVisibility(View.VISIBLE);
+        } else {
+            tvEmail.setVisibility(View.GONE);
+        }
+
+        // Hiển thị badge vai trò
+        String role = sessionManager.getUserRole();
+        if ("SHOPPER".equals(role)) {
+            tvRoleIcon.setText("🛍️");
+            tvRole.setText("Người đi chợ");
+        } else {
+            tvRoleIcon.setText("🛒");
+            tvRole.setText("Người mua");
+        }
+    }
+
+    private void loadProfileFromServer() {
+        long userId = sessionManager.getUserId();
+        if (userId <= 0) return;
+
+        apiService.getProfile(userId).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    User user = response.body();
+                    // Cập nhật session với dữ liệu mới nhất từ server
+                    sessionManager.saveLogin(
+                            sessionManager.getToken(),
+                            user.getId(),
+                            user.getFullName(),
+                            user.getPhone(),
+                            user.getEmail(),
+                            user.getRole()
+                    );
+                    // Cập nhật UI
+                    setupUserInfo();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                // Giữ dữ liệu local nếu không kết nối được server
+            }
+        });
     }
 
     private void loadStats() {
@@ -133,8 +189,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        btnPersonalInfo.setOnClickListener(v ->
-                Toast.makeText(this, "Thông tin cá nhân", Toast.LENGTH_SHORT).show());
+        btnPersonalInfo.setOnClickListener(v -> showPersonalInfoDialog());
 
         btnAddress.setOnClickListener(v ->
                 Toast.makeText(this, "Địa chỉ của tôi", Toast.LENGTH_SHORT).show());
@@ -161,5 +216,26 @@ public class ProfileActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+    }
+
+    private void showPersonalInfoDialog() {
+        String name = sessionManager.getUserName();
+        String phone = sessionManager.getUserPhone();
+        String email = sessionManager.getUserEmail();
+        String role = sessionManager.getUserRole();
+
+        String roleName = "SHOPPER".equals(role) ? "Người đi chợ" : "Người mua";
+
+        StringBuilder info = new StringBuilder();
+        info.append("👤  Họ tên: ").append(name.isEmpty() ? "Chưa cập nhật" : name).append("\n\n");
+        info.append("📱  Số điện thoại: ").append(phone.isEmpty() ? "Chưa cập nhật" : phone).append("\n\n");
+        info.append("📧  Email: ").append(email == null || email.isEmpty() ? "Chưa cập nhật" : email).append("\n\n");
+        info.append("🏷️  Vai trò: ").append(roleName);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Thông tin cá nhân")
+                .setMessage(info.toString())
+                .setPositiveButton("Đóng", null)
+                .show();
     }
 }

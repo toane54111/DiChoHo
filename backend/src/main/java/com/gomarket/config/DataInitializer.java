@@ -4,6 +4,7 @@ import com.gomarket.model.Product;
 import com.gomarket.model.User;
 import com.gomarket.repository.ProductRepository;
 import com.gomarket.repository.UserRepository;
+import com.gomarket.service.AutocompleteService;
 import com.gomarket.service.EmbeddingService;
 import com.gomarket.service.ScraperService;
 import org.slf4j.Logger;
@@ -35,7 +36,8 @@ public class DataInitializer {
     public CommandLineRunner initData(ScraperService scraperService,
                                        UserRepository userRepository,
                                        ProductRepository productRepository,
-                                       EmbeddingService embeddingService) {
+                                       EmbeddingService embeddingService,
+                                       AutocompleteService autocompleteService) {
         return args -> {
             log.info("=== KHỞI TẠO DỮ LIỆU MẪU ===");
 
@@ -47,6 +49,9 @@ public class DataInitializer {
 
             // 3. Nhúng embedding cho tất cả sản phẩm chưa có vector
             seedEmbeddings(productRepository, embeddingService);
+
+            // 4. Load autocomplete cache vào RAM
+            autocompleteService.refreshCache();
 
             log.info("=== HOÀN TẤT KHỞI TẠO DỮ LIỆU ===");
         };

@@ -184,12 +184,23 @@ public class CheckoutActivity extends AppCompatActivity {
             public void onResponse(Call<Order> call, Response<Order> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Order order = response.body();
-                    CartActivity.clearCart();
                     Toast.makeText(CheckoutActivity.this,
-                            "Đặt hàng thành công! Đơn #" + order.getId(), Toast.LENGTH_LONG).show();
+                            "Đặt hàng thành công! Đơn #" + order.getId() + "\nChọn shopper đi chợ cho bạn!", Toast.LENGTH_LONG).show();
 
-                    Intent intent = new Intent(CheckoutActivity.this, OrderTrackingActivity.class);
-                    intent.putExtra("order_id", order.getId());
+                    // Chuyển sang SelectShopperActivity để chọn shopper đi chợ hộ
+                    Intent intent = new Intent(CheckoutActivity.this, SelectShopperActivity.class);
+                    intent.putExtra("ORDER_ID", order.getId());
+
+                    // Truyền danh sách sản phẩm đã đặt
+                    ArrayList<String> itemNames = new ArrayList<>();
+                    for (OrderItem item : cartItems) {
+                        itemNames.add(item.getProductName());
+                    }
+                    intent.putStringArrayListExtra("ORDER_ITEMS", itemNames);
+
+                    // Xóa giỏ hàng sau khi đã đặt thành công
+                    CartActivity.clearCart();
+
                     startActivity(intent);
                     finish();
                 } else {

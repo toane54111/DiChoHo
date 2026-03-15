@@ -49,6 +49,10 @@ public class ChatActivity extends AppCompatActivity {
     private String shopperName;
     private String shopperAvatarUrl;
 
+    // Order data
+    private int orderId = -1;
+    private ArrayList<String> orderItemsList;
+
     private static final int REQUEST_IMAGE_PERMISSION = 100;
 
     // Activity result launcher for image picker
@@ -114,6 +118,8 @@ public class ChatActivity extends AppCompatActivity {
         shopperId = getIntent().getStringExtra("SHOPPER_ID");
         shopperName = getIntent().getStringExtra("SHOPPER_NAME");
         shopperAvatarUrl = getIntent().getStringExtra("SHOPPER_AVATAR");
+        orderId = getIntent().getIntExtra("ORDER_ID", -1);
+        orderItemsList = getIntent().getStringArrayListExtra("ORDER_ITEMS");
 
         if (shopperName != null) {
             tvShopperNameTitle.setText(shopperName);
@@ -134,25 +140,30 @@ public class ChatActivity extends AppCompatActivity {
             ivShopperAvatar.setImageResource(R.drawable.avatar_placeholder);
         }
 
-        // Đơn hàng: hiển thị nguyên liệu cần mua từ intent
-        ArrayList<String> missing = getIntent().getStringArrayListExtra("MISSING_INGREDIENTS");
+        // Hiển thị thông tin đơn hàng trong order section
+        // Ưu tiên ORDER_ITEMS (flow đặt hàng), fallback MISSING_INGREDIENTS (flow recipe cũ)
+        ArrayList<String> items = orderItemsList;
+        if (items == null || items.isEmpty()) {
+            items = getIntent().getStringArrayListExtra("MISSING_INGREDIENTS");
+        }
+
         View orderSection = findViewById(R.id.orderSection);
-        if (missing != null && !missing.isEmpty()) {
+        if (items != null && !items.isEmpty()) {
             if (orderSection != null) orderSection.setVisibility(View.VISIBLE);
             TextView chip1 = findViewById(R.id.orderChip1);
             TextView chip2 = findViewById(R.id.orderChip2);
             TextView chipMore = findViewById(R.id.orderChipMore);
-            if (chip1 != null && missing.size() > 0) {
+            if (chip1 != null && items.size() > 0) {
                 chip1.setVisibility(View.VISIBLE);
-                chip1.setText(missing.get(0) + " 1kg");
+                chip1.setText(items.get(0));
             }
-            if (chip2 != null && missing.size() > 1) {
+            if (chip2 != null && items.size() > 1) {
                 chip2.setVisibility(View.VISIBLE);
-                chip2.setText(missing.get(1) + " 1 bó");
+                chip2.setText(items.get(1));
             }
-            if (chipMore != null && missing.size() > 2) {
+            if (chipMore != null && items.size() > 2) {
                 chipMore.setVisibility(View.VISIBLE);
-                chipMore.setText("+" + (missing.size() - 2) + " món khác");
+                chipMore.setText("+" + (items.size() - 2) + " món khác");
             }
         } else {
             if (orderSection != null) orderSection.setVisibility(View.GONE);
@@ -171,7 +182,25 @@ public class ChatActivity extends AppCompatActivity {
 
     private void loadInitialMessages() {
         long now = System.currentTimeMillis();
-        messageList.add(new MessageModel("m1", "chat1", shopperId, "Chào bạn! Mình có thể giúp gì cho bạn?", now - 60000));
+
+        if (orderId > 0 && orderItemsList != null && !orderItemsList.isEmpty()) {
+            // Flow đặt hàng: shopper nhận đơn và xác nhận
+            String itemsSummary = orderItemsList.size() <= 3
+                    ? String.join(", ", orderItemsList)
+                    : orderItemsList.get(0) + ", " + orderItemsList.get(1)
+                        + " và " + (orderItemsList.size() - 2) + " món khác";
+
+            messageList.add(new MessageModel("m1", "chat1", shopperId,
+                    "Chào bạn! Mình đã nhận đơn #" + orderId + " của bạn rồi nha!", now - 60000));
+            messageList.add(new MessageModel("m2", "chat1", shopperId,
+                    "Đơn gồm: " + itemsSummary + ". Mình đang đi chợ lấy đồ cho bạn ngay!", now - 55000));
+            messageList.add(new MessageModel("m3", "chat1", shopperId,
+                    "Nếu có món nào hết hàng mình sẽ báo bạn để thay thế nhé!", now - 50000));
+        } else {
+            messageList.add(new MessageModel("m1", "chat1", shopperId,
+                    "Chào bạn! Mình có thể giúp gì cho bạn?", now - 60000));
+        }
+
         adapter.notifyDataSetChanged();
         rvMessages.smoothScrollToPosition(messageList.size() - 1);
     }
@@ -229,13 +258,23 @@ public class ChatActivity extends AppCompatActivity {
     private void simulateShopperReply(String userMessage) {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             long now = System.currentTimeMillis();
-            String reply = "Dạ vâng, mình đã ghi nhận và đang đi lấy đồ ạ.";
-            if (userMessage.toLowerCase().contains("cảm ơn")) {
-                reply = "Không có chi bạn nhé!";
-            } else if (userMessage.toLowerCase().contains("thiếu") || userMessage.toLowerCase().contains("còn hàng")) {
-                reply = "Bạn chờ mình báo lại xem ở siêu thị còn hàng không nha.";
-            } else if (userMessage.toLowerCase().contains("giá")) {
+            String reply;
+            String lower = userMessage.toLowerCase();
+
+            if (lower.contains("cảm ơn") || lower.contains("cam on")) {
+                reply = "Không có chi bạn nhé! Mình giao sớm cho bạn!";
+            } else if (lower.contains("thiếu") || lower.contains("còn hàng") || lower.contains("het hang")) {
+                reply = "Bạn chờ mình kiểm tra ở siêu thị xem còn hàng không nha.";
+            } else if (lower.contains("giá") || lower.contains("gia")) {
                 reply = "Mình sẽ kiểm tra giá và báo lại cho bạn ngay.";
+            } else if (lower.contains("thay") || lower.contains("đổi")) {
+                reply = "OK bạn, mình sẽ tìm món thay thế tương tự nhé!";
+            } else if (lower.contains("không cần") || lower.contains("khong can")) {
+                reply = "Dạ, mình bỏ món đó ra khỏi danh sách nhé!";
+            } else if (orderId > 0) {
+                reply = "Dạ mình ghi nhận rồi. Đang mua đồ cho đơn #" + orderId + " của bạn nha!";
+            } else {
+                reply = "Dạ vâng, mình đã ghi nhận và đang đi lấy đồ ạ.";
             }
 
             messageList.add(new MessageModel("m" + now, "chat1", shopperId, reply, now));

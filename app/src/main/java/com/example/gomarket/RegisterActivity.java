@@ -113,11 +113,12 @@ public class RegisterActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     User user = response.body();
 
-                    // Lưu session và chuyển thẳng vào Home
+                    // Lưu session (bao gồm email) và chuyển thẳng vào Home
                     SessionManager session = new SessionManager(RegisterActivity.this);
                     session.saveLogin(
                             user.getToken(), user.getId(),
-                            user.getFullName(), user.getPhone(), user.getRole()
+                            user.getFullName(), user.getPhone(),
+                            user.getEmail(), user.getRole()
                     );
 
                     Toast.makeText(RegisterActivity.this,

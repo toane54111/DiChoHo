@@ -18,6 +18,7 @@ import com.example.gomarket.ChatActivity;
 import com.example.gomarket.R;
 import com.example.gomarket.model.ShopperModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperViewHolder> {
@@ -43,14 +44,17 @@ public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperV
 
     private Context context;
     private List<ShopperModel> shopperList;
+    private int orderId;
     private String recipeId;
-    private List<String> missingIngredients;
+    private List<String> orderItems;
 
-    public ShopperAdapter(Context context, List<ShopperModel> shopperList, String recipeId, List<String> missingIngredients) {
+    public ShopperAdapter(Context context, List<ShopperModel> shopperList,
+                          int orderId, String recipeId, List<String> orderItems) {
         this.context = context;
         this.shopperList = shopperList;
+        this.orderId = orderId;
         this.recipeId = recipeId;
-        this.missingIngredients = missingIngredients;
+        this.orderItems = orderItems;
     }
 
     @NonNull
@@ -110,7 +114,10 @@ public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperV
             intent.putExtra("SHOPPER_ID", shopper.getShopperId());
             intent.putExtra("SHOPPER_NAME", shopper.getName());
             intent.putExtra("SHOPPER_AVATAR", shopper.getAvatarUrl());
-            if (missingIngredients != null) intent.putStringArrayListExtra("MISSING_INGREDIENTS", new java.util.ArrayList<>(missingIngredients));
+            intent.putExtra("ORDER_ID", orderId);
+            if (orderItems != null) {
+                intent.putStringArrayListExtra("ORDER_ITEMS", new ArrayList<>(orderItems));
+            }
             context.startActivity(intent);
         });
     }

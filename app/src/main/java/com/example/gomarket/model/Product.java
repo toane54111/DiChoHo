@@ -36,6 +36,12 @@ public class Product {
     @SerializedName("similarity")
     private double similarity;
 
+    @SerializedName("score")
+    private double score;
+
+    @SerializedName("matchType")
+    private String matchType;
+
     public Product() {}
 
     public int getId() { return id; }
@@ -70,6 +76,12 @@ public class Product {
 
     public double getSimilarity() { return similarity; }
     public void setSimilarity(double similarity) { this.similarity = similarity; }
+
+    public double getScore() { return score; }
+    public void setScore(double score) { this.score = score; }
+
+    public String getMatchType() { return matchType; }
+    public void setMatchType(String matchType) { this.matchType = matchType; }
 
     public String getFormattedPrice() {
         return String.format("%,.0fđ", price);

@@ -72,7 +72,10 @@ public class CategoryProductsActivity extends AppCompatActivity {
                 Product apiProduct = apiProducts.get(position);
                 intent.putExtra("product_id", apiProduct.getId());
                 intent.putExtra("price", apiProduct.getPrice());
+                intent.putExtra("original_price", apiProduct.getOriginalPrice());
                 intent.putExtra("image_url", apiProduct.getImageUrl());
+                intent.putExtra("unit", apiProduct.getUnit());
+                intent.putExtra("category", apiProduct.getCategory());
             }
 
             startActivity(intent);
