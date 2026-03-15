@@ -6,10 +6,8 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -23,6 +21,25 @@ import com.example.gomarket.model.ShopperModel;
 import java.util.List;
 
 public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperViewHolder> {
+
+    private static final String[][] MOCK_LOCATIONS = {
+            {"Đang ở chợ Bến Thành", "1.2"},
+            {"Đang ở Vinmart Quận 1", "0.8"},
+            {"Đang trên đường", "2.1"},
+            {"Đang ở siêu thị CoopMart", "1.5"}
+    };
+    private static final String[][] MOCK_SKILLS = {
+            {"Chọn thịt tươi giỏi", "Quen chợ Bến Thành"},
+            {"Mua siêu thị nhanh", "Đóng gói cẩn thận"},
+            {"Giao hàng đúng giờ", "Thân thiện"},
+            {"Giá tốt", "Nhiều kinh nghiệm"}
+    };
+    private static final String[] MOCK_SHIP = {
+            "Phí ship ~15.000₫ • 20-30 phút",
+            "Phí ship ~12.000₫ • 15-25 phút",
+            "Phí ship ~20.000₫ • 35-45 phút",
+            "Phí ship ~18.000₫ • 25-35 phút"
+    };
 
     private Context context;
     private List<ShopperModel> shopperList;
@@ -49,15 +66,29 @@ public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperV
 
         holder.tvShopperName.setText(shopper.getName());
         holder.tvRating.setText(String.format("%.1f", shopper.getRating()));
-        holder.tvOrders.setText("• " + shopper.getCompletedOrders() + " đơn");
-        holder.tvDistance.setText("• Cách bạn " + shopper.getDistance() + " km");
-        holder.tvVehicle.setText(shopper.getVehicleType());
+        holder.tvOrders.setText("(" + shopper.getCompletedOrders() + " đơn)");
 
-        // Online indicator
+        int i = Math.min(position, MOCK_LOCATIONS.length - 1);
+        holder.tvLocation.setText(MOCK_LOCATIONS[i][0] + " • cách " + String.format("%.1f", shopper.getDistance()).replace(",", ".") + "km");
+        holder.tvShipFee.setText(MOCK_SHIP[i]);
+        holder.tvShipFee.setVisibility(View.VISIBLE);
+
+        holder.badgePhuHop.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+        if (position == 0) {
+            holder.cardShopper.setCardBackgroundColor(ContextCompat.getColor(context, R.color.primary_light));
+        } else {
+            holder.cardShopper.setCardBackgroundColor(ContextCompat.getColor(context, android.R.color.white));
+        }
+
+        holder.skill1.setVisibility(View.VISIBLE);
+        holder.skill1.setText(MOCK_SKILLS[i][0]);
+        holder.skill2.setVisibility(View.VISIBLE);
+        holder.skill2.setText(MOCK_SKILLS[i][1]);
+        holder.tvFastDelivery.setVisibility(position < 2 ? View.VISIBLE : View.GONE);
+        if (position < 2) holder.tvFastDelivery.setText("Giao nhanh");
+
         if (shopper.isOnline()) {
             holder.onlineIndicator.setVisibility(View.VISIBLE);
-            holder.onlineIndicator.setBackgroundResource(R.drawable.bg_online_indicator);
-            // Set green color for online
             GradientDrawable drawable = new GradientDrawable();
             drawable.setShape(GradientDrawable.OVAL);
             drawable.setColor(ContextCompat.getColor(context, R.color.status_online));
@@ -75,11 +106,11 @@ public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperV
                 .into(holder.ivAvatar);
 
         holder.btnSelect.setOnClickListener(v -> {
-            Toast.makeText(context, "Đã nhờ shopper " + shopper.getName() + " mua giùm!", Toast.LENGTH_SHORT).show();
-            // Start Chat
             Intent intent = new Intent(context, ChatActivity.class);
             intent.putExtra("SHOPPER_ID", shopper.getShopperId());
             intent.putExtra("SHOPPER_NAME", shopper.getName());
+            intent.putExtra("SHOPPER_AVATAR", shopper.getAvatarUrl());
+            if (missingIngredients != null) intent.putStringArrayListExtra("MISSING_INGREDIENTS", new java.util.ArrayList<>(missingIngredients));
             context.startActivity(intent);
         });
     }
@@ -90,20 +121,25 @@ public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperV
     }
 
     public static class ShopperViewHolder extends RecyclerView.ViewHolder {
+        com.google.android.material.card.MaterialCardView cardShopper;
         ImageView ivAvatar;
         View onlineIndicator;
-        TextView tvShopperName, tvRating, tvOrders, tvDistance, tvVehicle;
-        Button btnSelect;
+        TextView tvShopperName, tvRating, tvOrders, tvLocation, skill1, skill2, tvFastDelivery, tvShipFee, badgePhuHop, btnSelect;
 
         public ShopperViewHolder(@NonNull View itemView) {
             super(itemView);
+            cardShopper = itemView.findViewById(R.id.cardShopper);
             ivAvatar = itemView.findViewById(R.id.ivAvatar);
             onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
             tvShopperName = itemView.findViewById(R.id.tvShopperName);
             tvRating = itemView.findViewById(R.id.tvRating);
             tvOrders = itemView.findViewById(R.id.tvOrders);
-            tvDistance = itemView.findViewById(R.id.tvDistance);
-            tvVehicle = itemView.findViewById(R.id.tvVehicle);
+            tvLocation = itemView.findViewById(R.id.tvLocation);
+            skill1 = itemView.findViewById(R.id.skill1);
+            skill2 = itemView.findViewById(R.id.skill2);
+            tvFastDelivery = itemView.findViewById(R.id.tvFastDelivery);
+            tvShipFee = itemView.findViewById(R.id.tvShipFee);
+            badgePhuHop = itemView.findViewById(R.id.badgePhuHop);
             btnSelect = itemView.findViewById(R.id.btnSelect);
         }
     }

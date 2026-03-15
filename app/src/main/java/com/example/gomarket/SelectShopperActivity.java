@@ -8,7 +8,6 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,12 +31,7 @@ public class SelectShopperActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_shopper);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-        toolbar.setNavigationOnClickListener(v -> finish());
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         rvShoppers = findViewById(R.id.rvShoppers);
         progressBar = findViewById(R.id.progressBar);
@@ -70,6 +64,10 @@ public class SelectShopperActivity extends AppCompatActivity {
 
         progressBar.setVisibility(View.GONE);
         rvShoppers.setVisibility(View.VISIBLE);
+
+        int count = shopperList.size();
+        android.widget.TextView tvCount = findViewById(R.id.tvShopperCount);
+        if (tvCount != null) tvCount.setText(count + " shopper đang hoạt động trong 2km");
 
         adapter = new ShopperAdapter(this, shopperList, recipeId, missingIngredients);
         rvShoppers.setAdapter(adapter);
