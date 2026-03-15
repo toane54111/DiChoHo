@@ -2,6 +2,7 @@ package com.example.gomarket.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -46,9 +48,24 @@ public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperV
         ShopperModel shopper = shopperList.get(position);
 
         holder.tvShopperName.setText(shopper.getName());
-        holder.tvRating.setText("⭐ " + shopper.getRating());
-        holder.tvOrders.setText(" • " + shopper.getCompletedOrders() + " đơn đã hoàn thành");
-        holder.tvDistance.setText("Cách bạn " + shopper.getDistance() + " km");
+        holder.tvRating.setText(String.format("%.1f", shopper.getRating()));
+        holder.tvOrders.setText("• " + shopper.getCompletedOrders() + " đơn");
+        holder.tvDistance.setText("• Cách bạn " + shopper.getDistance() + " km");
+        holder.tvVehicle.setText(shopper.getVehicleType());
+
+        // Online indicator
+        if (shopper.isOnline()) {
+            holder.onlineIndicator.setVisibility(View.VISIBLE);
+            holder.onlineIndicator.setBackgroundResource(R.drawable.bg_online_indicator);
+            // Set green color for online
+            GradientDrawable drawable = new GradientDrawable();
+            drawable.setShape(GradientDrawable.OVAL);
+            drawable.setColor(ContextCompat.getColor(context, R.color.status_online));
+            drawable.setStroke(2, ContextCompat.getColor(context, R.color.white));
+            holder.onlineIndicator.setBackground(drawable);
+        } else {
+            holder.onlineIndicator.setVisibility(View.GONE);
+        }
 
         Glide.with(context)
                 .load(shopper.getAvatarUrl())
@@ -73,16 +90,19 @@ public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperV
 
     public static class ShopperViewHolder extends RecyclerView.ViewHolder {
         ImageView ivAvatar;
-        TextView tvShopperName, tvRating, tvOrders, tvDistance;
+        View onlineIndicator;
+        TextView tvShopperName, tvRating, tvOrders, tvDistance, tvVehicle;
         Button btnSelect;
 
         public ShopperViewHolder(@NonNull View itemView) {
             super(itemView);
             ivAvatar = itemView.findViewById(R.id.ivAvatar);
+            onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
             tvShopperName = itemView.findViewById(R.id.tvShopperName);
             tvRating = itemView.findViewById(R.id.tvRating);
             tvOrders = itemView.findViewById(R.id.tvOrders);
             tvDistance = itemView.findViewById(R.id.tvDistance);
+            tvVehicle = itemView.findViewById(R.id.tvVehicle);
             btnSelect = itemView.findViewById(R.id.btnSelect);
         }
     }
