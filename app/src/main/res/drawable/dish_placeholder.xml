@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#E8E8E8"/>
+        </shape>
+    </item>
+    <item
+        android:gravity="center"
+        android:drawable="@drawable/ic_food_placeholder"
+        android:left="60dp"
+        android:right="60dp"
+        android:top="60dp"
+        android:bottom="60dp"/>
+</layer-list>

@@ -1,12 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#4CAF50</color>
-    <color name="primary_dark">#388E3C</color>
-    <color name="primary_light">#C8E6C9</color>
+    <!-- GrabFood Style Colors -->
+    <color name="primary">#00B14F</color>
+    <color name="primary_dark">#008F4C</color>
+    <color name="primary_light">#E8F5E9</color>
     <color name="accent">#FF9800</color>
-    <color name="background">#F5F5F5</color>
+    <color name="background">#F6F6F6</color>
     <color name="white">#FFFFFF</color>
     <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
+    <color name="text_secondary">#5E5E5E</color>
     <color name="text_hint">#BDBDBD</color>
+
+    <!-- Additional UI Colors -->
+    <color name="primary_variant">#00C853</color>
+    <color name="green_50">#E8F5E9</color>
+    <color name="green_100">#C8E6C9</color>
+    <color name="green_500">#00B14F</color>
+    <color name="green_700">#008F4C</color>
+
+    <!-- Chat Colors -->
+    <color name="chat_bubble_sent">#DCF8C6</color>
+    <color name="chat_bubble_received">#FFFFFF</color>
+    <color name="chat_online_indicator">#4CAF50</color>
+
+    <!-- Card & Shadow -->
+    <color name="card_background">#FFFFFF</color>
+    <color name="card_shadow">#1A000000</color>
+    <color name="divider">#EEEEEE</color>
+
+    <!-- Rating -->
+    <color name="rating_star">#FFB300</color>
+    <color name="rating_text">#FF9800</color>
+
+    <!-- Status -->
+    <color name="status_online">#4CAF50</color>
+    <color name="status_offline">#9E9E9E</color>
+    <color name="status_busy">#F44336</color>
+
+    <!-- Quick Reply Tags -->
+    <color name="tag_background">#E8F5E9</color>
+    <color name="tag_text">#008F4C</color>
 </resources>

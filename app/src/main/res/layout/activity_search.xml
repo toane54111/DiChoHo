@@ -1,199 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    android:fillViewport="true">
+    android:background="@android:color/white"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="16dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="48dp" />
-
-        <!-- Search Bar -->
-        <com.google.android.material.textfield.TextInputLayout
+        <!-- 1. Search Bar - GrabFood style -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusBottomEnd="28dp"
-            app:boxCornerRadiusBottomStart="28dp"
-            app:boxCornerRadiusTopEnd="28dp"
-            app:boxCornerRadiusTopStart="28dp"
-            app:boxStrokeColor="#E8F5E9"
-            app:hintEnabled="false"
-            app:startIconDrawable="@android:drawable/ic_menu_search"
-            app:startIconTint="#9E9E9E">
+            android:layout_marginBottom="24dp">
 
-            <com.google.android.material.textfield.TextInputEditText
+            <EditText
+                android:id="@+id/etSearch"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_search_bar_green_outline"
                 android:hint="search for food..."
                 android:inputType="text"
-                android:padding="16dp"
-                android:textColorHint="#9E9E9E" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:imeOptions="actionSearch"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif"
+                android:paddingStart="48dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"/>
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="16dp" />
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/ic_search_magnifier"
+                android:contentDescription="@null"/>
+        </FrameLayout>
 
-        <!-- Suggestions List -->
-        <androidx.cardview.widget.CardView
+        <!-- 2. Trending Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔥 Món đang hot"
+            android:fontFamily="sans-serif"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginBottom="12dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvTrending"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
+            android:nestedScrollingEnabled="false"
+            android:clipToPadding="false"
+            android:paddingBottom="4dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:reverseLayout="false"
+            tools:listitem="@layout/item_trending_chip"
+            tools:itemCount="4"
+            tools:orientation="horizontal"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingVertical="4dp">
-                
-                <!-- Suggestion Item: Thịt kho tàu -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="12dp"
-                    android:gravity="center_vertical"
-                    android:background="?android:attr/selectableItemBackground">
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@android:drawable/ic_menu_recent_history"
-                        app:tint="#9E9E9E"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Thịt kho tàu"
-                        android:textSize="16sp"
-                        android:textColor="#333333"
-                        android:layout_marginStart="12dp"/>
-                </LinearLayout>
-                
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginHorizontal="16dp"/>
-                
-                <!-- Suggestion Item: Bún riêu cua -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="12dp"
-                    android:gravity="center_vertical"
-                    android:background="?android:attr/selectableItemBackground">
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@android:drawable/ic_menu_recent_history"
-                        app:tint="#9E9E9E"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Bún riêu cua"
-                        android:textSize="16sp"
-                        android:textColor="#333333"
-                        android:layout_marginStart="12dp"/>
-                </LinearLayout>
-                
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginHorizontal="16dp"/>
-                
-                <!-- Suggestion Item: Cá kho -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="12dp"
-                    android:gravity="center_vertical"
-                    android:background="?android:attr/selectableItemBackground">
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@android:drawable/ic_menu_recent_history"
-                        app:tint="#9E9E9E"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cá kho"
-                        android:textSize="16sp"
-                        android:textColor="#333333"
-                        android:layout_marginStart="12dp"/>
-                </LinearLayout>
+        <!-- 3. Recent Searches -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🕘 Tìm gần đây"
+            android:fontFamily="sans-serif"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"/>
 
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <Space
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="16dp" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@android:color/white">
 
-        <!-- Category Items (simulating LazyColumn) -->
-        <androidx.cardview.widget.CardView
+            <include
+                android:id="@+id/includeRecent1"
+                layout="@layout/item_recent_search"/>
+            <include
+                android:id="@+id/includeRecent2"
+                layout="@layout/item_recent_search"/>
+        </LinearLayout>
+
+        <!-- 4. Food Recommendations -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🍜 Gợi ý cho bạn"
+            android:fontFamily="sans-serif"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRecommendations"
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:background="#D3D3D3"/> <!-- Placeholder for image -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="#66000000"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="Dessert"
-                    android:textColor="#FFFFFF"
-                    android:textSize="22sp"
-                    android:textStyle="bold"/>
-            </FrameLayout>
-        </androidx.cardview.widget.CardView>
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:clipToPadding="false"
+            android:paddingBottom="4dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_food_recommendation_card"
+            tools:itemCount="3"
+            tools:orientation="horizontal"/>
 
-        <androidx.cardview.widget.CardView
+        <!-- 5. Popular Categories -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🍔 Danh mục phổ biến"
+            android:fontFamily="sans-serif"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvCategories"
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:background="#D3D3D3"/>
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="#66000000"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="Fast food"
-                    android:textColor="#FFFFFF"
-                    android:textSize="22sp"
-                    android:textStyle="bold"/>
-            </FrameLayout>
-        </androidx.cardview.widget.CardView>
-
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:clipToPadding="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_search_category"
+            tools:itemCount="4"
+            tools:orientation="horizontal"/>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

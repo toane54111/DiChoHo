@@ -18,7 +18,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.DiChoHo"
+        android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
         android:usesCleartextTraffic="true">
 
         <!-- ==================== ACTIVITIES ==================== -->
@@ -44,6 +44,9 @@
         <activity android:name=".OrderTrackingActivity" android:exported="false" />
         <activity android:name=".ChatActivity" android:exported="false" />
         <activity android:name=".SearchActivity" android:exported="false" />
+        <activity android:name=".IngredientSearchActivity" android:exported="false" />
+        <activity android:name=".DishResultActivity" android:exported="false" />
+        <activity android:name=".SelectShopperActivity" android:exported="false" />
         <activity android:name=".ShopperMapActivity" android:exported="false" />
         <activity android:name=".CheckoutActivity" android:exported="false" />
         <activity android:name=".WalletActivity" android:exported="false" />
