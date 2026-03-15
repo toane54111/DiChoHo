@@ -61,12 +61,12 @@ public class SelectShopperActivity extends AppCompatActivity {
 
     private void loadMockShoppers() {
         shopperList = new ArrayList<>();
-        
+
         // Mock Online Shoppers sorted by distance and rating
-        shopperList.add(new ShopperModel("s1", "Nguyễn Minh", "https://example.com/avatar1.jpg", 4.9f, 320, 1.2, true));
-        shopperList.add(new ShopperModel("s2", "Trần Hải", "https://example.com/avatar2.jpg", 4.8f, 230, 2.1, true));
-        shopperList.add(new ShopperModel("s3", "Lê Yến", "https://example.com/avatar3.jpg", 4.7f, 150, 3.5, true));
-        shopperList.add(new ShopperModel("s4", "Phạm Hùng", "https://example.com/avatar4.jpg", 4.5f, 89, 4.0, true));
+        shopperList.add(new ShopperModel("s1", "Nguyễn Minh", "https://example.com/avatar1.jpg", 4.9f, 320, 1.2, true, "Xe máy"));
+        shopperList.add(new ShopperModel("s2", "Trần Hải", "https://example.com/avatar2.jpg", 4.8f, 230, 2.1, true, "Xe đạp"));
+        shopperList.add(new ShopperModel("s3", "Lê Yến", "https://example.com/avatar3.jpg", 4.7f, 150, 3.5, true, "Xe máy"));
+        shopperList.add(new ShopperModel("s4", "Phạm Hùng", "https://example.com/avatar4.jpg", 4.5f, 89, 4.0, false, "Xe đạp"));
 
         progressBar.setVisibility(View.GONE);
         rvShoppers.setVisibility(View.VISIBLE);

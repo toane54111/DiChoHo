@@ -10,6 +10,7 @@ public class ShopperModel implements Serializable {
     private int completedOrders;
     private double distance; // in km
     private boolean isOnline;
+    private String vehicleType; // "Xe máy", "Xe đạp"
 
     public ShopperModel() {
     }
@@ -22,6 +23,18 @@ public class ShopperModel implements Serializable {
         this.completedOrders = completedOrders;
         this.distance = distance;
         this.isOnline = isOnline;
+        this.vehicleType = "Xe máy";
+    }
+
+    public ShopperModel(String shopperId, String name, String avatarUrl, float rating, int completedOrders, double distance, boolean isOnline, String vehicleType) {
+        this.shopperId = shopperId;
+        this.name = name;
+        this.avatarUrl = avatarUrl;
+        this.rating = rating;
+        this.completedOrders = completedOrders;
+        this.distance = distance;
+        this.isOnline = isOnline;
+        this.vehicleType = vehicleType;
     }
 
     public String getShopperId() {
@@ -78,5 +91,13 @@ public class ShopperModel implements Serializable {
 
     public void setOnline(boolean online) {
         isOnline = online;
+    }
+
+    public String getVehicleType() {
+        return vehicleType != null ? vehicleType : "Xe máy";
+    }
+
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType = vehicleType;
     }
 }

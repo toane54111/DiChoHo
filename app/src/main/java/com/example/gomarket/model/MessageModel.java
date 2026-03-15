@@ -6,6 +6,7 @@ public class MessageModel {
     private String senderId;
     private String text;
     private long timestamp;
+    private String imageUrl; // For image messages
 
     public MessageModel() {
     }
@@ -56,5 +57,17 @@ public class MessageModel {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public boolean isImageMessage() {
+        return imageUrl != null && !imageUrl.isEmpty();
     }
 }

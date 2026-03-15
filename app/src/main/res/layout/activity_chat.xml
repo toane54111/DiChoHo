@@ -3,71 +3,185 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="#E5E5E5"
     android:orientation="vertical">
 
-    <!-- Top Bar -->
+    <!-- Modern Header with Shopper Info -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#FFFFFF"
-        app:elevation="2dp">
-        <androidx.appcompat.widget.Toolbar
+        app:elevation="4dp">
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize">
+            android:layout_height="?attr/actionBarSize"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
+
+            <ImageView
+                android:id="@+id/btnBack"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:padding="4dp"
+                android:src="@drawable/ic_back"
+                app:tint="#212121"/>
+
+            <!-- Shopper Avatar -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivShopperAvatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="12dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_launcher_background"
+                app:shapeAppearanceOverlay="@style/CircleImageView"/>
+
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-                <ImageView
-                    android:id="@+id/btnBack"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@android:drawable/ic_menu_revert"
-                    app:tint="#4CAF50"/>
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvShopperNameTitle"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginStart="8dp">
+                    android:text="Nguyễn Minh"
+                    android:textColor="#212121"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@drawable/bg_online_indicator"/>
+
                     <TextView
-                        android:id="@+id/tvShopperNameTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Chat với Shopper"
-                        android:textColor="#333333"
-                        android:textStyle="bold"
-                        android:textSize="16sp"/>
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-                        <View android:layout_width="8dp" android:layout_height="8dp" android:background="@android:color/holo_green_dark"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:text="Đang hoạt động"
-                            android:textColor="@android:color/holo_green_dark"
-                            android:textSize="12sp"/>
-                    </LinearLayout>
+                        android:layout_marginStart="6dp"
+                        android:text="Đang hoạt động"
+                        android:textColor="#4CAF50"
+                        android:textSize="12sp"/>
+
                 </LinearLayout>
             </LinearLayout>
-        </androidx.appcompat.widget.Toolbar>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_phone"/>
+        </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- Messages RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMessages"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="12dp"
+        android:padding="8dp"
         android:clipToPadding="false"/>
 
-    <!-- Bottom Input Bar -->
+    <!-- Quick Replies Section -->
+    <LinearLayout
+        android:id="@+id/quickRepliesContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#FFFFFF"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="8dp"
+        android:elevation="2dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gợi ý nhanh"
+            android:textSize="12sp"
+            android:textColor="#5E5E5E"
+            android:layout_marginBottom="6dp"
+            android:layout_marginStart="4dp"/>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/quickReply1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Còn hàng không?"
+                    android:background="@drawable/bg_quick_reply"
+                    android:textColor="#008F4C"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <TextView
+                    android:id="@+id/quickReply2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Giá bao nhiêu?"
+                    android:background="@drawable/bg_quick_reply"
+                    android:textColor="#008F4C"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <TextView
+                    android:id="@+id/quickReply3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mua giúp mình"
+                    android:background="@drawable/bg_quick_reply"
+                    android:textColor="#008F4C"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <TextView
+                    android:id="@+id/quickReply4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cảm ơn bạn"
+                    android:background="@drawable/bg_quick_reply"
+                    android:textColor="#008F4C"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="8dp"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Input Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -75,26 +189,48 @@
         android:elevation="4dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp">
 
+        <!-- Image Picker Button -->
+        <ImageView
+            android:id="@+id/btnImagePicker"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_image"
+            app:tint="#5E5E5E"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <!-- Message Input -->
         <EditText
             android:id="@+id/edtMessage"
             android:layout_width="0dp"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:minHeight="40dp"
-            android:background="@android:drawable/edit_text"
+            android:layout_marginHorizontal="8dp"
+            android:background="@drawable/bg_input_field"
             android:hint="Nhập tin nhắn..."
+            android:inputType="textMultiLine"
+            android:maxLines="3"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="8dp"/>
+            android:textColor="#212121"
+            android:textColorHint="#BDBDBD"
+            android:textSize="15sp"/>
 
-        <ImageView
+        <!-- Send Button -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btnSend"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_margin="8dp"
-            android:src="@android:drawable/ic_menu_send"
-            app:tint="#4CAF50"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_send"
+            app:backgroundTint="#00B14F"
+            app:tint="#FFFFFF"
+            app:fabSize="mini"
+            app:elevation="0dp"/>
+
     </LinearLayout>
 
 </LinearLayout>
