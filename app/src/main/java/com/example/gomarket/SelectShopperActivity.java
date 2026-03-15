@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,6 +24,10 @@ public class SelectShopperActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private ShopperAdapter adapter;
     private List<ShopperModel> shopperList;
+
+    // Dữ liệu từ Intent - hỗ trợ cả flow đặt hàng và flow recipe
+    private int orderId = -1;
+    private ArrayList<String> orderItems;
     private String recipeId;
     private ArrayList<String> missingIngredients;
 
@@ -36,11 +41,25 @@ public class SelectShopperActivity extends AppCompatActivity {
         rvShoppers = findViewById(R.id.rvShoppers);
         progressBar = findViewById(R.id.progressBar);
 
-        // Get data from intent
+        // Nhận data từ Intent
+        orderId = getIntent().getIntExtra("ORDER_ID", -1);
+        orderItems = getIntent().getStringArrayListExtra("ORDER_ITEMS");
         recipeId = getIntent().getStringExtra("RECIPE_ID");
         missingIngredients = getIntent().getStringArrayListExtra("MISSING_INGREDIENTS");
 
-        if (missingIngredients != null && !missingIngredients.isEmpty()) {
+        // Hiển thị thông tin
+        TextView tvInfo = findViewById(R.id.tvShopperCount);
+        if (orderId > 0 && orderItems != null && !orderItems.isEmpty()) {
+            // Flow đặt hàng: hiển thị tóm tắt đơn
+            String preview = orderItems.size() <= 3
+                    ? String.join(", ", orderItems)
+                    : orderItems.get(0) + ", " + orderItems.get(1) + " +" + (orderItems.size() - 2) + " món khác";
+            if (tvInfo != null) {
+                tvInfo.setText("Đơn #" + orderId + " • " + orderItems.size() + " sản phẩm");
+            }
+            Toast.makeText(this, "Chọn shopper để đi chợ hộ bạn!", Toast.LENGTH_SHORT).show();
+        } else if (missingIngredients != null && !missingIngredients.isEmpty()) {
+            // Flow recipe cũ
             Toast.makeText(this, "Đang tìm shopper mua: " + String.join(", ", missingIngredients), Toast.LENGTH_LONG).show();
         }
 
@@ -65,11 +84,18 @@ public class SelectShopperActivity extends AppCompatActivity {
         progressBar.setVisibility(View.GONE);
         rvShoppers.setVisibility(View.VISIBLE);
 
-        int count = shopperList.size();
-        android.widget.TextView tvCount = findViewById(R.id.tvShopperCount);
-        if (tvCount != null) tvCount.setText(count + " shopper đang hoạt động trong 2km");
+        TextView tvCount = findViewById(R.id.tvShopperCount);
+        if (tvCount != null && orderId <= 0) {
+            // Chỉ ghi đè text nếu không phải flow đặt hàng (đã set ở trên)
+            tvCount.setText(shopperList.size() + " shopper đang hoạt động trong 2km");
+        }
 
-        adapter = new ShopperAdapter(this, shopperList, recipeId, missingIngredients);
+        // Gộp tất cả items để truyền cho shopper
+        ArrayList<String> allItems = new ArrayList<>();
+        if (orderItems != null) allItems.addAll(orderItems);
+        if (missingIngredients != null) allItems.addAll(missingIngredients);
+
+        adapter = new ShopperAdapter(this, shopperList, orderId, recipeId, allItems);
         rvShoppers.setAdapter(adapter);
     }
 }

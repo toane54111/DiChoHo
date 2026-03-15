@@ -1,15 +1,19 @@
 package com.gomarket.service;
 
+import com.gomarket.dto.ProductSearchResult;
 import com.gomarket.dto.RecipeResponse.ProductInfo;
 import com.gomarket.model.Product;
 import com.gomarket.repository.ProductRepository;
+import com.gomarket.util.VietnameseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ProductSearchService - Tìm sản phẩm bằng RAG (Vector Search)
@@ -41,13 +45,16 @@ public class ProductSearchService {
     private final ProductRepository productRepository;
     private final EmbeddingService embeddingService;
     private final EntityManager entityManager;
+    private final SynonymService synonymService;
 
     public ProductSearchService(ProductRepository productRepository,
                                  EmbeddingService embeddingService,
-                                 EntityManager entityManager) {
+                                 EntityManager entityManager,
+                                 SynonymService synonymService) {
         this.productRepository = productRepository;
         this.embeddingService = embeddingService;
         this.entityManager = entityManager;
+        this.synonymService = synonymService;
     }
 
     /**
@@ -271,6 +278,164 @@ public class ProductSearchService {
             if (p.contains(word)) matchCount++;
         }
         return queryWords.length > 0 ? (double) matchCount / queryWords.length * 0.7 : 0;
+    }
+
+    /**
+     * Hybrid Search: Kết hợp Text Search + Vector Search
+     *
+     * Bước 1 (Lexical): LIKE '%keyword%' → score = 1.0 (exact match)
+     * Bước 2 (Semantic): RAG vector search → score = similarity (0.6 - 0.9)
+     * Merge: deduplicate theo product ID, giữ score cao nhất
+     * Sort: descending by score
+     *
+     * VD: "đồ nấu canh chua"
+     *   - LIKE: 0 kết quả (không có sp nào tên "đồ nấu canh chua")
+     *   - RAG:  Cà chua (0.85), Dứa (0.78), Giá đỗ (0.72), Cá lóc (0.68)...
+     */
+    public List<ProductSearchResult> hybridSearch(String query) {
+        log.info("=== HYBRID SEARCH: '{}' ===", query);
+        Map<Long, ProductSearchResult> resultMap = new LinkedHashMap<>();
+
+        // ─── BƯỚC 0: Query Rewrite (Synonym) ───
+        // "thịt lợn" → "thịt heo", "dứa" → "thơm", "mì chính" → "bột ngọt"
+        List<String> queryVariants = synonymService.getQueryVariants(query);
+        String rewrittenQuery = synonymService.rewriteQuery(query);
+        log.info("  Query Rewrite: '{}' → variants={}", query, queryVariants);
+
+        // ─── BƯỚC 1: Text Search (LIKE có dấu + không dấu) → score = 1.0 / 0.95 ───
+        for (String variant : queryVariants) {
+            // 1a: LIKE có dấu (chính xác)
+            List<Product> textResults = productRepository.searchByKeyword(variant);
+            for (Product p : textResults) {
+                if (resultMap.containsKey(p.getId())) continue;
+                ProductSearchResult r = toSearchResult(p);
+                r.setScore(1.0);
+                r.setMatchType("exact");
+                resultMap.put(p.getId(), r);
+            }
+        }
+        log.info("  Text search (có dấu): {} kết quả", resultMap.size());
+
+        // 1b: Search không dấu - duyệt tất cả sản phẩm, so sánh tên đã bỏ dấu
+        List<Product> allProducts = productRepository.findAll();
+        for (String variant : queryVariants) {
+            for (Product p : allProducts) {
+                if (resultMap.containsKey(p.getId())) continue;
+
+                boolean nameMatch = VietnameseUtils.containsIgnoreDiacritics(p.getName(), variant);
+                boolean categoryMatch = p.getCategory() != null &&
+                        VietnameseUtils.containsIgnoreDiacritics(p.getCategory(), variant);
+
+                if (nameMatch || categoryMatch) {
+                    ProductSearchResult r = toSearchResult(p);
+                    r.setScore(0.95);
+                    r.setMatchType("exact");
+                    resultMap.put(p.getId(), r);
+                }
+            }
+        }
+        log.info("  Text search (tổng cộng): {} kết quả", resultMap.size());
+
+        // ─── BƯỚC 2: Vector Search (RAG) → score = similarity ───
+        // Dùng rewrittenQuery để embed (đã chuẩn hóa synonym)
+        try {
+            float[] queryVector = embeddingService.embed(rewrittenQuery);
+            if (queryVector != null) {
+                List<ProductSearchResult> vectorResults = vectorSearchForHybrid(queryVector);
+                log.info("  Vector search: {} kết quả cho '{}'", vectorResults.size(), rewrittenQuery);
+
+                for (ProductSearchResult vr : vectorResults) {
+                    if (resultMap.containsKey(vr.getId())) {
+                        log.debug("  Duplicate ID={} (giữ score text)", vr.getId());
+                    } else {
+                        resultMap.put(vr.getId(), vr);
+                    }
+                }
+            } else {
+                log.warn("  Vector search: Embedding failed, chỉ dùng text search");
+            }
+        } catch (Exception e) {
+            log.error("  Vector search failed: {}", e.getMessage());
+        }
+
+        // ─── Sort by score DESC ───
+        List<ProductSearchResult> results = new ArrayList<>(resultMap.values());
+        results.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
+
+        log.info("=== HYBRID SEARCH DONE: {} kết quả (text={}, semantic={}) ===",
+                results.size(),
+                results.stream().filter(r -> "exact".equals(r.getMatchType())).count(),
+                results.stream().filter(r -> "semantic".equals(r.getMatchType())).count());
+
+        return results;
+    }
+
+    /**
+     * Vector search trả về ProductSearchResult (cho hybrid search)
+     * Không giới hạn top 3 như searchForIngredient, lấy tất cả > threshold
+     */
+    @SuppressWarnings("unchecked")
+    private List<ProductSearchResult> vectorSearchForHybrid(float[] queryVector) {
+        String vectorStr = vectorToString(queryVector);
+
+        String sql = "SELECT p.id, p.name, p.price, p.original_price, p.unit, p.category, " +
+                "p.image_url, p.description, p.shop_id, " +
+                "(1 - (p.embedding <=> cast(:vector as vector))) as similarity, " +
+                "s.name as shop_name " +
+                "FROM products p " +
+                "LEFT JOIN shops s ON p.shop_id = s.id " +
+                "WHERE p.embedding IS NOT NULL " +
+                "ORDER BY p.embedding <=> cast(:vector as vector) ASC " +
+                "LIMIT 20";
+
+        List<Object[]> rows = entityManager.createNativeQuery(sql)
+                .setParameter("vector", vectorStr)
+                .getResultList();
+
+        List<ProductSearchResult> results = new ArrayList<>();
+        for (Object[] row : rows) {
+            double similarity = row[9] != null ? ((Number) row[9]).doubleValue() : 0;
+
+            if (similarity < MIN_SIMILARITY_THRESHOLD) {
+                continue;
+            }
+
+            ProductSearchResult r = new ProductSearchResult();
+            r.setId(((Number) row[0]).longValue());
+            r.setName((String) row[1]);
+            r.setPrice(row[2] != null ? ((Number) row[2]).doubleValue() : 0);
+            r.setOriginalPrice(row[3] != null ? ((Number) row[3]).doubleValue() : 0);
+            r.setUnit((String) row[4]);
+            r.setCategory((String) row[5]);
+            r.setImageUrl((String) row[6]);
+            r.setDescription((String) row[7]);
+            r.setShopId(row[8] != null ? ((Number) row[8]).intValue() : null);
+            r.setScore(similarity);
+            r.setMatchType("semantic");
+            r.setShopName(row[10] != null ? (String) row[10] : null);
+
+            log.info("    RAG: '{}' [similarity={}]", r.getName(), String.format("%.4f", similarity));
+            results.add(r);
+        }
+
+        return results;
+    }
+
+    private ProductSearchResult toSearchResult(Product product) {
+        ProductSearchResult r = new ProductSearchResult();
+        r.setId(product.getId());
+        r.setName(product.getName());
+        r.setPrice(product.getPrice() != null ? product.getPrice() : 0);
+        r.setOriginalPrice(product.getOriginalPrice() != null ? product.getOriginalPrice() : 0);
+        r.setUnit(product.getUnit());
+        r.setCategory(product.getCategory());
+        r.setImageUrl(product.getImageUrl());
+        r.setDescription(product.getDescription());
+        if (product.getShop() != null) {
+            r.setShopId(product.getShop().getId().intValue());
+            r.setShopName(product.getShop().getName());
+        }
+        return r;
     }
 
     private ProductInfo toProductInfo(Product product) {

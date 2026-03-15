@@ -243,12 +243,15 @@ public class HomeActivity extends AppCompatActivity {
             intent.putExtra("moTa", sp.getMoTa());
             intent.putExtra("hinhAnh", sp.getHinhAnh());
 
-            // Truyền thêm product ID + imageUrl từ API nếu có
+            // Truyền thêm product ID + imageUrl + thông tin chi tiết từ API
             if (position < apiProducts.size()) {
                 Product apiProduct = apiProducts.get(position);
                 intent.putExtra("product_id", apiProduct.getId());
                 intent.putExtra("price", apiProduct.getPrice());
+                intent.putExtra("original_price", apiProduct.getOriginalPrice());
                 intent.putExtra("image_url", apiProduct.getImageUrl());
+                intent.putExtra("unit", apiProduct.getUnit());
+                intent.putExtra("category", apiProduct.getCategory());
             }
 
             startActivity(intent);

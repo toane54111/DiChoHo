@@ -27,7 +27,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:background="@drawable/bg_search_bar_green_outline"
-                android:hint="search for food..."
+                android:hint="Tìm thịt, rau, trứng, mì..."
                 android:inputType="text"
                 android:imeOptions="actionSearch"
                 android:textColor="@color/text_primary"
@@ -47,11 +47,29 @@
                 android:contentDescription="@null"/>
         </FrameLayout>
 
+        <!-- Autocomplete suggestions (ẩn mặc định, hiện khi user gõ) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvAutocomplete"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:visibility="gone"
+            android:nestedScrollingEnabled="false" />
+
+        <!-- Divider dưới autocomplete -->
+        <View
+            android:id="@+id/dividerAutocomplete"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:visibility="gone" />
+
         <!-- 2. Trending Section -->
         <TextView
+            android:id="@+id/tvTrendingLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🔥 Món đang hot"
+            android:text="🔥 Tìm kiếm phổ biến"
             android:fontFamily="sans-serif"
             android:textSize="17sp"
             android:textStyle="bold"
@@ -73,6 +91,7 @@
 
         <!-- 3. Recent Searches -->
         <TextView
+            android:id="@+id/tvRecentLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🕘 Tìm gần đây"
@@ -97,11 +116,12 @@
                 layout="@layout/item_recent_search"/>
         </LinearLayout>
 
-        <!-- 4. Food Recommendations -->
+        <!-- 4. Sản phẩm gợi ý -->
         <TextView
+            android:id="@+id/tvRecommendLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🍜 Gợi ý cho bạn"
+            android:text="🛒 Sản phẩm nổi bật"
             android:fontFamily="sans-serif"
             android:textSize="17sp"
             android:textStyle="bold"
@@ -121,11 +141,12 @@
             tools:itemCount="3"
             tools:orientation="horizontal"/>
 
-        <!-- 5. Popular Categories -->
+        <!-- 5. Danh mục sản phẩm -->
         <TextView
+            android:id="@+id/tvCategoryLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🍔 Danh mục phổ biến"
+            android:text="📦 Danh mục sản phẩm"
             android:fontFamily="sans-serif"
             android:textSize="17sp"
             android:textStyle="bold"

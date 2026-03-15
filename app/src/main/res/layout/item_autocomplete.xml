@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:background="?attr/selectableItemBackground">
+
+    <!-- Search icon -->
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_search_magnifier"
+        android:alpha="0.5"
+        android:contentDescription="@null" />
+
+    <!-- Product name -->
+    <TextView
+        android:id="@+id/tvAutoName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:text="Thịt heo nạc vai"
+        android:textSize="15sp"
+        android:textColor="#212121"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <!-- Category tag -->
+    <TextView
+        android:id="@+id/tvAutoCategory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Thịt heo"
+        android:textSize="12sp"
+        android:textColor="#9E9E9E"
+        android:maxLines="1" />
+
+    <!-- Arrow icon -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="↗"
+        android:textSize="16sp"
+        android:textColor="#BDBDBD" />
+
+</LinearLayout>

@@ -118,13 +118,23 @@ public class LoginActivity extends AppCompatActivity {
                     User user = response.body();
                     sessionManager.saveLogin(
                             user.getToken(), user.getId(),
-                            user.getFullName(), user.getPhone(), user.getRole()
+                            user.getFullName(), user.getPhone(),
+                            user.getEmail(), user.getRole()
                     );
-                    Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this,
+                            "Chào mừng " + user.getFullName() + "!",
+                            Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                     finish();
                 } else {
-                    Toast.makeText(LoginActivity.this, "Sai số điện thoại hoặc mật khẩu!", Toast.LENGTH_SHORT).show();
+                    // Parse lỗi từ server
+                    String errorMsg = "Sai số điện thoại hoặc mật khẩu!";
+                    try {
+                        String errorBody = response.errorBody().string();
+                        org.json.JSONObject json = new org.json.JSONObject(errorBody);
+                        if (json.has("error")) errorMsg = json.getString("error");
+                    } catch (Exception ignored) {}
+                    Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -133,11 +143,9 @@ public class LoginActivity extends AppCompatActivity {
                 btnLogin.setEnabled(true);
                 btnLogin.setText("Đăng nhập");
                 android.util.Log.e("LoginActivity", "API login failed: " + t.getMessage(), t);
-                // Fallback offline khi không kết nối được server
-                sessionManager.saveLogin("demo_token", 1, "Người dùng", phone, "BUYER");
-                Toast.makeText(LoginActivity.this, "Đăng nhập offline (không kết nối server)", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                finish();
+                Toast.makeText(LoginActivity.this,
+                        "Không thể kết nối server. Vui lòng kiểm tra kết nối mạng!",
+                        Toast.LENGTH_LONG).show();
             }
         });
     }

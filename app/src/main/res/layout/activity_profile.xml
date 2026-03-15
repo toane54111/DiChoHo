@@ -71,7 +71,16 @@
                     android:textSize="14sp"
                     android:textColor="#E8F5E9" />
 
-                <!-- Trạng thái xác thực -->
+                <!-- Email -->
+                <TextView
+                    android:id="@+id/tvEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="13sp"
+                    android:textColor="#C8E6C9" />
+
+                <!-- Badge vai trò -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -85,17 +94,19 @@
                     android:paddingBottom="4dp">
 
                     <TextView
+                        android:id="@+id/tvRoleIcon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="✓"
+                        android:text="🛒"
                         android:textColor="#FFFFFF"
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/tvRole"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
-                        android:text="Đã xác thực"
+                        android:text="Người mua"
                         android:textColor="#FFFFFF"
                         android:textSize="12sp" />
 

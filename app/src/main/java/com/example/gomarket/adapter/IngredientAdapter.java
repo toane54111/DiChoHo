@@ -1,5 +1,6 @@
 package com.example.gomarket.adapter;
 
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,16 +37,34 @@ public class IngredientAdapter extends RecyclerView.Adapter<IngredientAdapter.In
     @Override
     public void onBindViewHolder(@NonNull IngredientViewHolder holder, int position) {
         Recipe.Ingredient ingredient = ingredients.get(position);
+        boolean hasMatch = ingredient.getMatchedProduct() != null;
 
         holder.tvIcon.setText(FOOD_ICONS[position % FOOD_ICONS.length]);
         holder.tvIngredientName.setText(ingredient.getName());
         holder.tvIngredientQuantity.setText(ingredient.getQuantity());
 
-        if (ingredient.getMatchedProduct() != null) {
+        if (hasMatch) {
+            // Còn hàng - hiển thị giá
             holder.tvIngredientPrice.setText(ingredient.getMatchedProduct().getFormattedPrice());
+            holder.tvIngredientPrice.setTextColor(0xFF4CAF50); // primary green
+            holder.tvIngredientPrice.setTypeface(null, Typeface.BOLD);
             holder.tvIngredientPrice.setVisibility(View.VISIBLE);
+
+            // Style bình thường
+            holder.tvIngredientName.setTextColor(0xFF212121);
+            holder.tvIngredientName.setTypeface(null, Typeface.NORMAL);
+            holder.itemView.setAlpha(1.0f);
         } else {
-            holder.tvIngredientPrice.setVisibility(View.GONE);
+            // Hết hàng - hiển thị label "Hết hàng"
+            holder.tvIngredientPrice.setText("Hết hàng");
+            holder.tvIngredientPrice.setTextColor(0xFFE53935); // red
+            holder.tvIngredientPrice.setTypeface(null, Typeface.ITALIC);
+            holder.tvIngredientPrice.setVisibility(View.VISIBLE);
+
+            // Dim row để thể hiện không khả dụng
+            holder.tvIngredientName.setTextColor(0xFF9E9E9E);
+            holder.tvIngredientName.setTypeface(null, Typeface.ITALIC);
+            holder.itemView.setAlpha(0.6f);
         }
     }
 

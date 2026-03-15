@@ -144,6 +144,7 @@
                             android:textSize="16sp" />
 
                         <TextView
+                            android:id="@+id/tvRating"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"
@@ -153,6 +154,7 @@
                             android:textColor="#212121" />
 
                         <TextView
+                            android:id="@+id/tvRatingCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"
@@ -293,9 +295,10 @@
                                 android:textColor="#9E9E9E" />
 
                             <TextView
+                                android:id="@+id/tvOrigin"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Mỹ"
+                                android:text="Việt Nam"
                                 android:textSize="14sp"
                                 android:textColor="#212121" />
 
@@ -338,6 +341,7 @@
                                 android:textColor="#9E9E9E" />
 
                             <TextView
+                                android:id="@+id/tvWeight"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="500g / túi"
@@ -383,6 +387,7 @@
                                 android:textColor="#9E9E9E" />
 
                             <TextView
+                                android:id="@+id/tvExpiry"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="7 ngày sau khi mua"

@@ -33,6 +33,9 @@ public interface ApiService {
     @POST("auth/register")
     Call<User> register(@Body RegisterRequest request);
 
+    @GET("auth/profile/{userId}")
+    Call<User> getProfile(@Path("userId") long userId);
+
     // Recipe - AI Chef
     @GET("recipe/weather")
     Call<WeatherData> getWeather(@Query("latitude") double lat, @Query("longitude") double lng);
@@ -43,6 +46,12 @@ public interface ApiService {
     // Products
     @GET("products/search")
     Call<List<Product>> searchProducts(@Query("q") String query);
+
+    @GET("products/hybrid-search")
+    Call<List<Product>> hybridSearch(@Query("q") String query);
+
+    @GET("products/autocomplete")
+    Call<List<Product>> autocomplete(@Query("q") String query);
 
     @GET("products/category/{category}")
     Call<List<Product>> getByCategory(@Path("category") String category);
