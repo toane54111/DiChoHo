@@ -212,22 +212,30 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
     private void addIngredientsToCart() {
         if (recipe.getIngredients() != null) {
-            int productId = 100; // Base ID cho demo
+            // Xóa giỏ hàng cũ trước khi thêm nguyên liệu mới từ công thức
+            CartActivity.clearCart();
+
             for (Recipe.Ingredient ingredient : recipe.getIngredients()) {
                 double price = 0;
+                int productId;
+                String imageUrl = "";
                 if (ingredient.getMatchedProduct() != null) {
                     price = ingredient.getMatchedProduct().getPrice();
                     productId = ingredient.getMatchedProduct().getId();
+                    imageUrl = ingredient.getMatchedProduct().getImageUrl() != null
+                            ? ingredient.getMatchedProduct().getImageUrl() : "";
                 } else {
                     price = recipe.getTotalCost() / recipe.getIngredients().size();
+                    // Dùng hash ổn định cho ingredient không có matched product
+                    productId = Math.abs(ingredient.getName().hashCode()) % 100000;
                 }
 
                 OrderItem item = new OrderItem(
-                        productId++,
+                        productId,
                         ingredient.getName(),
                         1,
                         price,
-                        ""
+                        imageUrl
                 );
                 CartActivity.addToCart(item);
             }

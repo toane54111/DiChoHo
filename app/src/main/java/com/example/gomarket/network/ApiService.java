@@ -10,12 +10,12 @@ import com.example.gomarket.model.RecipeResponse;
 import com.example.gomarket.model.RegisterRequest;
 import com.example.gomarket.model.User;
 import com.example.gomarket.model.Wallet;
+import com.example.gomarket.model.WalletTransaction;
 import com.example.gomarket.model.WeatherData;
 
 import java.util.List;
 import java.util.Map;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -47,6 +47,9 @@ public interface ApiService {
     @GET("products/category/{category}")
     Call<List<Product>> getByCategory(@Path("category") String category);
 
+    @GET("products/by-category")
+    Call<List<Product>> getByCategoryQuery(@Query("name") String category);
+
     // Orders
     @POST("orders")
     Call<Order> createOrder(@Body OrderRequest request);
@@ -77,7 +80,7 @@ public interface ApiService {
     Call<Wallet> topUpWallet(@Path("userId") long userId, @Body Map<String, Long> body);
 
     @GET("wallet/{userId}/transactions")
-    Call<ResponseBody> getWalletTransactions(@Path("userId") long userId);
+    Call<List<WalletTransaction>> getWalletTransactions(@Path("userId") long userId);
 
     @POST("wallet/qr/generate")
     Call<Map<String, String>> generateQrPayload(@Body Map<String, Long> body);

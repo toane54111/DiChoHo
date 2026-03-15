@@ -9,6 +9,12 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DecodeFormat;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
+import com.example.gomarket.network.ApiClient;
+
 import java.util.ArrayList;
 
 public class SanPhamAdapter extends BaseAdapter {
@@ -55,8 +61,24 @@ public class SanPhamAdapter extends BaseAdapter {
         TextView tvGiaGoc = convertView.findViewById(R.id.tvGiaGoc);
         TextView tvGiaKhuyenMai = convertView.findViewById(R.id.tvGiaKhuyenMai);
 
-        // 4. Gán dữ liệu
-        imgSanPham.setImageResource(sanPham.getHinhAnh());
+        // 4. Gán dữ liệu — ưu tiên ảnh URL từ API, fallback drawable local
+        String imageUrl = ApiClient.getFullImageUrl(sanPham.getImageUrl());
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(context)
+                    .load(imageUrl)
+                    .apply(new RequestOptions()
+                            .override(250, 250)                // Decode nhỏ hơn → nhanh hơn
+                            .format(DecodeFormat.PREFER_RGB_565) // Dùng ít RAM hơn (16bit thay vì 32bit)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .skipMemoryCache(false)
+                            .centerCrop())
+                    .thumbnail(0.1f)                           // Thumbnail nhỏ load trước
+                    .placeholder(R.drawable.img)
+                    .error(sanPham.getHinhAnh() != 0 ? sanPham.getHinhAnh() : R.drawable.img)
+                    .into(imgSanPham);
+        } else {
+            imgSanPham.setImageResource(sanPham.getHinhAnh());
+        }
         tvTenSanPham.setText(sanPham.getTenSanPham());
         tvGiaGoc.setText(sanPham.getGiaGoc());
         tvGiaKhuyenMai.setText(sanPham.getGiaKhuyenMai());
