@@ -1,408 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F6F6F6"
-    android:fillViewport="true">
+    android:background="@android:color/white"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="16dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
 
-        <!-- Header -->
+        <!-- 1. Search Bar - GrabFood style -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp">
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_search_bar_green_outline"
+                android:hint="search for food..."
+                android:inputType="text"
+                android:imeOptions="actionSearch"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif"
+                android:paddingStart="48dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"/>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/ic_search_magnifier"
+                android:contentDescription="@null"/>
+        </FrameLayout>
+
+        <!-- 2. Trending Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tìm món ngon"
-            android:textSize="28sp"
+            android:text="🔥 Món đang hot"
+            android:fontFamily="sans-serif"
+            android:textSize="17sp"
             android:textStyle="bold"
-            android:textColor="#212121"
-            android:layout_marginBottom="4dp"/>
+            android:textColor="@color/text_primary"
+            android:layout_marginBottom="12dp"/>
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvTrending"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:clipToPadding="false"
+            android:paddingBottom="4dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:reverseLayout="false"
+            tools:listitem="@layout/item_trending_chip"
+            tools:itemCount="4"
+            tools:orientation="horizontal"/>
+
+        <!-- 3. Recent Searches -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bạn đang thèm món gì hôm nay?"
-            android:textSize="14sp"
-            android:textColor="#5E5E5E"
-            android:layout_marginBottom="20dp"/>
+            android:text="🕘 Tìm gần đây"
+            android:fontFamily="sans-serif"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"/>
 
-        <!-- Search Bar - Modern Style -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="28dp"
-            app:cardElevation="4dp"
-            app:strokeWidth="0dp"
-            android:layout_marginBottom="24dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="4dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_search"
-                    app:tint="#5E5E5E"/>
-
-                <EditText
-                    android:id="@+id/etSearch"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="12dp"
-                    android:background="@android:color/transparent"
-                    android:hint="Tìm món ăn, nguyên liệu..."
-                    android:inputType="text"
-                    android:imeOptions="actionSearch"
-                    android:textColor="#212121"
-                    android:textColorHint="#BDBDBD"
-                    android:textSize="16sp"/>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Trending Search Tags Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:orientation="vertical"
+            android:background="@android:color/white">
 
-            <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:src="@drawable/ic_search"
-                app:tint="#00B14F"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Gợi ý tìm kiếm"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#212121"
-                android:layout_marginStart="8dp"/>
+            <include
+                android:id="@+id/includeRecent1"
+                layout="@layout/item_recent_search"/>
+            <include
+                android:id="@+id/includeRecent2"
+                layout="@layout/item_recent_search"/>
         </LinearLayout>
 
-        <!-- Tags Container -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- 4. Food Recommendations -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🍜 Gợi ý cho bạn"
+            android:fontFamily="sans-serif"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRecommendations"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="0dp"
-            android:layout_marginBottom="24dp">
+            android:nestedScrollingEnabled="false"
+            android:clipToPadding="false"
+            android:paddingBottom="4dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_food_recommendation_card"
+            tools:itemCount="3"
+            tools:orientation="horizontal"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="4dp">
+        <!-- 5. Popular Categories -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🍔 Danh mục phổ biến"
+            android:fontFamily="sans-serif"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"/>
 
-                <!-- Tag Row 1 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:paddingVertical="8dp">
-
-                    <TextView
-                        android:id="@+id/tag_thit_kho"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Thịt kho"
-                        android:background="@drawable/bg_tag"
-                        android:textColor="#008F4C"
-                        android:textSize="14sp"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:clickable="true"
-                        android:focusable="true"/>
-
-                    <TextView
-                        android:id="@+id/tag_ca_kho"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cá kho"
-                        android:background="@drawable/bg_tag"
-                        android:textColor="#008F4C"
-                        android:textSize="14sp"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:clickable="true"
-                        android:focusable="true"/>
-
-                    <TextView
-                        android:id="@+id/tag_bun_rieu"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Bún riêu"
-                        android:background="@drawable/bg_tag"
-                        android:textColor="#008F4C"
-                        android:textSize="14sp"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="8dp"
-                        android:clickable="true"
-                        android:focusable="true"/>
-
-                </LinearLayout>
-
-                <!-- Divider -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#EEEEEE"
-                    android:layout_marginHorizontal="12dp"/>
-
-                <!-- Tag Row 2 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:paddingVertical="8dp">
-
-                    <TextView
-                        android:id="@+id/tag_com_tam"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cơm tấm"
-                        android:background="@drawable/bg_tag"
-                        android:textColor="#008F4C"
-                        android:textSize="14sp"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:clickable="true"
-                        android:focusable="true"/>
-
-                    <TextView
-                        android:id="@+id/tag_pho_bo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Phở bò"
-                        android:background="@drawable/bg_tag"
-                        android:textColor="#008F4C"
-                        android:textSize="14sp"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:clickable="true"
-                        android:focusable="true"/>
-
-                    <TextView
-                        android:id="@+id/tag_banh_mi"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Bánh mì"
-                        android:background="@drawable/bg_tag"
-                        android:textColor="#008F4C"
-                        android:textSize="14sp"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="8dp"
-                        android:clickable="true"
-                        android:focusable="true"/>
-
-                </LinearLayout>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Categories Section -->
-        <LinearLayout
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvCategories"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
-
-            <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:src="@drawable/ic_home"
-                app:tint="#00B14F"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Danh mục"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#212121"
-                android:layout_marginStart="8dp"/>
-        </LinearLayout>
-
-        <!-- Category Card 1 - Dessert -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="6dp"
-            app:strokeWidth="0dp">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <!-- Background Gradient -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/gradient_green"/>
-
-                <!-- Content -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="20dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_food"
-                        app:tint="#FFFFFF"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Tráng miệng"
-                        android:textColor="#FFFFFF"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="8dp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Món ngọt hấp dẫn"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:alpha="0.9"/>
-                </LinearLayout>
-            </FrameLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Category Card 2 - Fast Food -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="6dp"
-            app:strokeWidth="0dp">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <!-- Background Gradient -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/gradient_orange"/>
-
-                <!-- Content -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="20dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_home"
-                        app:tint="#FFFFFF"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Đồ ăn nhanh"
-                        android:textColor="#FFFFFF"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="8dp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Nhanh gọn, tiện lợi"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:alpha="0.9"/>
-                </LinearLayout>
-            </FrameLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Category Card 3 - Drinks -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="6dp"
-            app:strokeWidth="0dp">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <!-- Background Gradient -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/gradient_blue"/>
-
-                <!-- Content -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="20dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_drink"
-                        app:tint="#FFFFFF"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Đồ uống"
-                        android:textColor="#FFFFFF"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="8dp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Giải khát mùa hè"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:alpha="0.9"/>
-                </LinearLayout>
-            </FrameLayout>
-        </com.google.android.material.card.MaterialCardView>
-
+            android:nestedScrollingEnabled="false"
+            android:clipToPadding="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_search_category"
+            tools:itemCount="4"
+            tools:orientation="horizontal"/>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
