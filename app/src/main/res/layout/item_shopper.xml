@@ -62,7 +62,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Nguyễn Minh"
-                    android:textSize="17sp"
+                    android:fontFamily="sans-serif"
+                    android:textSize="15sp"
                     android:textStyle="bold"
                     android:textColor="#212121"/>
 
@@ -103,9 +104,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="4.9"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#FF9800"
+                        android:fontFamily="sans-serif"
+                        android:textSize="12sp"
+                        android:textColor="#00B14F"
                         android:layout_marginStart="4dp"/>
 
                 </LinearLayout>
@@ -116,7 +117,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="• 320 đơn"
-                    android:textSize="13sp"
+                    android:fontFamily="sans-serif"
+                    android:textSize="12sp"
                     android:textColor="#5E5E5E"
                     android:layout_marginStart="10dp"/>
 
@@ -151,6 +153,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Xe máy"
+                        android:fontFamily="sans-serif"
                         android:textSize="12sp"
                         android:textColor="#5E5E5E"
                         android:layout_marginStart="4dp"/>
@@ -163,9 +166,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="• Cách bạn 1.2 km"
-                    android:textSize="13sp"
+                    android:fontFamily="sans-serif"
+                    android:textSize="12sp"
                     android:textColor="#008F4C"
-                    android:textStyle="bold"
                     android:layout_marginStart="10dp"/>
 
             </LinearLayout>
