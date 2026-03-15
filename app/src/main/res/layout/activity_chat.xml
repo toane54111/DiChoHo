@@ -66,10 +66,11 @@
                         android:background="@drawable/bg_online_indicator"/>
 
                     <TextView
+                        android:id="@+id/tvShopperStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"
-                        android:text="Đang hoạt động"
+                        android:text="Đang mua hàng tại chợ..."
                         android:textColor="#4CAF50"
                         android:textSize="12sp"/>
 
@@ -82,6 +83,95 @@
                 android:src="@drawable/ic_phone"/>
         </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Đơn hàng của bạn -->
+    <LinearLayout
+        android:id="@+id/orderSection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@android:color/white"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:elevation="2dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_food"
+                app:tint="#00B14F"
+                android:contentDescription="@null"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Đơn hàng của bạn"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#212121"/>
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:layout_marginTop="8dp">
+
+            <LinearLayout
+                android:id="@+id/containerOrderChips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/orderChip1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_rounded_ingredient"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="8dp"
+                    android:textColor="#212121"
+                    android:textSize="13sp"
+                    android:layout_marginEnd="8dp"
+                    android:visibility="gone"
+                    tools:text="Thịt bò nạm 1kg"
+                    tools:visibility="visible"/>
+
+                <TextView
+                    android:id="@+id/orderChip2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_rounded_ingredient"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="8dp"
+                    android:textColor="#212121"
+                    android:textSize="13sp"
+                    android:layout_marginEnd="8dp"
+                    android:visibility="gone"
+                    tools:text="Rau thơm 1 bó"
+                    tools:visibility="visible"/>
+
+                <TextView
+                    android:id="@+id/orderChipMore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_rounded_ingredient"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="8dp"
+                    android:textColor="#5E5E5E"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    tools:text="+2 món khác"
+                    tools:visibility="visible"/>
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
 
     <!-- Messages RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
