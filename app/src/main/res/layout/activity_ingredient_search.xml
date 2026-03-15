@@ -6,46 +6,54 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="#F5F5F5"
+    android:background="@color/background"
     tools:context=".IngredientSearchActivity">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Tìm món ăn bằng nguyên liệu"
-        android:textSize="22sp"
+        android:fontFamily="sans-serif"
+        android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="#333333"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp"/>
 
     <EditText
         android:id="@+id/etIngredientInput"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:background="@android:drawable/edit_text"
+        android:background="@drawable/bg_input_rounded"
         android:hint="Nhập nguyên liệu (ví dụ: gà, trứng, cà chua)"
-        android:padding="12dp"
-        android:textSize="16sp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:textSize="15sp"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_hint"
         android:layout_marginBottom="16dp"/>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSearchDish"
         android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:text="Tìm món ăn"
-        android:textSize="16sp"
+        android:layout_height="52dp"
+        android:text="TÌM MÓN ĂN"
+        android:textSize="15sp"
         android:textStyle="bold"
-        android:backgroundTint="#FF6B6B"
+        android:textColor="@android:color/white"
+        app:backgroundTint="@color/primary"
+        app:cornerRadius="12dp"
+        app:elevation="2dp"
         android:layout_marginBottom="24dp"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Gợi ý nguyên liệu phổ biến:"
-        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        android:textSize="14sp"
         android:textStyle="bold"
-        android:textColor="#666666"
-        android:layout_marginBottom="8dp"/>
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="10dp"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvIngredientSuggestion"
@@ -54,6 +62,6 @@
         android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:spanCount="3"
-        tools:listitem="@layout/item_ingredient"/>
+        tools:listitem="@layout/item_ingredient_suggestion"/>
 
 </LinearLayout>

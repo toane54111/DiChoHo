@@ -127,10 +127,11 @@ public class ChatActivity extends AppCompatActivity {
             Glide.with(this)
                     .load(shopperAvatarUrl)
                     .circleCrop()
-                    .placeholder(R.drawable.ic_launcher_background)
+                    .placeholder(R.drawable.avatar_placeholder)
+                    .error(R.drawable.avatar_placeholder)
                     .into(ivShopperAvatar);
         } else {
-            ivShopperAvatar.setImageResource(R.drawable.ic_launcher_background);
+            ivShopperAvatar.setImageResource(R.drawable.avatar_placeholder);
         }
 
         messageList = new ArrayList<>();
