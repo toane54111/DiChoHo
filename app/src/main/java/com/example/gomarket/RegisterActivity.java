@@ -113,20 +113,12 @@ public class RegisterActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     User user = response.body();
 
-                    // Lưu session (bao gồm email) và chuyển thẳng vào Home
-                    SessionManager session = new SessionManager(RegisterActivity.this);
-                    session.saveLogin(
-                            user.getToken(), user.getId(),
-                            user.getFullName(), user.getPhone(),
-                            user.getEmail(), user.getRole()
-                    );
-
                     Toast.makeText(RegisterActivity.this,
-                            "Đăng ký thành công! Chào mừng " + user.getFullName(),
+                            "Đăng ký thành công! Vui lòng đăng nhập.",
                             Toast.LENGTH_SHORT).show();
 
-                    Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                    intent.putExtra("phone", user.getPhone());
                     startActivity(intent);
                     finish();
                 } else {
