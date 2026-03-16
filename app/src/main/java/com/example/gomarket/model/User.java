@@ -24,6 +24,28 @@ public class User {
     @SerializedName("token")
     private String token;
 
+    // Shopper fields
+    @SerializedName("latitude")
+    private Double latitude;
+
+    @SerializedName("longitude")
+    private Double longitude;
+
+    @SerializedName("is_online")
+    private Boolean isOnline;
+
+    @SerializedName("bio")
+    private String bio;
+
+    @SerializedName("rating")
+    private Double rating;
+
+    @SerializedName("total_orders")
+    private Integer totalOrders;
+
+    @SerializedName("vehicle_type")
+    private String vehicleType;
+
     public User() {}
 
     public int getId() { return id; }
@@ -46,4 +68,25 @@ public class User {
 
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
+
+    public Boolean getIsOnline() { return isOnline; }
+    public void setIsOnline(Boolean isOnline) { this.isOnline = isOnline; }
+
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
+
+    public Double getRating() { return rating; }
+    public void setRating(Double rating) { this.rating = rating; }
+
+    public Integer getTotalOrders() { return totalOrders; }
+    public void setTotalOrders(Integer totalOrders) { this.totalOrders = totalOrders; }
+
+    public String getVehicleType() { return vehicleType; }
+    public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
 }

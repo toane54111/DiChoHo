@@ -3,9 +3,6 @@ package com.gomarket.controller;
 import com.gomarket.dto.RecipeRequest;
 import com.gomarket.dto.RecipeResponse;
 import com.gomarket.dto.RecipeResponse.*;
-import com.gomarket.model.Product;
-import com.gomarket.model.Shop;
-import com.gomarket.repository.ShopRepository;
 import com.gomarket.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,18 +10,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
- * RecipeController - Core API thực hiện flow chính của ứng dụng:
+ * RecipeController - Gợi ý món ăn theo thời tiết (đơn giản hóa, bỏ RAG/Route)
  *
- * Sequence Diagram Flow:
+ * Flow:
  * 1. App gửi GPS (lat/lng) → Backend
  * 2. Backend → OpenWeather API (lấy thời tiết)
  * 3. Backend → Gemini LLM (gợi ý món ăn dựa trên thời tiết)
- * 4. Backend → RAG Search trong DB (tìm nguyên liệu phù hợp)
- * 5. Backend → A* Routing (tìm lộ trình tối ưu qua các shop)
- * 6. Backend → App (trả về RecipeResponse đầy đủ)
+ * 4. Backend → Tìm ảnh món ăn
+ * 5. Backend → App (trả về weather + recipe)
  */
 @RestController
 @RequestMapping("/api/recipe")
@@ -34,143 +29,86 @@ public class RecipeController {
 
     private final WeatherService weatherService;
     private final GeminiService geminiService;
-    private final ProductSearchService productSearchService;
-    private final RouteService routeService;
-    private final ShopRepository shopRepository;
     private final ImageSearchService imageSearchService;
+    private final ShoppingRequestService shoppingRequestService;
 
     public RecipeController(WeatherService weatherService,
                             GeminiService geminiService,
-                            ProductSearchService productSearchService,
-                            RouteService routeService,
-                            ShopRepository shopRepository,
-                            ImageSearchService imageSearchService) {
+                            ImageSearchService imageSearchService,
+                            ShoppingRequestService shoppingRequestService) {
         this.weatherService = weatherService;
         this.geminiService = geminiService;
-        this.productSearchService = productSearchService;
-        this.routeService = routeService;
-        this.shopRepository = shopRepository;
         this.imageSearchService = imageSearchService;
+        this.shoppingRequestService = shoppingRequestService;
     }
 
-    /**
-     * GET /api/recipe/weather - Lấy thời tiết nhanh (hiển thị trước khi gợi ý món)
-     */
+    /** GET /api/recipe/weather — Lấy thời tiết nhanh */
     @GetMapping("/weather")
     public ResponseEntity<WeatherInfo> getWeather(
             @RequestParam double latitude,
             @RequestParam double longitude) {
-        log.info("Lấy thời tiết: lat={}, lng={}", latitude, longitude);
         WeatherInfo weather = weatherService.getWeather(latitude, longitude);
         return ResponseEntity.ok(weather);
     }
 
     /**
-     * POST /api/recipe/suggest
-     * Core endpoint - Nhận GPS, trả về gợi ý món ăn + nguyên liệu + lộ trình
+     * POST /api/recipe/suggest — Gợi ý món ăn (đơn giản, không RAG/Route)
      */
     @PostMapping("/suggest")
     public ResponseEntity<RecipeResponse> suggestRecipe(@RequestBody RecipeRequest request) {
-        log.info("=== BẮT ĐẦU GỢI Ý MÓN ĂN ===");
-        log.info("Tọa độ: lat={}, lng={}", request.getLatitude(), request.getLongitude());
+        log.info("=== GỢI Ý MÓN ĂN (simplified) ===");
 
         RecipeResponse response = new RecipeResponse();
 
-        // ─── STEP 1: Lấy thời tiết từ OpenWeather API ───
-        log.info("Step 1: Đang lấy thông tin thời tiết...");
+        // Step 1: Lấy thời tiết
         WeatherInfo weather = weatherService.getWeather(
-                request.getLatitude(), request.getLongitude()
-        );
+                request.getLatitude(), request.getLongitude());
         response.setWeather(weather);
-        log.info("Thời tiết: {}°C, {}", weather.getTemp(), weather.getDescription());
 
-        // ─── STEP 2: Gọi Gemini LLM gợi ý món ăn ───
-        log.info("Step 2: Đang gọi Gemini AI gợi ý món ăn...");
+        // Step 2: Gọi Gemini gợi ý món
         String weatherSummary = weatherService.getWeatherSummary(weather);
         List<String> excludeDishes = request.getExcludeDishes();
         RecipeInfo recipe = geminiService.suggestRecipe(weatherSummary, excludeDishes);
         response.setRecipe(recipe);
-        log.info("Món ăn gợi ý: {}", recipe.getName());
 
-        // ─── STEP 2.5: Search ảnh món ăn từ Unsplash ───
-        log.info("Step 2.5: Đang tìm ảnh món ăn...");
+        // Step 3: Tìm ảnh món ăn
         String dishImageUrl = imageSearchService.searchDishImage(recipe.getName());
         if (dishImageUrl != null) {
             recipe.setImage_url(dishImageUrl);
-            log.info("Ảnh món ăn: {}", dishImageUrl);
         }
 
-        // ─── STEP 3: RAG Search - Tìm nguyên liệu trong DB ───
-        log.info("Step 3: Đang tìm nguyên liệu phù hợp trong database (RAG Search)...");
-        List<String> ingredientNames = recipe.getIngredients().stream()
-                .map(IngredientInfo::getName)
-                .collect(Collectors.toList());
-
-        List<ProductInfo> matchedProducts = productSearchService.searchForIngredients(
-                ingredientNames, request.getLatitude(), request.getLongitude()
-        );
-        response.setProducts(matchedProducts);
-        log.info("Tìm được {} sản phẩm phù hợp", matchedProducts.size());
-
-        // Map sản phẩm tìm được vào nguyên liệu tương ứng
-        mapProductsToIngredients(recipe.getIngredients(), matchedProducts);
-
-        // Tính tổng chi phí ước tính
-        double totalCost = matchedProducts.stream()
-                .mapToDouble(ProductInfo::getPrice)
-                .sum();
-        recipe.setTotal_cost(totalCost);
-
-        // ─── STEP 4: A* Routing - Tìm lộ trình tối ưu ───
-        log.info("Step 4: Đang tính lộ trình tối ưu (A* / Nearest Neighbor TSP)...");
-        List<Shop> shopsToVisit = getShopsFromProducts(matchedProducts);
-        RouteInfo route = routeService.findOptimalRoute(
-                request.getLatitude(), request.getLongitude(), shopsToVisit
-        );
-        response.setRoute(route);
-        log.info("Lộ trình: {} shops, {}km, ~{} phút",
-                route.getShops().size(), route.getTotal_distance(), route.getEstimated_time());
-
-        // ─── Bonus: Món ăn thay thế (hardcoded cho demo) ───
+        // Không còn RAG search sản phẩm, không còn route
+        response.setProducts(new ArrayList<>());
         response.setAlternative_recipes(new ArrayList<>());
 
-        log.info("=== HOÀN THÀNH GỢI Ý MÓN ĂN ===");
+        log.info("Gợi ý: {} ({}°C, {})", recipe.getName(), weather.getTemp(), weather.getDescription());
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Map sản phẩm đã tìm được vào từng nguyên liệu tương ứng
+     * POST /api/recipe/to-shopping-request — Tạo đơn đi chợ hộ từ công thức
+     * Body: { "userId": 1, "ingredients": ["2kg thịt heo", "1 bắp cải"...], "deliveryAddress": "...", "latitude": ..., "longitude": ... }
      */
-    private void mapProductsToIngredients(List<IngredientInfo> ingredients, List<ProductInfo> products) {
-        for (IngredientInfo ingredient : ingredients) {
-            // Tìm sản phẩm best match cho nguyên liệu này
-            for (ProductInfo product : products) {
-                String ingName = ingredient.getName().toLowerCase();
-                String prodName = product.getName().toLowerCase();
-                if (prodName.contains(ingName) || ingName.contains(prodName)) {
-                    ingredient.setProduct(product);
-                    break;
-                }
+    @PostMapping("/to-shopping-request")
+    public ResponseEntity<?> recipeToShoppingRequest(@RequestBody Map<String, Object> body) {
+        try {
+            @SuppressWarnings("unchecked")
+            List<String> ingredients = (List<String>) body.get("ingredients");
+
+            // Chuyển ingredients thành items format cho ShoppingRequestService
+            List<Map<String, String>> items = new ArrayList<>();
+            for (String ingredient : ingredients) {
+                items.add(Map.of("itemText", ingredient, "quantityNote", ""));
             }
-        }
-    }
 
-    /**
-     * Lấy danh sách Shop từ danh sách sản phẩm đã match
-     */
-    private List<Shop> getShopsFromProducts(List<ProductInfo> products) {
-        Set<Long> shopIds = new HashSet<>();
-        for (ProductInfo product : products) {
-            if (product.getShop_id() > 0) {
-                shopIds.add((long) product.getShop_id());
-            }
-        }
+            Map<String, Object> requestBody = new HashMap<>(body);
+            requestBody.put("items", items);
+            requestBody.putIfAbsent("notes", "Đơn từ AI Chef - gợi ý nấu ăn");
 
-        List<Shop> shops = new ArrayList<>();
-        for (Long shopId : shopIds) {
-            shopRepository.findById(shopId).ifPresent(shops::add);
+            var shoppingRequest = shoppingRequestService.createRequest(requestBody);
+            return ResponseEntity.ok(shoppingRequest);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-
-        return shops;
     }
 }
