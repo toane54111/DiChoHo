@@ -139,9 +139,9 @@ public class HomeActivity extends AppCompatActivity
         btnWallet.setOnClickListener(v ->
                 startActivity(new Intent(this, WalletActivity.class)));
 
-        // AI Chef banner
+        // AI Chef banner -> Sổ tay nấu ăn
         bannerSuggest.setOnClickListener(v ->
-                startActivity(new Intent(this, AIChefActivity.class)));
+                startActivity(new Intent(this, CookbookActivity.class)));
 
         // Action cards
         btnCreateList.setOnClickListener(v ->
