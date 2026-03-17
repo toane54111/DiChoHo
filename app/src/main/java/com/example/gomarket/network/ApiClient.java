@@ -19,9 +19,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ApiClient {
 
     // Emulator: 10.0.2.2 maps to host machine's localhost
-    // Thay bằng IP server thật khi deploy
-    private static final String SERVER_ROOT = "http://127.0.0.1:8080";
-    //private static final String SERVER_ROOT = "http://192.168.100.182:8080";
+    // Real device: dùng IP thực của máy tính (VD: 192.168.x.x)
+    //private static final String SERVER_ROOT = "http://127.0.0.1:8080";
+    private static final String SERVER_ROOT = "http://10.0.2.2:8080";
     private static final String BASE_URL = SERVER_ROOT + "/api/";
 
     /**
