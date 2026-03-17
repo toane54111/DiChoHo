@@ -9,12 +9,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager2.adapter.FragmentStateAdapter;
-import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.gomarket.adapter.PostFeedAdapter;
 import com.example.gomarket.model.CommunityPost;
@@ -26,8 +22,6 @@ import com.example.gomarket.util.SessionManager;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,11 +60,6 @@ public class HomeActivity extends AppCompatActivity
     // Bottom nav (5 tabs)
     private LinearLayout navHome, navTasks, navChat, navProfile;
     private FrameLayout navPost;
-
-    // Cookbook tabs
-    private ViewPager2 viewPagerCookbook;
-    private TabLayout tabLayoutCookbook;
-    private TextView tvSeeAllCookbook;
 
     // Services
     private ApiService apiService;
@@ -134,12 +123,6 @@ public class HomeActivity extends AppCompatActivity
         navChat = findViewById(R.id.navChat);
         navProfile = findViewById(R.id.navProfile);
 
-        // Cookbook tabs
-        viewPagerCookbook = findViewById(R.id.viewPagerCookbook);
-        tabLayoutCookbook = findViewById(R.id.tabLayoutCookbook);
-        tvSeeAllCookbook = findViewById(R.id.tvSeeAllCookbook);
-
-        setupCookbookViewPager();
     }
 
     private void setupRecyclerView() {
@@ -152,8 +135,9 @@ public class HomeActivity extends AppCompatActivity
         // Header
         searchBar.setOnClickListener(v ->
                 startActivity(new Intent(this, SearchActivity.class)));
+        // Icon 📖 Sổ tay nấu ăn -> mở CookbookActivity
         btnNotification.setOnClickListener(v ->
-                Toast.makeText(this, "Mở thông báo", Toast.LENGTH_SHORT).show());
+                startActivity(new Intent(this, CookbookActivity.class)));
         btnWallet.setOnClickListener(v ->
                 startActivity(new Intent(this, WalletActivity.class)));
 
@@ -170,10 +154,6 @@ public class HomeActivity extends AppCompatActivity
         // Community feed
         tvSeeAllPosts.setOnClickListener(v ->
                 startActivity(new Intent(this, CommunityFeedActivity.class)));
-
-        // Cookbook tabs
-        tvSeeAllCookbook.setOnClickListener(v ->
-                startActivity(new Intent(this, CookbookActivity.class)));
 
         // Floating order card
         btnDismissOrder.setOnClickListener(v -> dismissFloatingOrder());
@@ -422,51 +402,4 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
-    // ═══ COOKBOOK VIEWPAGER SETUP ═══
-
-    private void setupCookbookViewPager() {
-        CookbookHomePagerAdapter adapter = new CookbookHomePagerAdapter(this);
-        viewPagerCookbook.setAdapter(adapter);
-
-        new TabLayoutMediator(tabLayoutCookbook, viewPagerCookbook, (tab, position) -> {
-            switch (position) {
-                case 0:
-                    tab.setText("⭐ Gợi ý");
-                    break;
-                case 1:
-                    tab.setText("🌐 Cộng đồng");
-                    break;
-                case 2:
-                    tab.setText("👤 Cá nhân");
-                    break;
-            }
-        }).attach();
-    }
-
-    // Adapter for Home Cookbook ViewPager2
-    private static class CookbookHomePagerAdapter extends FragmentStateAdapter {
-
-        public CookbookHomePagerAdapter(FragmentActivity activity) {
-            super(activity);
-        }
-
-        @Override
-        public Fragment createFragment(int position) {
-            switch (position) {
-                case 0:
-                    return new SuggestionFragment();
-                case 1:
-                    return new CommunityFragment();
-                case 2:
-                    return new PersonalFragment();
-                default:
-                    return new SuggestionFragment();
-            }
-        }
-
-        @Override
-        public int getItemCount() {
-            return 3;
-        }
-    }
 }
