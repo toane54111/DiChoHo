@@ -65,10 +65,10 @@ public class RecipeCardAdapter extends RecyclerView.Adapter<RecipeCardAdapter.Re
 
         public RecipeViewHolder(@NonNull View itemView) {
             super(itemView);
-            ivRecipeImage = itemView.findViewById(R.id.ivRecipeImage);
+            ivRecipeImage = itemView.findViewById(R.id.imgRecipe);
             tvRecipeName = itemView.findViewById(R.id.tvRecipeName);
             tvDescription = itemView.findViewById(R.id.tvDescription);
-            tvCost = itemView.findViewById(R.id.tvCost);
+            tvCost = itemView.findViewById(R.id.tvEstimatedPrice);
             tvLikeCount = itemView.findViewById(R.id.tvLikeCount);
         }
     }
