@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <EditText
+        android:id="@+id/etItemName"
+        android:layout_width="0dp"
+        android:layout_height="44dp"
+        android:layout_weight="3"
+        android:background="@drawable/bg_input_rounded"
+        android:hint="Tên món"
+        android:inputType="text"
+        android:paddingHorizontal="12dp"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/etQuantity"
+        android:layout_width="0dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="6dp"
+        android:layout_weight="2"
+        android:background="@drawable/bg_input_rounded"
+        android:hint="SL"
+        android:inputType="text"
+        android:paddingHorizontal="10dp"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/etEstimatedPrice"
+        android:layout_width="0dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="6dp"
+        android:layout_weight="2"
+        android:background="@drawable/bg_input_rounded"
+        android:hint="Giá (đ)"
+        android:inputType="number"
+        android:paddingHorizontal="10dp"
+        android:textSize="13sp" />
+
+    <ImageView
+        android:id="@+id/btnRemove"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="6dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Remove"
+        android:padding="4dp"
+        android:src="@drawable/ic_back"
+        android:rotation="180"
+        android:clickable="true"
+        android:focusable="true" />
+</LinearLayout>

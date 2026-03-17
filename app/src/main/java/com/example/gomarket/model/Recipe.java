@@ -66,6 +66,9 @@ public class Recipe {
         @SerializedName("quantity")
         private String quantity;
 
+        @SerializedName("estimated_price")
+        private double estimatedPrice;
+
         @SerializedName("product")
         private Product matchedProduct;
 
@@ -76,6 +79,9 @@ public class Recipe {
 
         public String getQuantity() { return quantity; }
         public void setQuantity(String quantity) { this.quantity = quantity; }
+
+        public double getEstimatedPrice() { return estimatedPrice; }
+        public void setEstimatedPrice(double estimatedPrice) { this.estimatedPrice = estimatedPrice; }
 
         public Product getMatchedProduct() { return matchedProduct; }
         public void setMatchedProduct(Product matchedProduct) { this.matchedProduct = matchedProduct; }

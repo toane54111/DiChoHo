@@ -37,6 +37,12 @@ public class ShoppingRequest {
     @SerializedName("paymentStatus")
     private String paymentStatus;
 
+    @SerializedName("shopperFee")
+    private Double shopperFee;
+
+    @SerializedName("frozenAmount")
+    private Double frozenAmount;
+
     @SerializedName("totalActualCost")
     private Double totalActualCost;
 
@@ -78,6 +84,8 @@ public class ShoppingRequest {
     public String getNotes() { return notes; }
     public String getPaymentMethod() { return paymentMethod; }
     public String getPaymentStatus() { return paymentStatus; }
+    public Double getShopperFee() { return shopperFee; }
+    public Double getFrozenAmount() { return frozenAmount; }
     public Double getTotalActualCost() { return totalActualCost; }
     public Double getShopperLat() { return shopperLat; }
     public Double getShopperLng() { return shopperLng; }

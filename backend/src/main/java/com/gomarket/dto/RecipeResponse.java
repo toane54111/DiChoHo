@@ -60,12 +60,15 @@ public class RecipeResponse {
     public static class IngredientInfo {
         private String name;
         private String quantity;
+        private double estimated_price;
         private ProductInfo product;
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
         public String getQuantity() { return quantity; }
         public void setQuantity(String quantity) { this.quantity = quantity; }
+        public double getEstimated_price() { return estimated_price; }
+        public void setEstimated_price(double estimated_price) { this.estimated_price = estimated_price; }
         public ProductInfo getProduct() { return product; }
         public void setProduct(ProductInfo product) { this.product = product; }
     }

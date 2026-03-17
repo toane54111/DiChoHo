@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gomarket.adapter.IngredientAdapter;
 import com.example.gomarket.database.RecipeDbHelper;
-import com.example.gomarket.model.OrderItem;
 import com.example.gomarket.model.Recipe;
 import com.example.gomarket.provider.RecipeContentProvider;
 import com.google.android.material.button.MaterialButton;
@@ -188,8 +187,21 @@ public class RecipeDetailActivity extends AppCompatActivity {
         });
 
         btnBuyIngredients.setOnClickListener(v -> {
-            addIngredientsToCart();
-            Intent intent = new Intent(this, CartActivity.class);
+            // Chuyển nguyên liệu thành đơn đi chợ hộ
+            Intent intent = new Intent(this, CreateShoppingRequestActivity.class);
+            if (recipe.getIngredients() != null) {
+                StringBuilder items = new StringBuilder();
+                for (Recipe.Ingredient ing : recipe.getIngredients()) {
+                    if (items.length() > 0) items.append("||");
+                    items.append(ing.getName());
+                    if (ing.getQuantity() != null) items.append("::").append(ing.getQuantity());
+                }
+                intent.putExtra("ITEMS", items.toString());
+            }
+            if (recipe.getTotalCost() > 0) {
+                intent.putExtra("BUDGET", (long) recipe.getTotalCost());
+            }
+            intent.putExtra("NOTE", "Nguyên liệu cho: " + recipe.getName());
             startActivity(intent);
         });
     }
@@ -210,52 +222,4 @@ public class RecipeDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void addIngredientsToCart() {
-        if (recipe.getIngredients() != null) {
-            // Xóa giỏ hàng cũ trước khi thêm nguyên liệu mới từ công thức
-            CartActivity.clearCart();
-
-            int addedCount = 0;
-            int skippedCount = 0;
-
-            for (Recipe.Ingredient ingredient : recipe.getIngredients()) {
-                // Chỉ thêm nguyên liệu có sản phẩm tương ứng trong DB (còn hàng)
-                if (ingredient.getMatchedProduct() != null) {
-                    double price = ingredient.getMatchedProduct().getPrice();
-                    int productId = ingredient.getMatchedProduct().getId();
-                    String imageUrl = ingredient.getMatchedProduct().getImageUrl() != null
-                            ? ingredient.getMatchedProduct().getImageUrl() : "";
-
-                    OrderItem item = new OrderItem(
-                            productId,
-                            ingredient.getName(),
-                            1,
-                            price,
-                            imageUrl
-                    );
-                    CartActivity.addToCart(item);
-                    addedCount++;
-                } else {
-                    // Nguyên liệu hết hàng → bỏ qua, không thêm vào giỏ
-                    skippedCount++;
-                }
-            }
-
-            if (addedCount > 0 && skippedCount > 0) {
-                Toast.makeText(this,
-                        "Đã thêm " + addedCount + " nguyên liệu vào giỏ! ("
-                                + skippedCount + " nguyên liệu hết hàng)",
-                        Toast.LENGTH_LONG).show();
-            } else if (addedCount > 0) {
-                Toast.makeText(this,
-                        "Đã thêm " + addedCount + " nguyên liệu vào giỏ!",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this,
-                        "Không có nguyên liệu nào còn hàng để thêm vào giỏ!",
-                        Toast.LENGTH_SHORT).show();
-                return; // Không mở CartActivity nếu không có gì để thêm
-            }
-        }
-    }
 }

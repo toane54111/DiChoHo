@@ -72,6 +72,66 @@ public class WalletService {
                 wallet.getId(), "PAYMENT", -amount, desc, orderId));
     }
 
+    /** Đóng băng tiền khi tạo đơn (trừ trước, hoàn lại nếu hủy) */
+    @Transactional
+    public void freeze(Long userId, Long orderId, Long amount) {
+        Wallet wallet = walletRepository.findWithLockByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ví"));
+
+        if (wallet.getBalance() < amount)
+            throw new RuntimeException("Số dư ví không đủ. Cần: " +
+                    String.format("%,d", amount) + "đ, hiện có: " +
+                    String.format("%,d", wallet.getBalance()) + "đ");
+
+        wallet.setBalance(wallet.getBalance() - amount);
+        walletRepository.save(wallet);
+
+        transactionRepository.save(new WalletTransaction(
+                wallet.getId(), "FREEZE", -amount,
+                "Đóng băng cho đơn #" + orderId, orderId));
+    }
+
+    /** Hoàn tiền đóng băng khi hủy đơn */
+    @Transactional
+    public void unfreeze(Long userId, Long orderId, Long amount) {
+        Wallet wallet = getOrCreate(userId);
+        wallet.setBalance(wallet.getBalance() + amount);
+        walletRepository.save(wallet);
+
+        transactionRepository.save(new WalletTransaction(
+                wallet.getId(), "UNFREEZE", amount,
+                "Hoàn tiền đóng băng đơn #" + orderId, orderId));
+    }
+
+    /** Chuyển phí đi chợ cho shopper */
+    @Transactional
+    public void creditShopper(Long shopperId, Long orderId, Long amount) {
+        Wallet wallet = getOrCreate(shopperId);
+        wallet.setBalance(wallet.getBalance() + amount);
+        walletRepository.save(wallet);
+
+        transactionRepository.save(new WalletTransaction(
+                wallet.getId(), "EARNING", amount,
+                "Phí đi chợ đơn #" + orderId, orderId));
+    }
+
+    /** Trừ thêm khi vượt ngân sách */
+    @Transactional
+    public void chargeExtra(Long userId, Long orderId, Long extraAmount) {
+        Wallet wallet = walletRepository.findWithLockByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ví"));
+
+        if (wallet.getBalance() < extraAmount)
+            throw new RuntimeException("Số dư ví không đủ để trả phần vượt ngân sách");
+
+        wallet.setBalance(wallet.getBalance() - extraAmount);
+        walletRepository.save(wallet);
+
+        transactionRepository.save(new WalletTransaction(
+                wallet.getId(), "EXTRA_CHARGE", -extraAmount,
+                "Phí vượt ngân sách đơn #" + orderId, orderId));
+    }
+
     /** Hoàn tiền khi hủy đơn */
     @Transactional
     public void refund(Long userId, Long orderId, Long amount) {

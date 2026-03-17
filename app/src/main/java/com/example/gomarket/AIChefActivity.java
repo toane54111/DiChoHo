@@ -22,7 +22,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.gomarket.model.RecipeRequest;
-import com.example.gomarket.model.Product;
 import com.example.gomarket.model.Recipe;
 import com.example.gomarket.model.RecipeResponse;
 import com.example.gomarket.model.WeatherData;
@@ -32,8 +31,6 @@ import com.example.gomarket.service.LocationService;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.gson.Gson;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,12 +109,30 @@ public class AIChefActivity extends AppCompatActivity {
 
         btnThemVaoGio.setOnClickListener(v -> {
             if (currentResponse != null && currentResponse.getRecipe() != null) {
-                Intent intent = new Intent(this, RecipeDetailActivity.class);
-                intent.putExtra("recipe_json", new Gson().toJson(currentResponse));
+                // Tạo đơn đi chợ hộ từ recipe
+                Recipe recipe = currentResponse.getRecipe();
+                ArrayList<String> itemNames = new ArrayList<>();
+                ArrayList<String> itemQuantities = new ArrayList<>();
+                ArrayList<Double> itemPrices = new ArrayList<>();
+                if (recipe.getIngredients() != null) {
+                    for (Recipe.Ingredient ing : recipe.getIngredients()) {
+                        itemNames.add(ing.getName());
+                        itemQuantities.add(ing.getQuantity() != null ? ing.getQuantity() : "");
+                        itemPrices.add(ing.getEstimatedPrice());
+                    }
+                }
+                Intent intent = new Intent(this, CreateShoppingRequestActivity.class);
+                intent.putStringArrayListExtra("itemNames", itemNames);
+                intent.putStringArrayListExtra("itemQuantities", itemQuantities);
+                // Pass prices as double array
+                double[] pricesArr = new double[itemPrices.size()];
+                for (int i = 0; i < itemPrices.size(); i++) pricesArr[i] = itemPrices.get(i);
+                intent.putExtra("itemPrices", pricesArr);
+                intent.putExtra("budget", recipe.getTotalCost());
+                intent.putExtra("fromAIChef", true);
                 startActivity(intent);
             } else {
-                Intent intent = new Intent(this, RecipeDetailActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(this, CreateShoppingRequestActivity.class));
             }
         });
 
@@ -311,13 +326,7 @@ public class AIChefActivity extends AppCompatActivity {
 
         double totalCost = recipe.getTotalCost();
         if (totalCost > 0) {
-            tvTotalCost.setText(String.format("~%,.0fd", totalCost));
-        } else if (currentResponse.getProducts() != null) {
-            double sum = 0;
-            for (Product p : currentResponse.getProducts()) {
-                sum += p.getPrice();
-            }
-            if (sum > 0) tvTotalCost.setText(String.format("~%,.0fd", sum));
+            tvTotalCost.setText(String.format("~%,.0fđ", totalCost));
         }
     }
 
@@ -356,15 +365,13 @@ public class AIChefActivity extends AppCompatActivity {
 
         for (int i = 0; i < ingredients.size(); i++) {
             Recipe.Ingredient ingredient = ingredients.get(i);
-            boolean hasMatch = ingredient.getMatchedProduct() != null;
-            double price = hasMatch ? ingredient.getMatchedProduct().getPrice() : 0;
+            double price = ingredient.getEstimatedPrice();
             addIngredientRow(emojis[i % emojis.length], ingredient.getName(),
-                    ingredient.getQuantity(), hasMatch, price);
+                    ingredient.getQuantity(), price);
         }
     }
 
-    private void addIngredientRow(String emoji, String name, String quantity,
-                                   boolean available, double price) {
+    private void addIngredientRow(String emoji, String name, String quantity, double estimatedPrice) {
         LinearLayout row = new LinearLayout(this);
         row.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -372,10 +379,6 @@ public class AIChefActivity extends AppCompatActivity {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(0, dpToPx(8), 0, dpToPx(8));
-
-        if (!available) {
-            row.setAlpha(0.4f);
-        }
 
         // Emoji
         TextView tvEmoji = new TextView(this);
@@ -394,10 +397,7 @@ public class AIChefActivity extends AppCompatActivity {
         TextView tvName = new TextView(this);
         tvName.setText(name);
         tvName.setTextSize(14);
-        tvName.setTextColor(available ? 0xFF212121 : 0xFF9E9E9E);
-        if (!available) {
-            tvName.setTypeface(null, Typeface.ITALIC);
-        }
+        tvName.setTextColor(0xFF212121);
         nameCol.addView(tvName);
 
         TextView tvQty = new TextView(this);
@@ -408,18 +408,15 @@ public class AIChefActivity extends AppCompatActivity {
 
         row.addView(nameCol);
 
-        // Price or unavailable label
+        // Estimated price
         TextView tvPrice = new TextView(this);
-        if (available && price > 0) {
-            tvPrice.setText(String.format("%,.0fd", price));
+        if (estimatedPrice > 0) {
+            tvPrice.setText(String.format("~%,.0fđ", estimatedPrice));
             tvPrice.setTextColor(0xFF4CAF50);
             tvPrice.setTextSize(14);
             tvPrice.setTypeface(null, Typeface.BOLD);
         } else {
-            tvPrice.setText("Hết hàng");
-            tvPrice.setTextColor(0xFFE53935);
-            tvPrice.setTextSize(12);
-            tvPrice.setTypeface(null, Typeface.ITALIC);
+            tvPrice.setText("");
         }
         row.addView(tvPrice);
 
@@ -440,14 +437,14 @@ public class AIChefActivity extends AppCompatActivity {
         btnDoiMon.setVisibility(View.VISIBLE);
 
         layoutIngredients.removeAllViews();
-        String[][] defaultIngs = {
-                {"🦐", "Tom su", "300g"}, {"🦑", "Muc ong", "200g"},
-                {"🍄", "Nam kim cham", "150g"}, {"🥬", "Rau muong", "200g"},
-                {"🌶️", "Sa", "3 cay"}, {"🧅", "La chanh", "5 la"},
-                {"🌶️", "Ot hiem", "3 qua"}, {"🥥", "Nuoc cot dua", "200ml"}
+        Object[][] defaultIngs = {
+                {"🦐", "Tom su", "300g", 75000.0}, {"🦑", "Muc ong", "200g", 60000.0},
+                {"🍄", "Nam kim cham", "150g", 15000.0}, {"🥬", "Rau muong", "200g", 8000.0},
+                {"🌶️", "Sa", "3 cay", 5000.0}, {"🧅", "La chanh", "5 la", 3000.0},
+                {"🌶️", "Ot hiem", "3 qua", 5000.0}, {"🥥", "Nuoc cot dua", "200ml", 15000.0}
         };
-        for (String[] ing : defaultIngs) {
-            addIngredientRow(ing[0], ing[1], ing[2], true, 0);
+        for (Object[] ing : defaultIngs) {
+            addIngredientRow((String) ing[0], (String) ing[1], (String) ing[2], (double) ing[3]);
         }
 
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();

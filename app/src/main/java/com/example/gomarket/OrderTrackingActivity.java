@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -13,7 +14,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
-import com.example.gomarket.model.Order;
+import com.example.gomarket.model.ShoppingRequest;
+import com.example.gomarket.model.ShoppingRequestItem;
 import com.example.gomarket.network.ApiClient;
 import com.example.gomarket.network.ApiService;
 import com.example.gomarket.receiver.OrderStatusReceiver;
@@ -39,7 +41,8 @@ public class OrderTrackingActivity extends AppCompatActivity
     private TextView btnChat, btnCall;
     private MaterialButton btnViewFullMap;
 
-    private int orderId;
+    private long requestId;
+    private String shopperPhone;
     private OrderStatusReceiver orderStatusReceiver;
     private ApiService apiService;
 
@@ -48,29 +51,32 @@ public class OrderTrackingActivity extends AppCompatActivity
     private IMapController mapController;
     private Marker shopperMarker;
     private Marker destinationMarker;
-    private double destLat = 10.7769; // Fake default
-    private double destLng = 106.7009; // Fake default
+    private double destLat = 10.7769;
+    private double destLng = 106.7009;
     private LocationReceiver locationReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // Initialize OSMDroid configuration before loading layout
+
         Context ctx = getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
 
         setContentView(R.layout.activity_order_tracking);
 
-        orderId = getIntent().getIntExtra("order_id", -1);
+        requestId = getIntent().getLongExtra("REQUEST_ID", -1);
+        // Fallback for legacy int extra
+        if (requestId <= 0) {
+            requestId = getIntent().getIntExtra("order_id", -1);
+        }
         apiService = ApiClient.getApiService(this);
 
         initViews();
         setupClickListeners();
         setupMap();
 
-        if (orderId > 0) {
-            loadOrderDetails();
+        if (requestId > 0) {
+            loadRequestDetails();
             startOrderPolling();
         }
     }
@@ -91,12 +97,12 @@ public class OrderTrackingActivity extends AppCompatActivity
         tvGpsStatus = findViewById(R.id.tvGpsStatus);
         btnViewFullMap = findViewById(R.id.btnViewFullMap);
 
-        tvTitle.setText("Đơn hàng #" + String.format("%03d", orderId));
+        tvTitle.setText("Đơn #" + String.format("%03d", requestId));
     }
 
     private void setupMap() {
         map = findViewById(R.id.map);
-        map.setMultiTouchControls(false); // Mini-map shouldn't be very interactive
+        map.setMultiTouchControls(false);
         mapController = map.getController();
         mapController.setZoom(15.0);
     }
@@ -109,57 +115,85 @@ public class OrderTrackingActivity extends AppCompatActivity
             startActivity(intent);
         });
 
-        btnCall.setOnClickListener(v ->
-                Toast.makeText(this, "Đang gọi cho Shopper...", Toast.LENGTH_SHORT).show()
-        );
+        btnCall.setOnClickListener(v -> {
+            if (shopperPhone != null && !shopperPhone.isEmpty()) {
+                Intent intent = new Intent(Intent.ACTION_DIAL);
+                intent.setData(Uri.parse("tel:" + shopperPhone));
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, "Chưa có thông tin shopper", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         btnViewFullMap.setOnClickListener(v -> {
             Intent intent = new Intent(this, ShopperMapActivity.class);
             intent.putExtra("role", "BUYER");
-            intent.putExtra("order_id", orderId);
+            intent.putExtra("REQUEST_ID", requestId);
             startActivity(intent);
         });
     }
 
-    private void loadOrderDetails() {
-        apiService.getOrder(orderId).enqueue(new Callback<Order>() {
+    private void loadRequestDetails() {
+        apiService.getShoppingRequest(requestId).enqueue(new Callback<ShoppingRequest>() {
             @Override
-            public void onResponse(Call<Order> call, Response<Order> response) {
+            public void onResponse(Call<ShoppingRequest> call, Response<ShoppingRequest> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Order order = response.body();
-                    destLat = order.getLatitude() != 0 ? order.getLatitude() : destLat;
-                    destLng = order.getLongitude() != 0 ? order.getLongitude() : destLng;
-                    
+                    ShoppingRequest req = response.body();
+                    if (req.getLatitude() != null && req.getLatitude() != 0) {
+                        destLat = req.getLatitude();
+                    }
+                    if (req.getLongitude() != null && req.getLongitude() != 0) {
+                        destLng = req.getLongitude();
+                    }
+
                     if (map != null) {
                         GeoPoint dest = new GeoPoint(destLat, destLng);
                         mapController.setCenter(dest);
-                        
+
                         destinationMarker = new Marker(map);
                         destinationMarker.setPosition(dest);
                         destinationMarker.setTitle("Nơi giao hàng");
-                        // Use default OSMDroid marker or custom drawable
                         map.getOverlays().add(destinationMarker);
                         map.invalidate();
                     }
 
-                    updateOrderUI(order);
+                    updateRequestUI(req);
                 }
             }
 
             @Override
-            public void onFailure(Call<Order> call, Throwable t) {
+            public void onFailure(Call<ShoppingRequest> call, Throwable t) {
                 Toast.makeText(OrderTrackingActivity.this,
-                        "Không thể tải thông tin đơn hàng", Toast.LENGTH_SHORT).show();
+                        "Không thể tải thông tin đơn", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    private void updateRequestUI(ShoppingRequest req) {
+        if (req.getShopperName() != null) {
+            tvShopperName.setText(req.getShopperName());
+        } else {
+            tvShopperName.setText("Đang tìm shopper...");
+        }
+
+        shopperPhone = req.getShopperPhone();
+
+        // Show items count in route info
+        int itemCount = req.getItems() != null ? req.getItems().size() : 0;
+        tvRouteShops.setText(itemCount + " món");
+
+        // Budget in distance field
+        if (req.getBudget() != null) {
+            tvRouteDistance.setText(String.format("%,.0fđ", req.getBudget()));
+        }
+
+        updateStepperUI(req.getStatus());
+    }
+
     private void startOrderPolling() {
-        // Đăng ký Status Receiver
         orderStatusReceiver = new OrderStatusReceiver(this);
         IntentFilter statusFilter = new IntentFilter(OrderPollingService.ACTION_ORDER_STATUS_CHANGED);
-        
-        // Đăng ký Location Receiver
+
         locationReceiver = new LocationReceiver();
         IntentFilter locationFilter = new IntentFilter(OrderPollingService.ACTION_SHOPPER_LOCATION_UPDATED);
 
@@ -171,9 +205,8 @@ public class OrderTrackingActivity extends AppCompatActivity
             registerReceiver(locationReceiver, locationFilter);
         }
 
-        // Start OrderPollingService
         Intent serviceIntent = new Intent(this, OrderPollingService.class);
-        serviceIntent.putExtra(OrderPollingService.EXTRA_ORDER_ID, orderId);
+        serviceIntent.putExtra(OrderPollingService.EXTRA_ORDER_ID, (int) requestId);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
         } else {
@@ -181,27 +214,38 @@ public class OrderTrackingActivity extends AppCompatActivity
         }
     }
 
-    private void updateOrderUI(Order order) {
-        if (order.getShopperName() != null) {
-            tvShopperName.setText(order.getShopperName());
-        }
-
-        updateStepperUI(order.getStatus());
-    }
-
     private void updateStepperUI(String status) {
-        // Reset all steps to gray
+        if (status == null) return;
+
+        stepIcon1.setBackgroundResource(R.drawable.bg_icon_green);
+        stepIcon1.setText("✓");
+
+        stepIcon2.setBackgroundResource(R.drawable.bg_icon_gray);
         stepIcon3.setBackgroundResource(R.drawable.bg_icon_gray);
         stepIcon4.setBackgroundResource(R.drawable.bg_icon_gray);
         btnViewFullMap.setVisibility(View.GONE);
 
         switch (status) {
+            case "ACCEPTED":
+                stepIcon2.setBackgroundResource(R.drawable.bg_icon_green);
+                stepIcon2.setText("✓");
+                break;
+            case "SHOPPING":
+                stepIcon2.setBackgroundResource(R.drawable.bg_icon_green);
+                stepIcon2.setText("✓");
+                stepIcon3.setBackgroundResource(R.drawable.bg_icon_green);
+                stepIcon3.setText("✓");
+                break;
             case "DELIVERING":
+                stepIcon2.setBackgroundResource(R.drawable.bg_icon_green);
+                stepIcon2.setText("✓");
                 stepIcon3.setBackgroundResource(R.drawable.bg_icon_green);
                 stepIcon3.setText("✓");
                 btnViewFullMap.setVisibility(View.VISIBLE);
                 break;
             case "COMPLETED":
+                stepIcon2.setBackgroundResource(R.drawable.bg_icon_green);
+                stepIcon2.setText("✓");
                 stepIcon3.setBackgroundResource(R.drawable.bg_icon_green);
                 stepIcon3.setText("✓");
                 stepIcon4.setBackgroundResource(R.drawable.bg_icon_green);
@@ -227,13 +271,12 @@ public class OrderTrackingActivity extends AppCompatActivity
             shopperMarker.setTitle("Shopper");
             map.getOverlays().add(shopperMarker);
         }
-        
+
         shopperMarker.setPosition(shopperPos);
         mapController.animateTo(shopperPos);
 
         if (isStale) {
             tvGpsStatus.setVisibility(View.VISIBLE);
-            // Optionally change marker icon for stale GPS (for OSMDroid, using setIcon with a drawable)
         } else {
             tvGpsStatus.setVisibility(View.GONE);
         }
@@ -251,11 +294,12 @@ public class OrderTrackingActivity extends AppCompatActivity
             }
         }
     }
-    
+
     @Override
     protected void onResume() {
         super.onResume();
         if (map != null) map.onResume();
+        if (requestId > 0) loadRequestDetails();
     }
 
     @Override
@@ -271,5 +315,3 @@ public class OrderTrackingActivity extends AppCompatActivity
         if (locationReceiver != null) unregisterReceiver(locationReceiver);
     }
 }
-
-

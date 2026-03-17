@@ -1,22 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:background="#F5F5F5"
+    android:clipChildren="false">
 
     <!-- Nội dung chính (cuộn được) -->
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/bottomNavigation">
+        android:clipToPadding="false"
+        android:paddingBottom="68dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Header -->
+            <!-- ═══ HEADER (giữ nguyên UI cũ) ═══ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -41,9 +43,9 @@
                         <ImageView
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:contentDescription="Avatar"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/img"
-                            android:contentDescription="Avatar" />
+                            android:src="@drawable/img" />
 
                     </com.google.android.material.card.MaterialCardView>
 
@@ -51,8 +53,8 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginStart="12dp"
+                        android:layout_weight="1"
                         android:orientation="vertical">
 
                         <TextView
@@ -90,17 +92,38 @@
 
                     </LinearLayout>
 
+                    <!-- Ví tiền -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnWallet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="8dp"
+                        app:cardBackgroundColor="#FFFFFF"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="2dp">
+
+                        <TextView
+                            android:id="@+id/tvWalletBalance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:paddingHorizontal="10dp"
+                            android:text="💳 --"
+                            android:textColor="#4CAF50"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </com.google.android.material.card.MaterialCardView>
+
                     <!-- Nút thông báo -->
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/btnNotification"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:layout_marginEnd="8dp"
-                        app:cardCornerRadius="20dp"
-                        app:cardElevation="2dp"
-                        app:cardBackgroundColor="#FFFFFF"
                         android:clickable="true"
-                        android:focusable="true">
+                        android:focusable="true"
+                        app:cardBackgroundColor="#FFFFFF"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="2dp">
 
                         <TextView
                             android:layout_width="match_parent"
@@ -111,45 +134,6 @@
 
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- Nút giỏ hàng + badge -->
-                    <FrameLayout
-                        android:layout_width="40dp"
-                        android:layout_height="40dp">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:id="@+id/btnCart"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            app:cardCornerRadius="20dp"
-                            app:cardElevation="2dp"
-                            app:cardBackgroundColor="#FFFFFF"
-                            android:clickable="true"
-                            android:focusable="true">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="🛒"
-                                android:textSize="18sp" />
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <!-- Badge số lượng giỏ hàng -->
-                        <TextView
-                            android:id="@+id/tvCartBadge"
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:layout_gravity="top|end"
-                            android:background="@drawable/bg_badge_red"
-                            android:gravity="center"
-                            android:textColor="#FFFFFF"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:visibility="gone" />
-
-                    </FrameLayout>
-
                 </LinearLayout>
 
                 <!-- Thanh tìm kiếm -->
@@ -158,11 +142,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:layout_marginTop="16dp"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="2dp"
-                    app:cardBackgroundColor="#FFFFFF"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    app:cardBackgroundColor="#FFFFFF"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -183,7 +167,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
                             android:layout_weight="1"
-                            android:text="Tìm kiếm sản phẩm..."
+                            android:text="Tìm người đi chợ, món ăn, hoặc đồ quê..."
                             android:textColor="#9E9E9E"
                             android:textSize="14sp" />
 
@@ -199,37 +183,34 @@
 
             </LinearLayout>
 
-            <!-- Banner gợi ý món ăn -->
+            <!-- ═══ BANNER GỢI Ý MÓN ĂN (giữ nguyên UI cũ) ═══ -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/bannerSuggest"
                 android:layout_width="match_parent"
                 android:layout_height="150dp"
                 android:layout_margin="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
                 android:clickable="true"
-                android:focusable="true">
+                android:focusable="true"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
 
-                    <!-- Ảnh nền (thay R.drawable.bg_banner_food bằng ảnh của bạn) -->
                     <ImageView
                         android:id="@+id/imgBannerBackground"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:contentDescription="Banner background"
                         android:scaleType="centerCrop"
-                        android:src="@drawable/lauthai"
-                        android:contentDescription="Banner background" />
+                        android:src="@drawable/lauthai" />
 
-                    <!-- Lớp phủ tối để chữ dễ đọc -->
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="#40000000" />
 
-                    <!-- Nội dung -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -238,7 +219,6 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
-                        <!-- Tiêu đề -->
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -262,14 +242,13 @@
 
                         </LinearLayout>
 
-                        <!-- Nút gợi ý -->
                         <com.google.android.material.card.MaterialCardView
                             android:layout_width="wrap_content"
                             android:layout_height="36dp"
                             android:layout_marginTop="12dp"
+                            app:cardBackgroundColor="#FFFFFF"
                             app:cardCornerRadius="18dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="#FFFFFF">
+                            app:cardElevation="0dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -289,368 +268,31 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-
-            <!-- Danh mục -->
+            <!-- ═══ PHẦN MỚI: 2 ACTION CARDS ═══ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Danh mục"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#212121" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
-
-                    <!-- Rau lá -->
-                    <LinearLayout
-                        android:id="@+id/categoryVegetable"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="2dp"
-                            app:cardBackgroundColor="#E8F5E9">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="🥬"
-                                android:textSize="28sp" />
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Rau lá"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <!-- Thịt heo -->
-                    <LinearLayout
-                        android:id="@+id/categoryMeat"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="2dp"
-                            app:cardBackgroundColor="#FFEBEE">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="🥩"
-                                android:textSize="28sp" />
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Thịt heo"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <!-- Cá & Hải sản -->
-                    <LinearLayout
-                        android:id="@+id/categorySeafood"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="2dp"
-                            app:cardBackgroundColor="#E3F2FD">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="🐟"
-                                android:textSize="28sp" />
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Hải sản"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <!-- Trái cây -->
-                    <LinearLayout
-                        android:id="@+id/categoryFruit"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="2dp"
-                            app:cardBackgroundColor="#FFF3E0">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="🍎"
-                                android:textSize="28sp" />
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Trái cây"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Row 2: Củ quả, Thịt bò, Thịt gà, Xem thêm -->
-                <LinearLayout
-                    android:id="@+id/categoryRow2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
-
-                    <!-- Củ quả -->
-                    <LinearLayout
-                        android:id="@+id/categoryCuQua"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="2dp"
-                            app:cardBackgroundColor="#FFF8E1">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="🥕"
-                                android:textSize="28sp" />
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Củ quả"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <!-- Thịt bò -->
-                    <LinearLayout
-                        android:id="@+id/categoryThitBo"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="2dp"
-                            app:cardBackgroundColor="#FCE4EC">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="🐄"
-                                android:textSize="28sp" />
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Thịt bò"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <!-- Thịt gà & vịt -->
-                    <LinearLayout
-                        android:id="@+id/categoryThitGa"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="2dp"
-                            app:cardBackgroundColor="#FBE9E7">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="🍗"
-                                android:textSize="28sp" />
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Gà &amp; Vịt"
-                            android:textColor="#616161"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <!-- Xem thêm -->
-                    <LinearLayout
-                        android:id="@+id/categoryXemThem"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="2dp"
-                            app:cardBackgroundColor="#F5F5F5">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="➕"
-                                android:textSize="28sp" />
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Xem thêm"
-                            android:textColor="#4CAF50"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- 2 Banner: Đi chợ gần nhà + Shop nổi bật -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginHorizontal="16dp"
                 android:orientation="horizontal">
 
-                <!-- Đi chợ gần nhà -->
+                <!-- Tạo danh sách nhờ mua -->
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/btnDiChoGanNha"
+                    android:id="@+id/btnCreateList"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginEnd="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:cardBackgroundColor="#FFEBEE"
+                    android:layout_weight="1"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    app:cardBackgroundColor="#E8F5E9"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:padding="14dp">
 
-                        <!-- Nội dung bên trái -->
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -660,8 +302,8 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Đi Chợ Gần Nhà"
-                                android:textColor="#C62828"
+                                android:text="Nhờ Đi Chợ Hộ"
+                                android:textColor="#2E7D32"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
 
@@ -669,51 +311,49 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="Freeship đơn từ 50K"
-                                android:textColor="#E57373"
+                                android:text="Tạo danh sách"
+                                android:textColor="#66BB6A"
                                 android:textSize="11sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="trong bán kính 3km"
-                                android:textColor="#E57373"
+                                android:text="nhờ người mua giúp"
+                                android:textColor="#66BB6A"
                                 android:textSize="11sp" />
 
                         </LinearLayout>
 
-                        <!-- Icon bên phải -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:layout_alignParentBottom="true"
-                            android:text="🏪"
+                            android:text="📝"
                             android:textSize="36sp" />
 
                     </RelativeLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Shop nổi bật -->
+                <!-- Nhận đi chợ kiếm tiền -->
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/btnShopNoiBat"
+                    android:id="@+id/btnShopperMode"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:cardBackgroundColor="#FFF8E1"
+                    android:layout_weight="1"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    app:cardBackgroundColor="#E3F2FD"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:padding="14dp">
 
-                        <!-- Nội dung bên trái -->
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -723,8 +363,8 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Shop Nổi Bật"
-                                android:textColor="#F57F17"
+                                android:text="Nhận Đi Chợ"
+                                android:textColor="#1565C0"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
 
@@ -732,26 +372,25 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="Top 50+ shop chất"
-                                android:textColor="#FFB300"
+                                android:text="Kiếm tiền từ việc"
+                                android:textColor="#64B5F6"
                                 android:textSize="11sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="lượng tháng này"
-                                android:textColor="#FFB300"
+                                android:text="đi chợ hộ người khác"
+                                android:textColor="#64B5F6"
                                 android:textSize="11sp" />
 
                         </LinearLayout>
 
-                        <!-- Icon bên phải -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:layout_alignParentBottom="true"
-                            android:text="⭐"
+                            android:text="🛵"
                             android:textSize="36sp" />
 
                     </RelativeLayout>
@@ -759,13 +398,13 @@
                 </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
-            <!-- Sản phẩm nổi bật -->
+
+            <!-- ═══ PHẦN MỚI: COMMUNITY FEED ═══ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="20dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -773,94 +412,91 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="🔥 Sản phẩm nổi bật"
+                    android:text="🏘️ Bản tin chợ đồng hương"
+                    android:textColor="#212121"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#212121" />
+                    android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvSeeAll"
+                    android:id="@+id/tvSeeAllPosts"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Xem tất cả ›"
-                    android:textSize="14sp"
-                    android:textColor="#4CAF50"
                     android:clickable="true"
                     android:focusable="true"
-                    android:padding="4dp" />
+                    android:padding="4dp"
+                    android:text="Xem tất cả ›"
+                    android:textColor="#4CAF50"
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
-            <!-- GridView sản phẩm -->
-            <GridView
-                android:id="@+id/gridViewProducts"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvCommunityFeed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
-                android:numColumns="2"
-                android:horizontalSpacing="12dp"
-                android:verticalSpacing="12dp" />
+                android:layout_marginTop="8dp"
+                android:nestedScrollingEnabled="false"
+                android:paddingHorizontal="8dp" />
 
-            <!-- Nút Xem thêm sản phẩm -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/btnSeeMoreProducts"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeColor="#4CAF50"
-                app:strokeWidth="1dp"
-                android:clickable="true"
-                android:focusable="true">
+            <!-- Empty feed state -->
+            <LinearLayout
+                android:id="@+id/emptyFeedState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="40dp"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🏘️"
+                    android:textSize="48sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:gravity="center"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:text="Xem thêm sản phẩm ›"
-                    android:textColor="#4CAF50"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:text="Chưa có bài đăng nào.\nHãy là người đầu tiên chia sẻ!"
+                    android:textColor="#9E9E9E"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Khoảng trống cho bottom navigation -->
+            <!-- Bottom spacer -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="70dp" />
+                android:layout_height="80dp" />
 
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-    <!-- Bottom Navigation -->
+    <!-- ═══ FLOATING ACTIVE ORDER CARD ═══ -->
+    <include layout="@layout/layout_floating_order" />
+
+    <!-- ═══ BOTTOM NAVIGATION (5 TABS) ═══ -->
     <LinearLayout
-        android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
         android:background="#FFFFFF"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:elevation="8dp"
         android:orientation="horizontal">
 
-        <!-- Home -->
+        <!-- Trang chủ -->
         <LinearLayout
             android:id="@+id/navHome"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
             android:clickable="true"
-            android:focusable="true">
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -871,75 +507,121 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Home"
-                android:textSize="11sp"
+                android:text="Trang chủ"
                 android:textColor="#4CAF50"
+                android:textSize="10sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
 
-        <!-- Đơn hàng -->
+        <!-- Hoạt động -->
         <LinearLayout
-            android:id="@+id/navOrders"
+            android:id="@+id/navTasks"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
             android:clickable="true"
-            android:focusable="true">
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📝"
+                android:text="📋"
                 android:textSize="22sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đơn hàng"
-                android:textSize="11sp"
-                android:textColor="#9E9E9E" />
+                android:text="Hoạt động"
+                android:textColor="#9E9E9E"
+                android:textSize="10sp" />
 
         </LinearLayout>
 
-        <!-- Giỏ hàng -->
-        <LinearLayout
-            android:id="@+id/navCart"
+        <!-- Đăng tin (Center FAB) -->
+        <FrameLayout
+            android:id="@+id/navPost"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="-14dp"
+                    app:cardBackgroundColor="#4CAF50"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="4dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="＋"
+                        android:textColor="#FFFFFF"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Đăng tin"
+                    android:textColor="#4CAF50"
+                    android:textSize="10sp" />
+
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Tin nhắn -->
+        <LinearLayout
+            android:id="@+id/navChat"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:clickable="true"
-            android:focusable="true">
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🛒"
+                android:text="💬"
                 android:textSize="22sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Giỏ hàng"
-                android:textSize="11sp"
-                android:textColor="#9E9E9E" />
+                android:text="Tin nhắn"
+                android:textColor="#9E9E9E"
+                android:textSize="10sp" />
 
         </LinearLayout>
 
-        <!-- Profile -->
+        <!-- Cá nhân -->
         <LinearLayout
             android:id="@+id/navProfile"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
             android:clickable="true"
-            android:focusable="true">
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -950,12 +632,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Profile"
-                android:textSize="11sp"
-                android:textColor="#9E9E9E" />
+                android:text="Cá nhân"
+                android:textColor="#9E9E9E"
+                android:textSize="10sp" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-</RelativeLayout>
+</FrameLayout>

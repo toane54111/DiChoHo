@@ -10,8 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.gomarket.adapter.OrderAdapter;
-import com.example.gomarket.model.Order;
+import com.example.gomarket.adapter.ShoppingRequestAdapter;
+import com.example.gomarket.model.ShoppingRequest;
 import com.example.gomarket.network.ApiClient;
 import com.example.gomarket.network.ApiService;
 import com.example.gomarket.util.SessionManager;
@@ -24,25 +24,35 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class OrderListActivity extends AppCompatActivity implements OrderAdapter.OnOrderClickListener {
+public class OrderListActivity extends AppCompatActivity
+        implements ShoppingRequestAdapter.OnRequestClickListener {
 
     private RecyclerView recyclerViewOrders;
     private LinearLayout layoutEmpty;
     private MaterialButton btnFilterAll, btnFilterPending, btnFilterCompleted;
 
-    private List<Order> allOrders = new ArrayList<>();
-    private OrderAdapter adapter;
+    private List<ShoppingRequest> allRequests = new ArrayList<>();
+    private ShoppingRequestAdapter adapter;
     private ApiService apiService;
+    private SessionManager session;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_order_list);
 
+        session = new SessionManager(this);
+        apiService = ApiClient.getApiService(this);
+
         initViews();
         setupRecyclerView();
         setupClickListeners();
-        loadOrders();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadRequests();
     }
 
     private void initViews() {
@@ -51,11 +61,10 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
         btnFilterAll = findViewById(R.id.btnFilterAll);
         btnFilterPending = findViewById(R.id.btnFilterPending);
         btnFilterCompleted = findViewById(R.id.btnFilterCompleted);
-        apiService = ApiClient.getApiService(this);
     }
 
     private void setupRecyclerView() {
-        adapter = new OrderAdapter(allOrders, this);
+        adapter = new ShoppingRequestAdapter(allRequests, this);
         recyclerViewOrders.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewOrders.setAdapter(adapter);
     }
@@ -63,56 +72,81 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
     private void setupClickListeners() {
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
-        btnFilterAll.setOnClickListener(v -> filterOrders("ALL"));
-        btnFilterPending.setOnClickListener(v -> filterOrders("PENDING"));
-        btnFilterCompleted.setOnClickListener(v -> filterOrders("COMPLETED"));
+        btnFilterAll.setOnClickListener(v -> {
+            setActiveFilter(btnFilterAll);
+            adapter.updateRequests(allRequests);
+            updateEmptyState(allRequests);
+        });
+
+        btnFilterPending.setOnClickListener(v -> {
+            setActiveFilter(btnFilterPending);
+            List<ShoppingRequest> filtered = new ArrayList<>();
+            for (ShoppingRequest req : allRequests) {
+                String s = req.getStatus();
+                if (!"COMPLETED".equals(s) && !"CANCELLED".equals(s)) {
+                    filtered.add(req);
+                }
+            }
+            adapter.updateRequests(filtered);
+            updateEmptyState(filtered);
+        });
+
+        btnFilterCompleted.setOnClickListener(v -> {
+            setActiveFilter(btnFilterCompleted);
+            List<ShoppingRequest> filtered = new ArrayList<>();
+            for (ShoppingRequest req : allRequests) {
+                if ("COMPLETED".equals(req.getStatus())) {
+                    filtered.add(req);
+                }
+            }
+            adapter.updateRequests(filtered);
+            updateEmptyState(filtered);
+        });
     }
 
-    private void loadOrders() {
-        SessionManager session = new SessionManager(this);
-        int userId = session.getUserId();
+    private void setActiveFilter(MaterialButton active) {
+        btnFilterAll.setBackgroundTintList(getColorStateList(
+                active == btnFilterAll ? R.color.primary : R.color.white));
+        btnFilterAll.setTextColor(getColor(
+                active == btnFilterAll ? R.color.white : R.color.text_primary));
 
-        apiService.getUserOrders(userId).enqueue(new Callback<List<Order>>() {
+        btnFilterPending.setBackgroundTintList(getColorStateList(
+                active == btnFilterPending ? R.color.primary : R.color.white));
+        btnFilterPending.setTextColor(getColor(
+                active == btnFilterPending ? R.color.white : R.color.text_primary));
+
+        btnFilterCompleted.setBackgroundTintList(getColorStateList(
+                active == btnFilterCompleted ? R.color.primary : R.color.white));
+        btnFilterCompleted.setTextColor(getColor(
+                active == btnFilterCompleted ? R.color.white : R.color.text_primary));
+    }
+
+    private void loadRequests() {
+        long userId = session.getUserId();
+
+        apiService.getUserShoppingRequests(userId).enqueue(new Callback<List<ShoppingRequest>>() {
             @Override
-            public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
+            public void onResponse(Call<List<ShoppingRequest>> call,
+                                   Response<List<ShoppingRequest>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    allOrders.clear();
-                    allOrders.addAll(response.body());
-                    adapter.notifyDataSetChanged();
-                    updateEmptyState();
+                    allRequests.clear();
+                    allRequests.addAll(response.body());
+                    adapter.updateRequests(allRequests);
                 }
+                updateEmptyState(allRequests);
             }
 
             @Override
-            public void onFailure(Call<List<Order>> call, Throwable t) {
+            public void onFailure(Call<List<ShoppingRequest>> call, Throwable t) {
                 Toast.makeText(OrderListActivity.this,
-                        "Không thể tải đơn hàng", Toast.LENGTH_SHORT).show();
+                        "Không thể tải danh sách đơn", Toast.LENGTH_SHORT).show();
+                updateEmptyState(allRequests);
             }
         });
     }
 
-    private void filterOrders(String filter) {
-        if ("ALL".equals(filter)) {
-            adapter.updateOrders(allOrders);
-        } else {
-            List<Order> filtered = new ArrayList<>();
-            for (Order order : allOrders) {
-                if ("PENDING".equals(filter)) {
-                    if (!"COMPLETED".equals(order.getStatus())) {
-                        filtered.add(order);
-                    }
-                } else if ("COMPLETED".equals(filter)) {
-                    if ("COMPLETED".equals(order.getStatus())) {
-                        filtered.add(order);
-                    }
-                }
-            }
-            adapter.updateOrders(filtered);
-        }
-    }
-
-    private void updateEmptyState() {
-        if (allOrders.isEmpty()) {
+    private void updateEmptyState(List<ShoppingRequest> list) {
+        if (list.isEmpty()) {
             layoutEmpty.setVisibility(View.VISIBLE);
             recyclerViewOrders.setVisibility(View.GONE);
         } else {
@@ -122,9 +156,9 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
     }
 
     @Override
-    public void onOrderClick(Order order) {
-        Intent intent = new Intent(this, OrderTrackingActivity.class);
-        intent.putExtra("order_id", order.getId());
+    public void onRequestClick(ShoppingRequest request) {
+        Intent intent = new Intent(this, OrderWaitingActivity.class);
+        intent.putExtra("REQUEST_ID", request.getId());
         startActivity(intent);
     }
 }

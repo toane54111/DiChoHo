@@ -38,6 +38,12 @@ public class ShoppingRequest {
     @Column(name = "payment_status", length = 20)
     private String paymentStatus = "PENDING";
 
+    @Column(name = "shopper_fee")
+    private Double shopperFee = 0.0;
+
+    @Column(name = "frozen_amount")
+    private Double frozenAmount = 0.0;
+
     @Column(name = "total_actual_cost")
     private Double totalActualCost;
 
@@ -100,6 +106,12 @@ public class ShoppingRequest {
 
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public Double getShopperFee() { return shopperFee; }
+    public void setShopperFee(Double shopperFee) { this.shopperFee = shopperFee; }
+
+    public Double getFrozenAmount() { return frozenAmount; }
+    public void setFrozenAmount(Double frozenAmount) { this.frozenAmount = frozenAmount; }
 
     public Double getTotalActualCost() { return totalActualCost; }
     public void setTotalActualCost(Double totalActualCost) { this.totalActualCost = totalActualCost; }

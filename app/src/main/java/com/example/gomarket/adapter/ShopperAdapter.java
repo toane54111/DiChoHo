@@ -44,12 +44,12 @@ public class ShopperAdapter extends RecyclerView.Adapter<ShopperAdapter.ShopperV
 
     private Context context;
     private List<ShopperModel> shopperList;
-    private int orderId;
+    private long orderId;
     private String recipeId;
     private List<String> orderItems;
 
     public ShopperAdapter(Context context, List<ShopperModel> shopperList,
-                          int orderId, String recipeId, List<String> orderItems) {
+                          long orderId, String recipeId, List<String> orderItems) {
         this.context = context;
         this.shopperList = shopperList;
         this.orderId = orderId;
