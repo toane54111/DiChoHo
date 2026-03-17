@@ -74,13 +74,13 @@ public class CommunityPost {
 
     public String getCategoryDisplay() {
         if (category == null) return "Khác";
-        return switch (category) {
-            case "nong_san" -> "Nông sản";
-            case "dac_san" -> "Đặc sản";
-            case "rao_vat" -> "Rao vặt";
-            case "gom_chung" -> "Gom chung";
-            default -> "Khác";
-        };
+        switch (category) {
+            case "nong_san": return "Nông sản";
+            case "dac_san": return "Đặc sản";
+            case "rao_vat": return "Rao vặt";
+            case "gom_chung": return "Gom chung";
+            default: return "Khác";
+        }
     }
 
     public static class PostImage {

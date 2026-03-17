@@ -336,7 +336,7 @@
                                 android:id="@+id/btnThemVaoGio"
                                 android:layout_width="wrap_content"
                                 android:layout_height="48dp"
-                                android:text="Thêm vào giỏ"
+                                android:text="Tạo đơn đi chợ hộ"
                                 android:textSize="14sp"
                                 app:cornerRadius="24dp"
                                 app:backgroundTint="#4CAF50"

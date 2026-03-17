@@ -137,17 +137,18 @@ public class ProfileActivity extends AppCompatActivity {
     private void loadStats() {
         long userId = sessionManager.getUserId();
 
-        // Load số đơn hàng
-        apiService.getUserOrders(userId).enqueue(new Callback<List<Order>>() {
+        // Load số đơn đi chợ hộ
+        apiService.getUserShoppingRequests(userId).enqueue(new Callback<List<com.example.gomarket.model.ShoppingRequest>>() {
             @Override
-            public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
+            public void onResponse(Call<List<com.example.gomarket.model.ShoppingRequest>> call,
+                                   Response<List<com.example.gomarket.model.ShoppingRequest>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Order> orders = response.body();
-                    tvStatOrders.setText(String.valueOf(orders.size()));
+                    var requests = response.body();
+                    tvStatOrders.setText(String.valueOf(requests.size()));
 
                     int completed = 0;
-                    for (Order order : orders) {
-                        if ("COMPLETED".equals(order.getStatus())) completed++;
+                    for (var req : requests) {
+                        if ("COMPLETED".equals(req.getStatus())) completed++;
                     }
                     tvStatCompleted.setText(String.valueOf(completed));
                 } else {
@@ -157,7 +158,7 @@ public class ProfileActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<Order>> call, Throwable t) {
+            public void onFailure(Call<List<com.example.gomarket.model.ShoppingRequest>> call, Throwable t) {
                 tvStatOrders.setText("0");
                 tvStatCompleted.setText("0");
             }

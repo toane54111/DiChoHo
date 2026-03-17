@@ -225,7 +225,8 @@ public class SearchActivity extends AppCompatActivity {
             return;
         }
         hideAutocomplete();
-        Intent intent = new Intent(SearchActivity.this, ProductSearchResultActivity.class);
+        // Tìm kiếm sản phẩm - hiển thị kết quả trong CommunityFeed (tìm bài đăng liên quan)
+        Intent intent = new Intent(SearchActivity.this, CommunityFeedActivity.class);
         intent.putExtra("SEARCH_QUERY", query.trim());
         startActivity(intent);
     }

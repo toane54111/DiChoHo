@@ -36,25 +36,29 @@
         <activity android:name=".RegisterActivity" android:exported="false" />
         <activity android:name=".HomeActivity" android:exported="false" />
         <activity android:name=".ProfileActivity" android:exported="false" />
-        <activity android:name=".ProductDetailActivity" android:exported="false" />
         <activity android:name=".AIChefActivity" android:exported="false" />
         <activity android:name=".RecipeDetailActivity" android:exported="false" />
-        <activity android:name=".CartActivity" android:exported="false" />
         <activity android:name=".OrderListActivity" android:exported="false" />
         <activity android:name=".OrderTrackingActivity" android:exported="false" />
         <activity android:name=".ChatActivity" android:exported="false" />
         <activity android:name=".SearchActivity" android:exported="false" />
-        <activity android:name=".IngredientSearchActivity" android:exported="false" />
-        <activity android:name=".DishResultActivity" android:exported="false" />
         <activity android:name=".SelectShopperActivity" android:exported="false" />
         <activity android:name=".ShopperMapActivity" android:exported="false" />
-        <activity android:name=".CheckoutActivity" android:exported="false" />
         <activity android:name=".WalletActivity" android:exported="false" />
-        <activity android:name=".CategoryProductsActivity" android:exported="false" />
-        <activity android:name=".AllProductsActivity" android:exported="false" />
-        <activity android:name=".ProductSearchResultActivity" android:exported="false" />
-        <!-- MainActivity removed - LoginActivity is the launcher -->
-        <activity android:name=".ListViewTestActivity" android:exported="false" />
+
+        <!-- Đi chợ hộ - New activities -->
+        <activity android:name=".CreateShoppingRequestActivity" android:exported="false" />
+        <activity android:name=".ShopperDashboardActivity" android:exported="false" />
+        <activity android:name=".ShopperShoppingActivity" android:exported="false" />
+        <activity android:name=".OrderWaitingActivity" android:exported="false" />
+        <activity android:name=".OrderChatActivity" android:exported="false" />
+        <activity android:name=".ConversationListActivity" android:exported="false" />
+
+        <!-- Chợ đồng hương - Community activities -->
+        <activity android:name=".CommunityFeedActivity" android:exported="false" />
+        <activity android:name=".CreatePostActivity" android:exported="false" />
+        <activity android:name=".PostDetailActivity" android:exported="false" />
+
 
 
         <!-- ==================== SERVICES ==================== -->

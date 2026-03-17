@@ -26,7 +26,7 @@ public class SelectShopperActivity extends AppCompatActivity {
     private List<ShopperModel> shopperList;
 
     // Dữ liệu từ Intent - hỗ trợ cả flow đặt hàng và flow recipe
-    private int orderId = -1;
+    private long orderId = -1;
     private ArrayList<String> orderItems;
     private String recipeId;
     private ArrayList<String> missingIngredients;
@@ -41,8 +41,11 @@ public class SelectShopperActivity extends AppCompatActivity {
         rvShoppers = findViewById(R.id.rvShoppers);
         progressBar = findViewById(R.id.progressBar);
 
-        // Nhận data từ Intent
-        orderId = getIntent().getIntExtra("ORDER_ID", -1);
+        // Nhận data từ Intent - hỗ trợ cả REQUEST_ID (new) và ORDER_ID (legacy)
+        orderId = getIntent().getLongExtra("REQUEST_ID", -1);
+        if (orderId <= 0) {
+            orderId = getIntent().getIntExtra("ORDER_ID", -1);
+        }
         orderItems = getIntent().getStringArrayListExtra("ORDER_ITEMS");
         recipeId = getIntent().getStringExtra("RECIPE_ID");
         missingIngredients = getIntent().getStringArrayListExtra("MISSING_INGREDIENTS");

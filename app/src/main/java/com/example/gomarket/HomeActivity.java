@@ -1,74 +1,69 @@
 package com.example.gomarket;
 
 import android.content.Intent;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.GridView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.gomarket.model.Product;
+import com.example.gomarket.adapter.PostFeedAdapter;
+import com.example.gomarket.model.CommunityPost;
+import com.example.gomarket.model.ShoppingRequest;
+import com.example.gomarket.model.Wallet;
 import com.example.gomarket.network.ApiClient;
 import com.example.gomarket.network.ApiService;
 import com.example.gomarket.util.SessionManager;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity
+        implements PostFeedAdapter.OnPostActionListener {
 
-    private GridView gridViewProducts;
-    private ArrayList<SanPham> danhSachSanPham;
-    private SanPhamAdapter adapter;
+    // Old header (giữ nguyên)
+    private MaterialCardView btnNotification, searchBar, bannerSuggest;
+    private MaterialCardView btnWallet;
+    private TextView tvGreeting, tvAddress, tvWalletBalance;
 
-    // Bottom Navigation
-    private LinearLayout navHome, navOrders, navCart, navProfile;
+    // New action cards
+    private MaterialCardView btnCreateList, btnShopperMode;
 
-    // Header
-    private MaterialCardView btnNotification, btnCart, searchBar, bannerSuggest;
-    private TextView tvGreeting, tvAddress;
+    // Community feed
+    private RecyclerView rvCommunityFeed;
+    private LinearLayout emptyFeedState;
+    private TextView tvSeeAllPosts;
+    private PostFeedAdapter postAdapter;
+    private List<CommunityPost> feedPosts = new ArrayList<>();
 
-    // Categories - Row 1
-    private LinearLayout categoryRauLa, categoryThitHeo, categoryCaHaiSan, categoryTraiCay;
-    // Categories - Row 2
-    private LinearLayout categoryRow2;
-    private LinearLayout categoryCuQua, categoryThitBo, categoryThitGa, categoryXemThem;
+    // Floating active order
+    private View floatingOrderCard;
+    private TextView tvFloatingStatus, tvFloatingShopperName, tvFloatingOrderSummary;
+    private TextView btnDismissOrder;
+    private MaterialButton btnTrackOrder;
+    private long activeOrderId = -1;
+    private boolean floatingOrderDismissed = false;
 
-    private MaterialCardView btnDiChoGanNha, btnShopNoiBat, btnSeeMoreProducts;
-    private TextView tvSeeAll;
+    // Bottom nav (5 tabs)
+    private LinearLayout navHome, navTasks, navChat, navProfile;
+    private FrameLayout navPost;
 
-    // API
+    // Services
     private ApiService apiService;
-    private List<Product> apiProducts = new ArrayList<>();
-
-    // Badge giỏ hàng
-    private TextView tvCartBadge;
-
-    // Tất cả categories từ BHX data
-    private static final String[][] ALL_CATEGORIES = {
-            {"Rau lá", "🥬", "#E8F5E9"},
-            {"Thịt heo", "🥩", "#FFEBEE"},
-            {"Cá & Hải sản", "🐟", "#E3F2FD"},
-            {"Trái cây", "🍎", "#FFF3E0"},
-            {"Củ quả", "🥕", "#FFF8E1"},
-            {"Thịt bò", "🥩", "#FCE4EC"},
-            {"Thịt gà & vịt", "🍗", "#FBE9E7"},
-            {"Nấm", "🍄", "#F3E5F5"},
-            {"Trứng", "🥚", "#FFFDE7"},
-    };
+    private SessionManager session;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,56 +71,119 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         apiService = ApiClient.getApiService(this);
+        session = new SessionManager(this);
 
         initViews();
-        loadUserGreeting();
-        loadProducts();
-        setupGridView();
+        setupRecyclerView();
         setupClickListeners();
+        loadUserGreeting();
+    }
 
-        // Load sản phẩm từ API
-        loadProductsFromApi();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadUserGreeting();
+        loadWalletBalance();
+        loadCommunityFeed();
+        floatingOrderDismissed = false;
+        loadActiveOrder();
     }
 
     private void initViews() {
-        gridViewProducts = findViewById(R.id.gridViewProducts);
-        btnNotification = findViewById(R.id.btnNotification);
-        btnCart = findViewById(R.id.btnCart);
-        searchBar = findViewById(R.id.searchBar);
+        // Old header
         tvGreeting = findViewById(R.id.tvGreeting);
         tvAddress = findViewById(R.id.tvAddress);
-        tvCartBadge = findViewById(R.id.tvCartBadge);
-
-        // Categories - Row 1
-        categoryRauLa = findViewById(R.id.categoryVegetable);
-        categoryThitHeo = findViewById(R.id.categoryMeat);
-        categoryCaHaiSan = findViewById(R.id.categorySeafood);
-        categoryTraiCay = findViewById(R.id.categoryFruit);
-
-        // Categories - Row 2
-        categoryRow2 = findViewById(R.id.categoryRow2);
-        categoryCuQua = findViewById(R.id.categoryCuQua);
-        categoryThitBo = findViewById(R.id.categoryThitBo);
-        categoryThitGa = findViewById(R.id.categoryThitGa);
-        categoryXemThem = findViewById(R.id.categoryXemThem);
-
-        // Bottom Navigation
-        navHome = findViewById(R.id.navHome);
-        navOrders = findViewById(R.id.navOrders);
-        navCart = findViewById(R.id.navCart);
-        navProfile = findViewById(R.id.navProfile);
-
-        btnDiChoGanNha = findViewById(R.id.btnDiChoGanNha);
-        btnShopNoiBat = findViewById(R.id.btnShopNoiBat);
+        btnWallet = findViewById(R.id.btnWallet);
+        tvWalletBalance = findViewById(R.id.tvWalletBalance);
+        btnNotification = findViewById(R.id.btnNotification);
+        searchBar = findViewById(R.id.searchBar);
         bannerSuggest = findViewById(R.id.bannerSuggest);
 
-        // Sản phẩm nổi bật - xem tất cả
-        tvSeeAll = findViewById(R.id.tvSeeAll);
-        btnSeeMoreProducts = findViewById(R.id.btnSeeMoreProducts);
+        // Action cards
+        btnCreateList = findViewById(R.id.btnCreateList);
+        btnShopperMode = findViewById(R.id.btnShopperMode);
+
+        // Community feed
+        rvCommunityFeed = findViewById(R.id.rvCommunityFeed);
+        emptyFeedState = findViewById(R.id.emptyFeedState);
+        tvSeeAllPosts = findViewById(R.id.tvSeeAllPosts);
+
+        // Floating order card
+        floatingOrderCard = findViewById(R.id.floatingOrderCard);
+        tvFloatingStatus = findViewById(R.id.tvFloatingStatus);
+        tvFloatingShopperName = findViewById(R.id.tvFloatingShopperName);
+        tvFloatingOrderSummary = findViewById(R.id.tvFloatingOrderSummary);
+        btnDismissOrder = findViewById(R.id.btnDismissOrder);
+        btnTrackOrder = findViewById(R.id.btnTrackOrder);
+
+        // Bottom nav
+        navHome = findViewById(R.id.navHome);
+        navTasks = findViewById(R.id.navTasks);
+        navPost = findViewById(R.id.navPost);
+        navChat = findViewById(R.id.navChat);
+        navProfile = findViewById(R.id.navProfile);
     }
 
+    private void setupRecyclerView() {
+        postAdapter = new PostFeedAdapter(this, feedPosts, this);
+        rvCommunityFeed.setLayoutManager(new LinearLayoutManager(this));
+        rvCommunityFeed.setAdapter(postAdapter);
+    }
+
+    private void setupClickListeners() {
+        // Header
+        searchBar.setOnClickListener(v ->
+                startActivity(new Intent(this, SearchActivity.class)));
+        btnNotification.setOnClickListener(v ->
+                Toast.makeText(this, "Mở thông báo", Toast.LENGTH_SHORT).show());
+        btnWallet.setOnClickListener(v ->
+                startActivity(new Intent(this, WalletActivity.class)));
+
+        // AI Chef banner
+        bannerSuggest.setOnClickListener(v ->
+                startActivity(new Intent(this, AIChefActivity.class)));
+
+        // Action cards
+        btnCreateList.setOnClickListener(v ->
+                startActivity(new Intent(this, CreateShoppingRequestActivity.class)));
+        btnShopperMode.setOnClickListener(v ->
+                startActivity(new Intent(this, ShopperDashboardActivity.class)));
+
+        // Community feed
+        tvSeeAllPosts.setOnClickListener(v ->
+                startActivity(new Intent(this, CommunityFeedActivity.class)));
+
+        // Floating order card
+        btnDismissOrder.setOnClickListener(v -> dismissFloatingOrder());
+        btnTrackOrder.setOnClickListener(v -> {
+            if (activeOrderId > 0) {
+                Intent intent = new Intent(this, OrderWaitingActivity.class);
+                intent.putExtra("REQUEST_ID", activeOrderId);
+                startActivity(intent);
+            }
+        });
+        floatingOrderCard.setOnClickListener(v -> {
+            if (activeOrderId > 0) {
+                Intent intent = new Intent(this, OrderWaitingActivity.class);
+                intent.putExtra("REQUEST_ID", activeOrderId);
+                startActivity(intent);
+            }
+        });
+
+        // Bottom nav
+        navHome.setOnClickListener(v -> { /* already home */ });
+        navTasks.setOnClickListener(v ->
+                startActivity(new Intent(this, OrderListActivity.class)));
+        navPost.setOnClickListener(v -> showPostOptions());
+        navChat.setOnClickListener(v ->
+                startActivity(new Intent(this, ConversationListActivity.class)));
+        navProfile.setOnClickListener(v ->
+                startActivity(new Intent(this, ProfileActivity.class)));
+    }
+
+    // ═══ OLD HEADER LOGIC ═══
+
     private void loadUserGreeting() {
-        SessionManager session = new SessionManager(this);
         String name = session.getUserName();
         if (name != null && !name.isEmpty() && !name.equals("Người dùng")) {
             tvGreeting.setText("Chào, " + name + "! 👋");
@@ -134,234 +192,211 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    // ─── LOAD SẢN PHẨM TỪ API ───
-    private void loadProductsFromApi() {
-        apiService.searchProducts("").enqueue(new Callback<List<Product>>() {
+    // ═══ WALLET ═══
+
+    private void loadWalletBalance() {
+        long userId = session.getUserId();
+        if (userId <= 0) return;
+
+        apiService.getWalletBalance(userId).enqueue(new Callback<Wallet>() {
             @Override
-            public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    apiProducts = response.body();
-                    updateGridWithApiProducts();
+            public void onResponse(Call<Wallet> call, Response<Wallet> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    long balance = response.body().getBalance();
+                    tvWalletBalance.setText("💳 " + formatBalance(balance));
                 }
             }
 
             @Override
-            public void onFailure(Call<List<Product>> call, Throwable t) {
-                // Giữ data hardcoded khi không kết nối được server
+            public void onFailure(Call<Wallet> call, Throwable t) {
+                tvWalletBalance.setText("💳 --");
             }
         });
     }
 
-    private static final int HOME_PRODUCT_LIMIT = 8; // Chỉ hiển thị 8 sản phẩm nổi bật trên Home
-
-    private void updateGridWithApiProducts() {
-        danhSachSanPham.clear();
-
-        // Chỉ lấy tối đa HOME_PRODUCT_LIMIT sản phẩm cho trang chủ
-        int limit = Math.min(apiProducts.size(), HOME_PRODUCT_LIMIT);
-        for (int i = 0; i < limit; i++) {
-            Product p = apiProducts.get(i);
-            int image = R.drawable.img; // fallback
-            String giaGoc = String.format("%,.0fđ", p.getOriginalPrice());
-            String giaKM = String.format("%,.0fđ", p.getPrice());
-            String imageUrl = p.getImageUrl();
-
-            danhSachSanPham.add(new SanPham(
-                    p.getName(), giaGoc, giaKM, p.getDescription(), image, imageUrl
-            ));
+    private String formatBalance(long balance) {
+        if (balance >= 1_000_000) {
+            return String.format("%.1fM", balance / 1_000_000.0);
+        } else if (balance >= 1_000) {
+            return String.format("%dK", balance / 1_000);
         }
-
-        adapter.notifyDataSetChanged();
-        setGridViewHeightBasedOnChildren(gridViewProducts, 2);
+        return balance + "đ";
     }
 
-    /**
-     * Fix GridView inside ScrollView: tính chiều cao dựa trên số item
-     */
-    private void setGridViewHeightBasedOnChildren(GridView gridView, int numColumns) {
-        ListAdapter listAdapter = gridView.getAdapter();
-        if (listAdapter == null) return;
+    // ═══ COMMUNITY FEED ═══
 
-        int totalHeight = 0;
-        int items = listAdapter.getCount();
-        int rows = (int) Math.ceil((double) items / numColumns);
+    private void loadCommunityFeed() {
+        apiService.getFeed(null, null, 0, null).enqueue(new Callback<List<CommunityPost>>() {
+            @Override
+            public void onResponse(Call<List<CommunityPost>> call,
+                                   Response<List<CommunityPost>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    feedPosts.clear();
+                    feedPosts.addAll(response.body());
+                    postAdapter.updatePosts(feedPosts);
+                }
+                updateFeedEmptyState();
+            }
 
-        for (int i = 0; i < rows; i++) {
-            View listItem = listAdapter.getView(i * numColumns, null, gridView);
-            listItem.measure(
-                    View.MeasureSpec.makeMeasureSpec(gridView.getWidth(), View.MeasureSpec.AT_MOST),
-                    View.MeasureSpec.UNSPECIFIED
-            );
-            totalHeight += listItem.getMeasuredHeight();
-        }
-
-        ViewGroup.LayoutParams params = gridView.getLayoutParams();
-        params.height = totalHeight + (gridView.getVerticalSpacing() * (rows - 1)) + gridView.getPaddingTop() + gridView.getPaddingBottom();
-        gridView.setLayoutParams(params);
-        gridView.requestLayout();
+            @Override
+            public void onFailure(Call<List<CommunityPost>> call, Throwable t) {
+                updateFeedEmptyState();
+            }
+        });
     }
 
-    // ─── MỞ TRANG DANH MỤC ───
-    private void openCategory(String category) {
-        Intent intent = new Intent(this, CategoryProductsActivity.class);
-        intent.putExtra("category_name", category);
+    private void updateFeedEmptyState() {
+        emptyFeedState.setVisibility(feedPosts.isEmpty() ? View.VISIBLE : View.GONE);
+        rvCommunityFeed.setVisibility(feedPosts.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    // ═══ FLOATING ACTIVE ORDER ═══
+
+    private void loadActiveOrder() {
+        if (floatingOrderDismissed) return;
+
+        long userId = session.getUserId();
+        if (userId <= 0) return;
+
+        String role = session.getUserRole();
+        Call<List<ShoppingRequest>> call;
+        if ("SHOPPER".equalsIgnoreCase(role)) {
+            call = apiService.getShopperRequests(userId);
+        } else {
+            call = apiService.getUserShoppingRequests(userId);
+        }
+
+        call.enqueue(new Callback<List<ShoppingRequest>>() {
+            @Override
+            public void onResponse(Call<List<ShoppingRequest>> call,
+                                   Response<List<ShoppingRequest>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ShoppingRequest active = null;
+                    for (ShoppingRequest req : response.body()) {
+                        String status = req.getStatus();
+                        if (status != null
+                                && !"COMPLETED".equals(status)
+                                && !"CANCELLED".equals(status)) {
+                            active = req;
+                            break;
+                        }
+                    }
+                    if (active != null && !floatingOrderDismissed) {
+                        showFloatingOrder(active);
+                    } else {
+                        floatingOrderCard.setVisibility(View.GONE);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ShoppingRequest>> call, Throwable t) {
+                floatingOrderCard.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void showFloatingOrder(ShoppingRequest req) {
+        activeOrderId = req.getId();
+        floatingOrderCard.setVisibility(View.VISIBLE);
+
+        String statusText;
+        switch (req.getStatus()) {
+            case "OPEN":
+                statusText = "🟡 Đang chờ shopper";
+                break;
+            case "ACCEPTED":
+                statusText = "🟢 Đã có shopper nhận";
+                break;
+            case "SHOPPING":
+                statusText = "🛒 Đang đi chợ";
+                break;
+            case "DELIVERING":
+                statusText = "🚗 Đang giao hàng";
+                break;
+            default:
+                statusText = req.getStatus();
+                break;
+        }
+        tvFloatingStatus.setText(statusText);
+        tvFloatingShopperName.setText(
+                req.getShopperName() != null ? req.getShopperName() : "Chờ nhận đơn...");
+        tvFloatingOrderSummary.setText(
+                req.getItemCount() + " sản phẩm · Đơn #" + String.format("%03d", req.getId()));
+    }
+
+    private void dismissFloatingOrder() {
+        floatingOrderDismissed = true;
+        floatingOrderCard.setVisibility(View.GONE);
+    }
+
+    // ═══ BOTTOM SHEET POST OPTIONS ═══
+
+    private void showPostOptions() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_post_options, null);
+
+        sheetView.findViewById(R.id.optCreatePost).setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(this, CreatePostActivity.class));
+        });
+
+        sheetView.findViewById(R.id.optCreateRequest).setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(this, CreateShoppingRequestActivity.class));
+        });
+
+        dialog.setContentView(sheetView);
+        dialog.show();
+    }
+
+    // ═══ POST FEED ADAPTER CALLBACKS ═══
+
+    @Override
+    public void onPostClick(CommunityPost post) {
+        Intent intent = new Intent(this, PostDetailActivity.class);
+        intent.putExtra("POST_ID", post.getId());
         startActivity(intent);
     }
 
-    // ─── DATA HARDCODED (FALLBACK) ───
-    private void loadProducts() {
-        danhSachSanPham = new ArrayList<>();
+    @Override
+    public void onLikeClick(CommunityPost post, int position) {
+        apiService.toggleLike(post.getId(), session.getUserId())
+                .enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call,
+                                           Response<Map<String, Object>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            boolean liked = Boolean.TRUE.equals(response.body().get("liked"));
+                            int count = ((Number) response.body().get("likeCount")).intValue();
+                            post.setIsLikedByUser(liked);
+                            post.setLikeCount(count);
+                            postAdapter.notifyItemChanged(position);
+                        }
+                    }
 
-        danhSachSanPham.add(new SanPham("Táo Mỹ", "25.000đ", "20.000đ",
-                "Táo Mỹ nhập khẩu, giòn ngọt, giàu vitamin C.", R.drawable.apple));
-        danhSachSanPham.add(new SanPham("Chuối già", "15.000đ", "12.000đ",
-                "Chuối già Nam Mỹ, chín vàng đều, vị ngọt thanh.", R.drawable.banana));
-        danhSachSanPham.add(new SanPham("Cherry Mỹ", "120.000đ", "99.000đ",
-                "Cherry đỏ nhập khẩu Chile, quả to đều.", R.drawable.cherry));
-        danhSachSanPham.add(new SanPham("Nho xanh Úc", "80.000đ", "65.000đ",
-                "Nho xanh không hạt Úc, giòn ngọt.", R.drawable.grapes));
-        danhSachSanPham.add(new SanPham("Xoài cát Hòa Lộc", "45.000đ", "38.000đ",
-                "Xoài cát Hòa Lộc, thịt vàng ươm.", R.drawable.date));
-        danhSachSanPham.add(new SanPham("Dưa hấu đỏ", "35.000đ", "28.000đ",
-                "Dưa hấu ruột đỏ, ngọt mát.", R.drawable.date));
-    }
-
-    private void setupGridView() {
-        adapter = new SanPhamAdapter(this, danhSachSanPham);
-        gridViewProducts.setAdapter(adapter);
-
-        // Fix GridView height inside ScrollView
-        gridViewProducts.post(() -> setGridViewHeightBasedOnChildren(gridViewProducts, 2));
-
-        gridViewProducts.setOnItemClickListener((parent, view, position, id) -> {
-            SanPham sp = danhSachSanPham.get(position);
-
-            Intent intent = new Intent(HomeActivity.this, ProductDetailActivity.class);
-            intent.putExtra("tenSanPham", sp.getTenSanPham());
-            intent.putExtra("giaGoc", sp.getGiaGoc());
-            intent.putExtra("giaKhuyenMai", sp.getGiaKhuyenMai());
-            intent.putExtra("moTa", sp.getMoTa());
-            intent.putExtra("hinhAnh", sp.getHinhAnh());
-
-            // Truyền thêm product ID + imageUrl + thông tin chi tiết từ API
-            if (position < apiProducts.size()) {
-                Product apiProduct = apiProducts.get(position);
-                intent.putExtra("product_id", apiProduct.getId());
-                intent.putExtra("price", apiProduct.getPrice());
-                intent.putExtra("original_price", apiProduct.getOriginalPrice());
-                intent.putExtra("image_url", apiProduct.getImageUrl());
-                intent.putExtra("unit", apiProduct.getUnit());
-                intent.putExtra("category", apiProduct.getCategory());
-            }
-
-            startActivity(intent);
-        });
-    }
-
-    private void setupClickListeners() {
-        searchBar.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
-            startActivity(intent);
-        });
-
-        btnNotification.setOnClickListener(v ->
-                Toast.makeText(this, "Mở thông báo", Toast.LENGTH_SHORT).show());
-
-        btnCart.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, CartActivity.class);
-            startActivity(intent);
-        });
-
-        // Categories Row 1 → mở trang danh mục riêng
-        categoryRauLa.setOnClickListener(v -> openCategory("Rau lá"));
-        categoryThitHeo.setOnClickListener(v -> openCategory("Thịt heo"));
-        categoryCaHaiSan.setOnClickListener(v -> openCategory("Cá & Hải sản"));
-        categoryTraiCay.setOnClickListener(v -> openCategory("Trái cây"));
-
-        // Categories Row 2
-        categoryCuQua.setOnClickListener(v -> openCategory("Củ quả"));
-        categoryThitBo.setOnClickListener(v -> openCategory("Thịt bò"));
-        categoryThitGa.setOnClickListener(v -> openCategory("Thịt gà & vịt"));
-
-        // Xem thêm → hiện dialog chọn tất cả categories
-        categoryXemThem.setOnClickListener(v -> showAllCategoriesDialog());
-
-        // Bottom Navigation
-        navHome.setOnClickListener(v ->
-                Toast.makeText(this, "Đang ở Trang chủ", Toast.LENGTH_SHORT).show());
-
-        navOrders.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, OrderListActivity.class);
-            startActivity(intent);
-        });
-
-        navCart.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, CartActivity.class);
-            startActivity(intent);
-        });
-
-        navProfile.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
-            startActivity(intent);
-        });
-
-        btnDiChoGanNha.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, ShopperMapActivity.class);
-            startActivity(intent);
-        });
-
-        btnShopNoiBat.setOnClickListener(v ->
-                Toast.makeText(this, "Mở trang Shop nổi bật", Toast.LENGTH_SHORT).show());
-
-        bannerSuggest.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, AIChefActivity.class);
-            startActivity(intent);
-        });
-
-        // "Xem tất cả" + "Xem thêm sản phẩm" → mở AllProductsActivity
-        View.OnClickListener openAllProducts = v -> {
-            Intent intent = new Intent(HomeActivity.this, AllProductsActivity.class);
-            startActivity(intent);
-        };
-        tvSeeAll.setOnClickListener(openAllProducts);
-        btnSeeMoreProducts.setOnClickListener(openAllProducts);
-    }
-
-    /**
-     * Hiện dialog chọn tất cả categories
-     */
-    private void showAllCategoriesDialog() {
-        String[] categoryNames = new String[ALL_CATEGORIES.length];
-        String[] categoryEmojis = new String[ALL_CATEGORIES.length];
-        for (int i = 0; i < ALL_CATEGORIES.length; i++) {
-            categoryEmojis[i] = ALL_CATEGORIES[i][1];
-            categoryNames[i] = ALL_CATEGORIES[i][1] + "  " + ALL_CATEGORIES[i][0];
-        }
-
-        new AlertDialog.Builder(this)
-                .setTitle("Chọn danh mục")
-                .setItems(categoryNames, (dialog, which) -> {
-                    openCategory(ALL_CATEGORIES[which][0]);
-                })
-                .setNegativeButton("Đóng", null)
-                .show();
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                    }
+                });
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        loadUserGreeting();
-        updateCartBadge();
+    public void onCommentClick(CommunityPost post) {
+        Intent intent = new Intent(this, PostDetailActivity.class);
+        intent.putExtra("POST_ID", post.getId());
+        intent.putExtra("FOCUS_COMMENT", true);
+        startActivity(intent);
     }
 
-    private void updateCartBadge() {
-        if (tvCartBadge == null) return;
-        int size = CartActivity.getCartSize();
-        if (size > 0) {
-            tvCartBadge.setVisibility(View.VISIBLE);
-            tvCartBadge.setText(size > 99 ? "99+" : String.valueOf(size));
+    @Override
+    public void onContactClick(CommunityPost post) {
+        if (post.getAuthorPhone() != null) {
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            intent.setData(android.net.Uri.parse("tel:" + post.getAuthorPhone()));
+            startActivity(intent);
         } else {
-            tvCartBadge.setVisibility(View.GONE);
+            Toast.makeText(this, "Không có thông tin liên hệ", Toast.LENGTH_SHORT).show();
         }
     }
 }

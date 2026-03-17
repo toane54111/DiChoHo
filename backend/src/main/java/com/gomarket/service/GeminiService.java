@@ -86,9 +86,13 @@ public class GeminiService {
             prompt.append(". Hãy chọn món KHÁC hoàn toàn.\n\n");
         }
 
+        prompt.append("6. ƯỚC TÍNH GIÁ: Mỗi nguyên liệu PHẢI có estimated_price (đơn vị VNĐ), " +
+            "ước tính giá bán lẻ tại siêu thị/chợ Việt Nam theo số lượng đã nêu. " +
+            "Ví dụ: 300g tôm sú ~ 75000, 200g nấm kim châm ~ 15000.\n\n");
+
         prompt.append("Trả về CHÍNH XÁC JSON (không markdown, không ```json):\n" +
             "{\"name\": \"Tên món\", \"description\": \"Mô tả ngắn\", " +
-            "\"ingredients\": [{\"name\": \"tên nguyên liệu\", \"quantity\": \"số lượng\"}], " +
+            "\"ingredients\": [{\"name\": \"tên nguyên liệu\", \"quantity\": \"số lượng\", \"estimated_price\": 50000}], " +
             "\"steps\": [\"Bước 1...\", \"Bước 2...\"]}");
 
         return prompt.toString();
@@ -160,15 +164,22 @@ public class GeminiService {
 
             // Parse ingredients
             List<IngredientInfo> ingredients = new ArrayList<>();
+            double totalCost = 0;
             JsonArray ingArray = recipeJson.getAsJsonArray("ingredients");
             for (JsonElement el : ingArray) {
                 JsonObject ingObj = el.getAsJsonObject();
                 IngredientInfo ing = new IngredientInfo();
                 ing.setName(ingObj.get("name").getAsString());
                 ing.setQuantity(ingObj.get("quantity").getAsString());
+                if (ingObj.has("estimated_price") && !ingObj.get("estimated_price").isJsonNull()) {
+                    double price = ingObj.get("estimated_price").getAsDouble();
+                    ing.setEstimated_price(price);
+                    totalCost += price;
+                }
                 ingredients.add(ing);
             }
             recipe.setIngredients(ingredients);
+            recipe.setTotal_cost(totalCost);
 
             // Parse steps
             List<String> steps = new ArrayList<>();
@@ -193,18 +204,22 @@ public class GeminiService {
         recipe.setWeather_context(weatherSummary);
 
         List<IngredientInfo> ingredients = new ArrayList<>();
-        String[][] data = {
-                {"Tôm sú", "300g"}, {"Mực ống", "200g"}, {"Nấm kim châm", "150g"},
-                {"Rau muống", "200g"}, {"Sả", "3 cây"}, {"Lá chanh", "5 lá"},
-                {"Ớt hiểm", "3 quả"}, {"Nước cốt dừa", "200ml"}
+        double totalCost = 0;
+        Object[][] data = {
+                {"Tôm sú", "300g", 75000.0}, {"Mực ống", "200g", 60000.0}, {"Nấm kim châm", "150g", 15000.0},
+                {"Rau muống", "200g", 8000.0}, {"Sả", "3 cây", 5000.0}, {"Lá chanh", "5 lá", 3000.0},
+                {"Ớt hiểm", "3 quả", 5000.0}, {"Nước cốt dừa", "200ml", 15000.0}
         };
-        for (String[] d : data) {
+        for (Object[] d : data) {
             IngredientInfo ing = new IngredientInfo();
-            ing.setName(d[0]);
-            ing.setQuantity(d[1]);
+            ing.setName((String) d[0]);
+            ing.setQuantity((String) d[1]);
+            ing.setEstimated_price((double) d[2]);
+            totalCost += (double) d[2];
             ingredients.add(ing);
         }
         recipe.setIngredients(ingredients);
+        recipe.setTotal_cost(totalCost);
 
         List<String> steps = List.of(
                 "Sơ chế tôm, mực. Rửa sạch rau và nấm.",

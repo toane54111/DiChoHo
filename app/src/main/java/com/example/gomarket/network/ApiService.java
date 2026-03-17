@@ -1,5 +1,6 @@
 package com.example.gomarket.network;
 
+import com.example.gomarket.model.ChatMessage;
 import com.example.gomarket.model.CommunityPost;
 import com.example.gomarket.model.LocationResponse;
 import com.example.gomarket.model.LoginRequest;
@@ -11,6 +12,7 @@ import com.example.gomarket.model.RecipeRequest;
 import com.example.gomarket.model.RecipeResponse;
 import com.example.gomarket.model.RegisterRequest;
 import com.example.gomarket.model.ShoppingRequest;
+import com.example.gomarket.model.ShopperReview;
 import com.example.gomarket.model.User;
 import com.example.gomarket.model.Wallet;
 import com.example.gomarket.model.WalletTransaction;
@@ -169,4 +171,24 @@ public interface ApiService {
 
     @POST("wallet/qr/process")
     Call<Wallet> processQrPayload(@Body Map<String, String> body);
+
+    // ═══ Reviews (Đánh giá shopper) ═══
+    @POST("reviews")
+    Call<ShopperReview> createReview(@Body Map<String, Object> body);
+
+    @GET("reviews/shopper/{shopperId}/summary")
+    Call<Map<String, Object>> getShopperRatingSummary(@Path("shopperId") long shopperId);
+
+    @GET("reviews/request/{requestId}")
+    Call<Map<String, Object>> getReviewForRequest(@Path("requestId") long requestId);
+
+    // ═══ Chat (Tin nhắn đơn hàng) ═══
+    @POST("chat/send")
+    Call<ChatMessage> sendChatMessage(@Body Map<String, Object> body);
+
+    @GET("chat/{requestId}/messages")
+    Call<List<ChatMessage>> getChatMessages(@Path("requestId") long requestId, @Query("afterId") Long afterId);
+
+    @GET("chat/conversations/{userId}")
+    Call<List<Map<String, Object>>> getConversations(@Path("userId") long userId);
 }
