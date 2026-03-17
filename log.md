@@ -2,6 +2,15 @@
 
 ## 2026-03-18
 
+### Trang Home: icon chuông → sổ tay, bỏ block 3 tab trên Home
+
+- **activity_home.xml**: Icon 🔔 đổi thành 📖 (Sổ tay nấu ăn); xóa toàn bộ block "Sổ tay nấu ăn" (TabLayout + ViewPager2) để Home gọn như ban đầu.
+- **HomeActivity.java**: Nút icon 📖 (btnNotification) mở CookbookActivity; xóa code ViewPager/Tab cookbook và adapter.
+
+### Cấu hình API cho thiết bị thật (đăng nhập)
+
+- **ApiClient.java**: Đổi `SERVER_ROOT` sang IP Wi‑Fi máy tính `http://10.54.101.239:8080` để app trên điện thoại kết nối được backend (cùng mạng Wi‑Fi).
+
 ### Sửa lỗi build RecipeCardAdapter + HomeActivity
 
 - **RecipeCardAdapter.java**
