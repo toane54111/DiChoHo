@@ -42,7 +42,6 @@ public class CommunityFeedActivity extends AppCompatActivity
 
     private TextView chipAll, chipNongSan, chipDacSan, chipRaoVat, chipGomChung;
     private TextView chipMienBac, chipMienTrung, chipMienNam;
-    private TextView activeChip;
 
     private ApiService apiService;
     private SessionManager session;
