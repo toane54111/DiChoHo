@@ -30,6 +30,10 @@ public class Post {
     @Column(name = "location_name")
     private String locationName; // e.g. "Gia Lai", "Bến Tre"
 
+    // Vùng miền: MIEN_BAC, MIEN_TRUNG, MIEN_NAM
+    @Column(name = "region")
+    private String region;
+
     @Column(name = "embedding", columnDefinition = "vector(1024)")
     @Convert(converter = com.gomarket.config.VectorTypeConverter.class)
     private float[] embedding;
@@ -85,6 +89,9 @@ public class Post {
 
     public String getLocationName() { return locationName; }
     public void setLocationName(String locationName) { this.locationName = locationName; }
+
+    public String getRegion() { return region; }
+    public void setRegion(String region) { this.region = region; }
 
     public float[] getEmbedding() { return embedding; }
     public void setEmbedding(float[] embedding) { this.embedding = embedding; }

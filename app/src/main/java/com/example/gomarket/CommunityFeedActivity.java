@@ -41,11 +41,13 @@ public class CommunityFeedActivity extends AppCompatActivity
     private EditText etSearch;
 
     private TextView chipAll, chipNongSan, chipDacSan, chipRaoVat, chipGomChung;
+    private TextView chipMienBac, chipMienTrung, chipMienNam;
     private TextView activeChip;
 
     private ApiService apiService;
     private SessionManager session;
     private String currentCategory = null;
+    private String currentRegion = null;
     private int currentPage = 0;
 
     @Override
@@ -72,7 +74,9 @@ public class CommunityFeedActivity extends AppCompatActivity
         chipDacSan = findViewById(R.id.chipDacSan);
         chipRaoVat = findViewById(R.id.chipRaoVat);
         chipGomChung = findViewById(R.id.chipGomChung);
-        activeChip = chipAll;
+        chipMienBac = findViewById(R.id.chipMienBac);
+        chipMienTrung = findViewById(R.id.chipMienTrung);
+        chipMienNam = findViewById(R.id.chipMienNam);
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         findViewById(R.id.fabCreatePost).setOnClickListener(v -> {
@@ -95,26 +99,68 @@ public class CommunityFeedActivity extends AppCompatActivity
         });
 
         // Category chips
-        setupChip(chipAll, null);
-        setupChip(chipNongSan, "nong_san");
-        setupChip(chipDacSan, "dac_san");
-        setupChip(chipRaoVat, "rao_vat");
-        setupChip(chipGomChung, "gom_chung");
+        setupCategoryChip(chipAll, null);
+        setupCategoryChip(chipNongSan, "nong_san");
+        setupCategoryChip(chipDacSan, "dac_san");
+        setupCategoryChip(chipRaoVat, "rao_vat");
+        setupCategoryChip(chipGomChung, "gom_chung");
+
+        // Region chips (vùng miền)
+        setupRegionChip(chipMienBac, "MIEN_BAC");
+        setupRegionChip(chipMienTrung, "MIEN_TRUNG");
+        setupRegionChip(chipMienNam, "MIEN_NAM");
     }
 
-    private void setupChip(TextView chip, String category) {
+    private void setupCategoryChip(TextView chip, String category) {
         chip.setOnClickListener(v -> {
-            if (activeChip != null) {
-                activeChip.setBackgroundResource(R.drawable.bg_filter_inactive);
-                activeChip.setTextColor(getColor(R.color.text_secondary));
-            }
+            // Reset region chips
+            resetRegionChips();
+            // Highlight selected category chip
+            resetCategoryChips();
             chip.setBackgroundResource(R.drawable.bg_filter_active);
             chip.setTextColor(getColor(R.color.white));
-            activeChip = chip;
             currentCategory = category;
+            currentRegion = null; // Clear region when selecting category
             currentPage = 0;
             loadFeed();
         });
+    }
+
+    private void setupRegionChip(TextView chip, String region) {
+        chip.setOnClickListener(v -> {
+            // Reset category chips
+            resetCategoryChips();
+            // Highlight selected region chip
+            resetRegionChips();
+            chip.setBackgroundResource(R.drawable.bg_filter_active);
+            chip.setTextColor(getColor(R.color.white));
+            currentRegion = region;
+            currentCategory = null; // Clear category when selecting region
+            currentPage = 0;
+            loadFeed();
+        });
+    }
+
+    private void resetCategoryChips() {
+        chipAll.setBackgroundResource(R.drawable.bg_filter_inactive);
+        chipAll.setTextColor(getColor(R.color.text_secondary));
+        chipNongSan.setBackgroundResource(R.drawable.bg_filter_inactive);
+        chipNongSan.setTextColor(getColor(R.color.text_secondary));
+        chipDacSan.setBackgroundResource(R.drawable.bg_filter_inactive);
+        chipDacSan.setTextColor(getColor(R.color.text_secondary));
+        chipRaoVat.setBackgroundResource(R.drawable.bg_filter_inactive);
+        chipRaoVat.setTextColor(getColor(R.color.text_secondary));
+        chipGomChung.setBackgroundResource(R.drawable.bg_filter_inactive);
+        chipGomChung.setTextColor(getColor(R.color.text_secondary));
+    }
+
+    private void resetRegionChips() {
+        chipMienBac.setBackgroundResource(R.drawable.bg_filter_inactive);
+        chipMienBac.setTextColor(getColor(R.color.text_secondary));
+        chipMienTrung.setBackgroundResource(R.drawable.bg_filter_inactive);
+        chipMienTrung.setTextColor(getColor(R.color.text_secondary));
+        chipMienNam.setBackgroundResource(R.drawable.bg_filter_inactive);
+        chipMienNam.setTextColor(getColor(R.color.text_secondary));
     }
 
     private void setupRecyclerView() {
@@ -135,7 +181,7 @@ public class CommunityFeedActivity extends AppCompatActivity
     }
 
     private void loadFeed() {
-        apiService.getFeed(null, null, currentPage, currentCategory)
+        apiService.getFeed(null, null, currentPage, currentCategory, currentRegion)
                 .enqueue(new Callback<List<CommunityPost>>() {
             @Override
             public void onResponse(Call<List<CommunityPost>> call, Response<List<CommunityPost>> response) {
@@ -155,7 +201,7 @@ public class CommunityFeedActivity extends AppCompatActivity
 
     private void loadMore() {
         currentPage++;
-        apiService.getFeed(null, null, currentPage, currentCategory)
+        apiService.getFeed(null, null, currentPage, currentCategory, currentRegion)
                 .enqueue(new Callback<List<CommunityPost>>() {
             @Override
             public void onResponse(Call<List<CommunityPost>> call, Response<List<CommunityPost>> response) {
