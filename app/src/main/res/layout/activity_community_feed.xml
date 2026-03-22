@@ -152,12 +152,78 @@
         </LinearLayout>
     </HorizontalScrollView>
 
+    <!-- Label Vùng miền -->
+    <TextView
+        android:id="@+id/tvRegionLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/chipScroll"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="8dp"
+        android:text="🗺️ Vùng miền"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <!-- Region filter chips -->
+    <HorizontalScrollView
+        android:id="@+id/regionChipScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvRegionLabel"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/regionChipContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:id="@+id/chipMienBac"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_filter_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="🏔️ Miền Bắc"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/chipMienTrung"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_filter_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="⛰️ Miền Trung"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/chipMienNam"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_filter_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="🌴 Miền Nam"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
     <!-- Feed list -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFeed"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/chipScroll"
+        android:layout_below="@id/regionChipScroll"
         android:clipToPadding="false"
         android:paddingBottom="80dp" />
 
