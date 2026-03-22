@@ -37,8 +37,9 @@ public class PostController {
             @RequestParam(required = false) Double lat,
             @RequestParam(required = false) Double lng,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(required = false) String category) {
-        return ResponseEntity.ok(postService.getFeed(lat, lng, page, category));
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String region) {
+        return ResponseEntity.ok(postService.getFeed(lat, lng, page, category, region));
     }
 
     /** GET /api/posts/search?q= — RAG semantic search trên bài đăng */
