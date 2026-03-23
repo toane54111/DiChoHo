@@ -39,6 +39,7 @@
         <activity android:name=".ProfileActivity" android:exported="false" />
         <activity android:name=".AIChefActivity" android:exported="false" />
         <activity android:name=".RecipeDetailActivity" android:exported="false" />
+        <activity android:name=".CookbookActivity" android:exported="false" />
         <activity android:name=".OrderListActivity" android:exported="false" />
         <activity android:name=".OrderTrackingActivity" android:exported="false" />
         <activity android:name=".ChatActivity" android:exported="false" />

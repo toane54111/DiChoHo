@@ -268,7 +268,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ═══ PHẦN MỚI: 2 ACTION CARDS ═══ -->
+            <!-- ═══ 2 ACTION CARDS ═══ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -399,12 +399,12 @@
 
             </LinearLayout>
 
-            <!-- ═══ PHẦN MỚI: COMMUNITY FEED ═══ -->
+            <!-- Bản tin chợ đồng hương (bài đăng) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="20dp"
+                android:layout_marginHorizontal="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -438,7 +438,6 @@
                 android:nestedScrollingEnabled="false"
                 android:paddingHorizontal="8dp" />
 
-            <!-- Empty feed state -->
             <LinearLayout
                 android:id="@+id/emptyFeedState"
                 android:layout_width="match_parent"

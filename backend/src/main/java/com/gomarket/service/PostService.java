@@ -43,6 +43,7 @@ public class PostService {
         post.setLatitude(toDouble(body.get("latitude")));
         post.setLongitude(toDouble(body.get("longitude")));
         post.setLocationName((String) body.get("locationName"));
+        post.setRegion((String) body.get("region"));
 
         // RAG: Embed nội dung bài đăng
         try {
@@ -71,12 +72,17 @@ public class PostService {
         return saved;
     }
 
-    public List<Post> getFeed(Double lat, Double lng, int page, String category) {
+    public List<Post> getFeed(Double lat, Double lng, int page, String category, String region) {
         List<Post> posts;
 
         if (lat != null && lng != null) {
             // Location-based feed
             posts = postRepository.findNearbyPosts(lat, lng, 20, page * 20);
+        } else if (region != null && !region.isEmpty()) {
+            // Filter theo vùng miền
+            Page<Post> p = postRepository.findByIsActiveTrueAndRegionOrderByCreatedAtDesc(
+                    region, PageRequest.of(page, 20));
+            posts = p.getContent();
         } else if (category != null && !category.isEmpty()) {
             Page<Post> p = postRepository.findByIsActiveTrueAndCategoryOrderByCreatedAtDesc(
                     category, PageRequest.of(page, 20));

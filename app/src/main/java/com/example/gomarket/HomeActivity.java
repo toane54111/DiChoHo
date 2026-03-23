@@ -122,6 +122,7 @@ public class HomeActivity extends AppCompatActivity
         navPost = findViewById(R.id.navPost);
         navChat = findViewById(R.id.navChat);
         navProfile = findViewById(R.id.navProfile);
+
     }
 
     private void setupRecyclerView() {
@@ -134,14 +135,15 @@ public class HomeActivity extends AppCompatActivity
         // Header
         searchBar.setOnClickListener(v ->
                 startActivity(new Intent(this, SearchActivity.class)));
+        // Icon 📖 Sổ tay nấu ăn -> mở CookbookActivity
         btnNotification.setOnClickListener(v ->
                 startActivity(new Intent(this, CookbookActivity.class)));
         btnWallet.setOnClickListener(v ->
                 startActivity(new Intent(this, WalletActivity.class)));
 
-        // AI Chef banner
+        // AI Chef banner -> Sổ tay nấu ăn
         bannerSuggest.setOnClickListener(v ->
-                startActivity(new Intent(this, AIChefActivity.class)));
+                startActivity(new Intent(this, CookbookActivity.class)));
 
         // Action cards
         btnCreateList.setOnClickListener(v ->
@@ -226,7 +228,7 @@ public class HomeActivity extends AppCompatActivity
     // ═══ COMMUNITY FEED ═══
 
     private void loadCommunityFeed() {
-        apiService.getFeed(null, null, 0, null).enqueue(new Callback<List<CommunityPost>>() {
+        apiService.getFeed(null, null, 0, null, null).enqueue(new Callback<List<CommunityPost>>() {
             @Override
             public void onResponse(Call<List<CommunityPost>> call,
                                    Response<List<CommunityPost>> response) {
@@ -399,4 +401,5 @@ public class HomeActivity extends AppCompatActivity
             Toast.makeText(this, "Không có thông tin liên hệ", Toast.LENGTH_SHORT).show();
         }
     }
+
 }

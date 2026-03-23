@@ -15,6 +15,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Page<Post> findByIsActiveTrueAndCategoryOrderByCreatedAtDesc(String category, Pageable pageable);
 
+    Page<Post> findByIsActiveTrueAndRegionOrderByCreatedAtDesc(String region, Pageable pageable);
+
     List<Post> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     /**
