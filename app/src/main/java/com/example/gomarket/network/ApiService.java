@@ -92,7 +92,10 @@ public interface ApiService {
     @GET("posts/feed")
     Call<List<CommunityPost>> getFeed(@Query("lat") Double lat, @Query("lng") Double lng,
                                        @Query("page") int page, @Query("category") String category,
-                                       @Query("region") String region);
+                                       @Query("region") String region, @Query("province") String province);
+
+    @GET("posts/provinces")
+    Call<Map<String, List<String>>> getProvinces();
 
     @GET("posts/search")
     Call<List<CommunityPost>> searchPosts(@Query("q") String query);

@@ -228,7 +228,7 @@ public class HomeActivity extends AppCompatActivity
     // ═══ COMMUNITY FEED ═══
 
     private void loadCommunityFeed() {
-        apiService.getFeed(null, null, 0, null, null).enqueue(new Callback<List<CommunityPost>>() {
+        apiService.getFeed(null, null, 0, null, null, null).enqueue(new Callback<List<CommunityPost>>() {
             @Override
             public void onResponse(Call<List<CommunityPost>> call,
                                    Response<List<CommunityPost>> response) {

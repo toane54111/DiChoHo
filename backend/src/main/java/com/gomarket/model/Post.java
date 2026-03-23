@@ -34,6 +34,10 @@ public class Post {
     @Column(name = "region")
     private String region;
 
+    // Tỉnh/thành phố
+    @Column(name = "province")
+    private String province;
+
     @Column(name = "embedding", columnDefinition = "vector(1024)")
     @Convert(converter = com.gomarket.config.VectorTypeConverter.class)
     private float[] embedding;
@@ -92,6 +96,9 @@ public class Post {
 
     public String getRegion() { return region; }
     public void setRegion(String region) { this.region = region; }
+
+    public String getProvince() { return province; }
+    public void setProvince(String province) { this.province = province; }
 
     public float[] getEmbedding() { return embedding; }
     public void setEmbedding(float[] embedding) { this.embedding = embedding; }

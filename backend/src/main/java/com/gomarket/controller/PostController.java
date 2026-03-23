@@ -18,6 +18,7 @@ public class PostController {
 
     public PostController(PostService postService) {
         this.postService = postService;
+        postService.seedCommunityPosts();
     }
 
     /** POST /api/posts — Tạo bài đăng mới */
@@ -38,8 +39,15 @@ public class PostController {
             @RequestParam(required = false) Double lng,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String region) {
-        return ResponseEntity.ok(postService.getFeed(lat, lng, page, category, region));
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String province) {
+        return ResponseEntity.ok(postService.getFeed(lat, lng, page, category, region, province));
+    }
+
+    /** GET /api/posts/provinces — Danh sách tỉnh thành theo vùng miền */
+    @GetMapping("/provinces")
+    public ResponseEntity<java.util.Map<String, java.util.List<String>>> getProvinces() {
+        return ResponseEntity.ok(PostService.getProvincesByRegion());
     }
 
     /** GET /api/posts/search?q= — RAG semantic search trên bài đăng */

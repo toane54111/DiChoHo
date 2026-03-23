@@ -5,8 +5,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +25,7 @@ import com.example.gomarket.util.SessionManager;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +43,8 @@ public class CommunityFeedActivity extends AppCompatActivity
     private LinearLayout emptyState;
     private MaterialCardView searchBarContainer;
     private EditText etSearch;
+    private Spinner spinnerProvince;
+    private LinearLayout provinceContainer;
 
     private TextView chipAll, chipNongSan, chipDacSan, chipRaoVat, chipGomChung;
     private TextView chipMienBac, chipMienTrung, chipMienNam;
@@ -47,7 +53,13 @@ public class CommunityFeedActivity extends AppCompatActivity
     private SessionManager session;
     private String currentCategory = null;
     private String currentRegion = null;
+    private String currentProvince = null;
+    private String currentSearchQuery = null;
     private int currentPage = 0;
+
+    // Province data per region
+    private Map<String, List<String>> provincesMap = new HashMap<>();
+    private boolean spinnerInitialized = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,9 +69,41 @@ public class CommunityFeedActivity extends AppCompatActivity
         apiService = ApiClient.getApiService(this);
         session = new SessionManager(this);
 
+        initProvincesData();
         initViews();
         setupRecyclerView();
-        loadFeed();
+
+        // Handle search query from SearchActivity
+        String searchQuery = getIntent().getStringExtra("SEARCH_QUERY");
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            currentSearchQuery = searchQuery;
+            searchBarContainer.setVisibility(View.VISIBLE);
+            etSearch.setText(searchQuery);
+            searchPosts(searchQuery);
+        } else {
+            loadFeed();
+        }
+    }
+
+    private void initProvincesData() {
+        provincesMap.put("MIEN_BAC", Arrays.asList(
+            "Tất cả", "Hà Nội", "Hải Phòng", "Quảng Ninh", "Bắc Giang", "Bắc Kạn", "Bắc Ninh",
+            "Cao Bằng", "Điện Biên", "Hà Giang", "Hà Nam", "Hải Dương", "Hòa Bình",
+            "Hưng Yên", "Lai Châu", "Lạng Sơn", "Lào Cai", "Nam Định", "Ninh Bình",
+            "Phú Thọ", "Sơn La", "Thái Bình", "Thái Nguyên", "Tuyên Quang", "Vĩnh Phúc", "Yên Bái"
+        ));
+        provincesMap.put("MIEN_TRUNG", Arrays.asList(
+            "Tất cả", "Thanh Hóa", "Nghệ An", "Hà Tĩnh", "Quảng Bình", "Quảng Trị",
+            "Thừa Thiên Huế", "Đà Nẵng", "Quảng Nam", "Quảng Ngãi", "Bình Định",
+            "Phú Yên", "Khánh Hòa", "Ninh Thuận", "Bình Thuận",
+            "Kon Tum", "Gia Lai", "Đắk Lắk", "Đắk Nông", "Lâm Đồng"
+        ));
+        provincesMap.put("MIEN_NAM", Arrays.asList(
+            "Tất cả", "TP. Hồ Chí Minh", "Bà Rịa - Vũng Tàu", "Bình Dương", "Bình Phước",
+            "Đồng Nai", "Tây Ninh", "Long An", "Tiền Giang", "Bến Tre", "Trà Vinh",
+            "Vĩnh Long", "Đồng Tháp", "An Giang", "Kiên Giang", "Cần Thơ",
+            "Hậu Giang", "Sóc Trăng", "Bạc Liêu", "Cà Mau"
+        ));
     }
 
     private void initViews() {
@@ -67,6 +111,8 @@ public class CommunityFeedActivity extends AppCompatActivity
         emptyState = findViewById(R.id.emptyState);
         searchBarContainer = findViewById(R.id.searchBarContainer);
         etSearch = findViewById(R.id.etSearch);
+        spinnerProvince = findViewById(R.id.spinnerProvince);
+        provinceContainer = findViewById(R.id.provinceContainer);
 
         chipAll = findViewById(R.id.chipAll);
         chipNongSan = findViewById(R.id.chipNongSan);
@@ -91,7 +137,16 @@ public class CommunityFeedActivity extends AppCompatActivity
         etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 String query = etSearch.getText().toString().trim();
-                if (!query.isEmpty()) searchPosts(query);
+                if (!query.isEmpty()) {
+                    currentSearchQuery = query;
+                    resetCategoryChips();
+                    resetRegionChips();
+                    currentCategory = null;
+                    currentRegion = null;
+                    currentProvince = null;
+                    provinceContainer.setVisibility(View.GONE);
+                    searchPosts(query);
+                }
                 return true;
             }
             return false;
@@ -104,22 +159,45 @@ public class CommunityFeedActivity extends AppCompatActivity
         setupCategoryChip(chipRaoVat, "rao_vat");
         setupCategoryChip(chipGomChung, "gom_chung");
 
-        // Region chips (vùng miền)
+        // Region chips
         setupRegionChip(chipMienBac, "MIEN_BAC");
         setupRegionChip(chipMienTrung, "MIEN_TRUNG");
         setupRegionChip(chipMienNam, "MIEN_NAM");
+
+        // Province spinner
+        spinnerProvince.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (!spinnerInitialized) {
+                    spinnerInitialized = true;
+                    return;
+                }
+                String selected = (String) parent.getItemAtPosition(position);
+                if ("Tất cả".equals(selected)) {
+                    currentProvince = null;
+                } else {
+                    currentProvince = selected;
+                }
+                currentPage = 0;
+                currentSearchQuery = null;
+                loadFeed();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
     }
 
     private void setupCategoryChip(TextView chip, String category) {
         chip.setOnClickListener(v -> {
-            // Reset region chips
             resetRegionChips();
-            // Highlight selected category chip
             resetCategoryChips();
             chip.setBackgroundResource(R.drawable.bg_filter_active);
             chip.setTextColor(getColor(R.color.white));
             currentCategory = category;
-            currentRegion = null; // Clear region when selecting category
+            currentRegion = null;
+            currentProvince = null;
+            currentSearchQuery = null;
+            provinceContainer.setVisibility(View.GONE);
             currentPage = 0;
             loadFeed();
         });
@@ -127,17 +205,32 @@ public class CommunityFeedActivity extends AppCompatActivity
 
     private void setupRegionChip(TextView chip, String region) {
         chip.setOnClickListener(v -> {
-            // Reset category chips
             resetCategoryChips();
-            // Highlight selected region chip
             resetRegionChips();
             chip.setBackgroundResource(R.drawable.bg_filter_active);
             chip.setTextColor(getColor(R.color.white));
             currentRegion = region;
-            currentCategory = null; // Clear category when selecting region
+            currentCategory = null;
+            currentProvince = null;
+            currentSearchQuery = null;
             currentPage = 0;
+
+            // Show province spinner for selected region
+            showProvinceSpinner(region);
             loadFeed();
         });
+    }
+
+    private void showProvinceSpinner(String region) {
+        List<String> provinces = provincesMap.get(region);
+        if (provinces != null) {
+            spinnerInitialized = false;
+            ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                    this, android.R.layout.simple_spinner_item, provinces);
+            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerProvince.setAdapter(spinnerAdapter);
+            provinceContainer.setVisibility(View.VISIBLE);
+        }
     }
 
     private void resetCategoryChips() {
@@ -167,7 +260,6 @@ public class CommunityFeedActivity extends AppCompatActivity
         rvFeed.setLayoutManager(new LinearLayoutManager(this));
         rvFeed.setAdapter(adapter);
 
-        // Simple load more on scroll
         rvFeed.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -180,7 +272,7 @@ public class CommunityFeedActivity extends AppCompatActivity
     }
 
     private void loadFeed() {
-        apiService.getFeed(null, null, currentPage, currentCategory, currentRegion)
+        apiService.getFeed(null, null, currentPage, currentCategory, currentRegion, currentProvince)
                 .enqueue(new Callback<List<CommunityPost>>() {
             @Override
             public void onResponse(Call<List<CommunityPost>> call, Response<List<CommunityPost>> response) {
@@ -199,8 +291,9 @@ public class CommunityFeedActivity extends AppCompatActivity
     }
 
     private void loadMore() {
+        if (currentSearchQuery != null) return; // No pagination for search
         currentPage++;
-        apiService.getFeed(null, null, currentPage, currentCategory, currentRegion)
+        apiService.getFeed(null, null, currentPage, currentCategory, currentRegion, currentProvince)
                 .enqueue(new Callback<List<CommunityPost>>() {
             @Override
             public void onResponse(Call<List<CommunityPost>> call, Response<List<CommunityPost>> response) {
@@ -283,6 +376,8 @@ public class CommunityFeedActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        loadFeed();
+        if (currentSearchQuery == null) {
+            loadFeed();
+        }
     }
 }

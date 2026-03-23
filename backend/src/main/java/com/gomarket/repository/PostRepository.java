@@ -17,7 +17,22 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Page<Post> findByIsActiveTrueAndRegionOrderByCreatedAtDesc(String region, Pageable pageable);
 
+    Page<Post> findByIsActiveTrueAndProvinceOrderByCreatedAtDesc(String province, Pageable pageable);
+
+    Page<Post> findByIsActiveTrueAndRegionAndProvinceOrderByCreatedAtDesc(String region, String province, Pageable pageable);
+
     List<Post> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    /**
+     * Text-based search fallback khi vector search không khả dụng
+     */
+    @Query("SELECT p FROM Post p WHERE p.isActive = true AND " +
+           "(LOWER(p.title) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(p.content) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(p.locationName) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(p.province) LIKE LOWER(CONCAT('%', :q, '%'))) " +
+           "ORDER BY p.createdAt DESC")
+    List<Post> searchByText(@Param("q") String query);
 
     /**
      * RAG: Vector search trên posts — tìm bài đăng tương đồng ngữ nghĩa

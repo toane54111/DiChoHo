@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_weight="1"
-            android:text="Chợ Đồng Hương"
+            android:text="🏘️ Chợ Đồng Hương"
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -63,16 +63,31 @@
         app:cardCornerRadius="24dp"
         app:cardElevation="2dp">
 
-        <EditText
-            android:id="@+id/etSearch"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@null"
-            android:hint="Tìm kiếm bài đăng..."
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:paddingHorizontal="16dp"
-            android:textSize="14sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔍"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:background="@null"
+                android:hint="Tìm nông sản, đặc sản, vùng miền..."
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:textSize="14sp" />
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Category filter chips -->
@@ -159,7 +174,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/chipScroll"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:text="🗺️ Vùng miền"
         android:textColor="@color/text_primary"
         android:textSize="14sp"
@@ -179,7 +194,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:paddingHorizontal="12dp"
-            android:paddingVertical="8dp">
+            android:paddingVertical="6dp">
 
             <TextView
                 android:id="@+id/chipMienBac"
@@ -218,12 +233,42 @@
         </LinearLayout>
     </HorizontalScrollView>
 
+    <!-- Province selector (shown when region is selected) -->
+    <LinearLayout
+        android:id="@+id/provinceContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/regionChipScroll"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📍 Tỉnh/Thành:"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerProvince"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_input_rounded"
+            android:paddingHorizontal="8dp" />
+    </LinearLayout>
+
     <!-- Feed list -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFeed"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/regionChipScroll"
+        android:layout_below="@id/provinceContainer"
         android:clipToPadding="false"
         android:paddingBottom="80dp" />
 
@@ -245,7 +290,7 @@
         android:id="@+id/emptyState"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/chipScroll"
+        android:layout_below="@id/provinceContainer"
         android:layout_marginTop="60dp"
         android:gravity="center"
         android:orientation="vertical"

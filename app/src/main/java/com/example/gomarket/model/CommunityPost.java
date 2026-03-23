@@ -31,6 +31,9 @@ public class CommunityPost {
     @SerializedName("region")
     private String region;
 
+    @SerializedName("province")
+    private String province;
+
     @SerializedName("images")
     private List<PostImage> images;
 
@@ -63,6 +66,7 @@ public class CommunityPost {
     public Double getLatitude() { return latitude; }
     public Double getLongitude() { return longitude; }
     public String getLocationName() { return locationName; }
+    public String getProvince() { return province; }
     public String getRegion() { return region; }
     public List<PostImage> getImages() { return images; }
     public String getAuthorName() { return authorName; }
