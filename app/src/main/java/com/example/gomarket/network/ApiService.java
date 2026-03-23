@@ -124,6 +124,34 @@ public interface ApiService {
     @POST("recipe/to-shopping-request")
     Call<ShoppingRequest> recipeToShoppingRequest(@Body Map<String, Object> body);
 
+    // ═══ Cookbook (Sổ tay nấu ăn) ═══
+    @POST("cookbook")
+    Call<com.example.gomarket.model.CookbookRecipe> createCookbookRecipe(@Body Map<String, Object> body);
+
+    @GET("cookbook/suggestions")
+    Call<List<com.example.gomarket.model.CookbookRecipe>> getCookbookSuggestions(@Query("page") int page);
+
+    @GET("cookbook/community")
+    Call<List<com.example.gomarket.model.CookbookRecipe>> getCookbookCommunity(@Query("page") int page, @Query("userId") Long userId);
+
+    @GET("cookbook/personal/{userId}")
+    Call<List<com.example.gomarket.model.CookbookRecipe>> getCookbookPersonal(@Path("userId") long userId);
+
+    @GET("cookbook/{id}")
+    Call<com.example.gomarket.model.CookbookRecipe> getCookbookRecipe(@Path("id") long id, @Query("userId") Long userId);
+
+    @POST("cookbook/{id}/like")
+    Call<Map<String, Object>> toggleCookbookLike(@Path("id") long id, @Query("userId") long userId);
+
+    @POST("cookbook/{id}/comments")
+    Call<com.example.gomarket.model.CookbookComment> addCookbookComment(@Path("id") long id, @Body Map<String, Object> body);
+
+    @GET("cookbook/{id}/comments")
+    Call<List<com.example.gomarket.model.CookbookComment>> getCookbookComments(@Path("id") long id);
+
+    @DELETE("cookbook/{id}")
+    Call<Map<String, String>> deleteCookbookRecipe(@Path("id") long id, @Query("userId") long userId);
+
     // ═══ Products (Từ điển vật giá) ═══
     @GET("products/search")
     Call<List<Product>> searchProducts(@Query("q") String query);

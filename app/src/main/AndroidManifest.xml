@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -58,6 +59,11 @@
         <activity android:name=".CommunityFeedActivity" android:exported="false" />
         <activity android:name=".CreatePostActivity" android:exported="false" />
         <activity android:name=".PostDetailActivity" android:exported="false" />
+
+        <!-- Sổ tay nấu ăn - Cookbook activities -->
+        <activity android:name=".CookbookActivity" android:exported="false" />
+        <activity android:name=".CookbookRecipeDetailActivity" android:exported="false" />
+        <activity android:name=".CreateCookbookRecipeActivity" android:exported="false" />
 
 
 

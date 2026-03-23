@@ -32,16 +32,18 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Kiểm tra đã đăng nhập chưa
         sessionManager = new SessionManager(this);
-        if (sessionManager.isLoggedIn()) {
-            startActivity(new Intent(this, HomeActivity.class));
-            finish();
-            return;
-        }
-
         setContentView(R.layout.activity_login);
-        apiService = ApiClient.getApiService(this);
+
+        // Init async: tự nhận diện IP backend (emulator/WiFi)
+        // Xong mới cho đăng nhập hoặc auto-redirect
+        ApiClient.initAsync(this, () -> {
+            apiService = ApiClient.getApiService(this);
+            if (sessionManager.isLoggedIn()) {
+                startActivity(new Intent(this, HomeActivity.class));
+                finish();
+            }
+        });
 
         // Ánh xạ view
         edtPhone = findViewById(R.id.edtPhone);
@@ -63,6 +65,8 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(LoginActivity.this, "Vui lòng nhập số điện thoại", Toast.LENGTH_SHORT).show();
                 } else if (password.isEmpty()) {
                     Toast.makeText(LoginActivity.this, "Vui lòng nhập mật khẩu", Toast.LENGTH_SHORT).show();
+                } else if (apiService == null) {
+                    Toast.makeText(LoginActivity.this, "Đang kết nối server, vui lòng chờ...", Toast.LENGTH_SHORT).show();
                 } else {
                     performLogin(phone, password);
                 }

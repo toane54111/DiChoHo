@@ -135,7 +135,7 @@ public class HomeActivity extends AppCompatActivity
         searchBar.setOnClickListener(v ->
                 startActivity(new Intent(this, SearchActivity.class)));
         btnNotification.setOnClickListener(v ->
-                Toast.makeText(this, "Mở thông báo", Toast.LENGTH_SHORT).show());
+                startActivity(new Intent(this, CookbookActivity.class)));
         btnWallet.setOnClickListener(v ->
                 startActivity(new Intent(this, WalletActivity.class)));
 
