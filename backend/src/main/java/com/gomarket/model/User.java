@@ -47,6 +47,10 @@ public class User {
     @Column(name = "vehicle_type", length = 50)
     private String vehicleType;
 
+    /** Hồ sơ khẩu vị — AI phân tích từ lịch sử mua hàng, VD: "Hảo ngọt, Trái cây nhiệt đới, Hải sản" */
+    @Column(name = "taste_profile", columnDefinition = "TEXT")
+    private String tasteProfile;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -106,4 +110,7 @@ public class User {
 
     public String getVehicleType() { return vehicleType; }
     public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
+
+    public String getTasteProfile() { return tasteProfile; }
+    public void setTasteProfile(String tasteProfile) { this.tasteProfile = tasteProfile; }
 }

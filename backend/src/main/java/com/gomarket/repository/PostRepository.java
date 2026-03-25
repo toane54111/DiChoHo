@@ -21,6 +21,16 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Page<Post> findByIsActiveTrueAndRegionAndProvinceOrderByCreatedAtDesc(String region, String province, Pageable pageable);
 
+    // Combined category + region/province filters
+    @Query("SELECT p FROM Post p WHERE p.isActive = true AND p.category = :cat AND p.region = :reg ORDER BY p.createdAt DESC")
+    Page<Post> findByCategoryAndRegion(@Param("cat") String category, @Param("reg") String region, Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE p.isActive = true AND p.category = :cat AND p.province = :prov ORDER BY p.createdAt DESC")
+    Page<Post> findByCategoryAndProvince(@Param("cat") String category, @Param("prov") String province, Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE p.isActive = true AND p.category = :cat AND p.region = :reg AND p.province = :prov ORDER BY p.createdAt DESC")
+    Page<Post> findByCategoryAndRegionAndProvince(@Param("cat") String category, @Param("reg") String region, @Param("prov") String province, Pageable pageable);
+
     List<Post> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     /**

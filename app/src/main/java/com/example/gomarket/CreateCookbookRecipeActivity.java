@@ -1,25 +1,39 @@
 package com.example.gomarket;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.example.gomarket.model.CookbookRecipe;
 import com.example.gomarket.network.ApiClient;
 import com.example.gomarket.network.ApiService;
 import com.example.gomarket.util.SessionManager;
+import com.google.android.material.card.MaterialCardView;
 import com.google.gson.Gson;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -28,11 +42,28 @@ public class CreateCookbookRecipeActivity extends AppCompatActivity {
 
     private EditText etTitle, etDescription;
     private LinearLayout containerIngredients, containerSteps;
+    private ImageView ivImagePreview;
+    private MaterialCardView cardImagePreview, btnPickImage;
     private List<View> ingredientRows = new ArrayList<>();
     private List<View> stepRows = new ArrayList<>();
     private ApiService apiService;
     private SessionManager session;
     private Gson gson = new Gson();
+
+    private Uri selectedImageUri = null;
+    private String uploadedImageUrl = null;
+
+    private final ActivityResultLauncher<Intent> imagePickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    selectedImageUri = result.getData().getData();
+                    if (selectedImageUri != null) {
+                        cardImagePreview.setVisibility(View.VISIBLE);
+                        Glide.with(this).load(selectedImageUri).centerCrop().into(ivImagePreview);
+                        uploadedImageUrl = null;
+                    }
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,11 +77,25 @@ public class CreateCookbookRecipeActivity extends AppCompatActivity {
         etDescription = findViewById(R.id.etDescription);
         containerIngredients = findViewById(R.id.containerIngredients);
         containerSteps = findViewById(R.id.containerSteps);
+        ivImagePreview = findViewById(R.id.ivImagePreview);
+        cardImagePreview = findViewById(R.id.cardImagePreview);
+        btnPickImage = findViewById(R.id.btnPickImage);
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         findViewById(R.id.btnAddIngredient).setOnClickListener(v -> addIngredientRow("", "", ""));
         findViewById(R.id.btnAddStep).setOnClickListener(v -> addStepRow(""));
         findViewById(R.id.btnSubmit).setOnClickListener(v -> submitRecipe());
+
+        btnPickImage.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            imagePickerLauncher.launch(intent);
+        });
+
+        findViewById(R.id.btnRemoveImage).setOnClickListener(v -> {
+            selectedImageUri = null;
+            uploadedImageUrl = null;
+            cardImagePreview.setVisibility(View.GONE);
+        });
 
         // Default 3 ingredient rows + 3 step rows
         addIngredientRow("", "", "");
@@ -225,7 +270,61 @@ public class CreateCookbookRecipeActivity extends AppCompatActivity {
             return;
         }
 
-        // Build request body
+        findViewById(R.id.btnSubmit).setEnabled(false);
+
+        double finalTotalCost = totalCost;
+        List<Map<String, Object>> finalIngredients = ingredients;
+        List<String> finalSteps = steps;
+
+        // Upload image first if selected
+        if (selectedImageUri != null && uploadedImageUrl == null) {
+            uploadImageThenSubmit(userId, title, finalIngredients, finalSteps, finalTotalCost);
+        } else {
+            doSubmitRecipe(userId, title, finalIngredients, finalSteps, finalTotalCost);
+        }
+    }
+
+    private void uploadImageThenSubmit(long userId, String title,
+            List<Map<String, Object>> ingredients, List<String> steps, double totalCost) {
+        try {
+            InputStream is = getContentResolver().openInputStream(selectedImageUri);
+            if (is == null) {
+                doSubmitRecipe(userId, title, ingredients, steps, totalCost);
+                return;
+            }
+            File tempFile = new File(getCacheDir(), "upload_" + System.currentTimeMillis() + ".jpg");
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            byte[] buffer = new byte[4096];
+            int len;
+            while ((len = is.read(buffer)) > 0) fos.write(buffer, 0, len);
+            fos.close();
+            is.close();
+
+            RequestBody reqBody = RequestBody.create(MediaType.parse("image/*"), tempFile);
+            MultipartBody.Part part = MultipartBody.Part.createFormData("file", tempFile.getName(), reqBody);
+
+            apiService.uploadImage(part).enqueue(new Callback<Map<String, String>>() {
+                @Override
+                public void onResponse(Call<Map<String, String>> call, Response<Map<String, String>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        uploadedImageUrl = response.body().get("imageUrl");
+                    }
+                    doSubmitRecipe(userId, title, ingredients, steps, totalCost);
+                    tempFile.delete();
+                }
+                @Override
+                public void onFailure(Call<Map<String, String>> call, Throwable t) {
+                    doSubmitRecipe(userId, title, ingredients, steps, totalCost);
+                    tempFile.delete();
+                }
+            });
+        } catch (Exception e) {
+            doSubmitRecipe(userId, title, ingredients, steps, totalCost);
+        }
+    }
+
+    private void doSubmitRecipe(long userId, String title,
+            List<Map<String, Object>> ingredients, List<String> steps, double totalCost) {
         Map<String, Object> body = new HashMap<>();
         body.put("userId", userId);
         body.put("title", title);
@@ -234,8 +333,9 @@ public class CreateCookbookRecipeActivity extends AppCompatActivity {
         body.put("stepsJson", gson.toJson(steps));
         body.put("totalCost", totalCost);
         body.put("isSystemRecipe", false);
-
-        findViewById(R.id.btnSubmit).setEnabled(false);
+        if (uploadedImageUrl != null) {
+            body.put("imageUrl", uploadedImageUrl);
+        }
 
         apiService.createCookbookRecipe(body).enqueue(new Callback<CookbookRecipe>() {
             @Override
@@ -250,7 +350,6 @@ public class CreateCookbookRecipeActivity extends AppCompatActivity {
                     findViewById(R.id.btnSubmit).setEnabled(true);
                 }
             }
-
             @Override
             public void onFailure(Call<CookbookRecipe> call, Throwable t) {
                 Toast.makeText(CreateCookbookRecipeActivity.this,
