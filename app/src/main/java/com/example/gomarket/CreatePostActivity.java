@@ -1,30 +1,46 @@
 package com.example.gomarket;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.bumptech.glide.Glide;
 import com.example.gomarket.model.CommunityPost;
 import com.example.gomarket.network.ApiClient;
 import com.example.gomarket.network.ApiService;
 import com.example.gomarket.util.SessionManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.material.card.MaterialCardView;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -34,11 +50,28 @@ public class CreatePostActivity extends AppCompatActivity {
     private EditText etTitle, etContent, etLocation;
     private RadioGroup rgCategory, rgRegion;
     private Spinner spinnerProvince;
+    private ImageView ivImagePreview;
+    private MaterialCardView cardImagePreview, btnPickImage;
     private ApiService apiService;
     private SessionManager session;
     private double latitude = 0, longitude = 0;
 
+    private Uri selectedImageUri = null;
+    private String uploadedImageUrl = null;
+
     private Map<String, List<String>> provincesMap = new LinkedHashMap<>();
+
+    private final ActivityResultLauncher<Intent> imagePickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    selectedImageUri = result.getData().getData();
+                    if (selectedImageUri != null) {
+                        cardImagePreview.setVisibility(android.view.View.VISIBLE);
+                        Glide.with(this).load(selectedImageUri).centerCrop().into(ivImagePreview);
+                        uploadedImageUrl = null; // Will upload on submit
+                    }
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,8 +89,10 @@ public class CreatePostActivity extends AppCompatActivity {
         rgCategory = findViewById(R.id.rgCategory);
         rgRegion = findViewById(R.id.rgRegion);
         spinnerProvince = findViewById(R.id.spinnerProvince);
+        ivImagePreview = findViewById(R.id.ivImagePreview);
+        cardImagePreview = findViewById(R.id.cardImagePreview);
+        btnPickImage = findViewById(R.id.btnPickImage);
 
-        // Update province spinner when region changes
         rgRegion.setOnCheckedChangeListener((group, checkedId) -> {
             String region = null;
             if (checkedId == R.id.rbMienBac) region = "MIEN_BAC";
@@ -66,11 +101,29 @@ public class CreatePostActivity extends AppCompatActivity {
             updateProvinceSpinner(region);
         });
 
-        // Initialize with empty spinner
         updateProvinceSpinner(null);
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         findViewById(R.id.btnPost).setOnClickListener(v -> submitPost());
+
+        btnPickImage.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            imagePickerLauncher.launch(intent);
+        });
+
+        findViewById(R.id.btnRemoveImage).setOnClickListener(v -> {
+            selectedImageUri = null;
+            uploadedImageUrl = null;
+            cardImagePreview.setVisibility(android.view.View.GONE);
+        });
+
+        // Handle prefill from AI Thổ Địa
+        String prefillTitle = getIntent().getStringExtra("PREFILL_TITLE");
+        if (prefillTitle != null) etTitle.setText(prefillTitle);
+        String prefillCategory = getIntent().getStringExtra("PREFILL_CATEGORY");
+        if ("gom_chung".equals(prefillCategory)) {
+            rgCategory.check(R.id.rbGomChung);
+        }
 
         getCurrentLocation();
     }
@@ -139,6 +192,74 @@ public class CreatePostActivity extends AppCompatActivity {
             return;
         }
 
+        findViewById(R.id.btnPost).setEnabled(false);
+
+        // If image selected but not uploaded yet, upload first
+        if (selectedImageUri != null && uploadedImageUrl == null) {
+            uploadImageThenSubmit(title, content, locationName);
+        } else {
+            doSubmitPost(title, content, locationName);
+        }
+    }
+
+    private void uploadImageThenSubmit(String title, String content, String locationName) {
+        try {
+            File tempFile = createTempFileFromUri(selectedImageUri);
+            if (tempFile == null) {
+                Toast.makeText(this, "Không thể đọc ảnh", Toast.LENGTH_SHORT).show();
+                findViewById(R.id.btnPost).setEnabled(true);
+                return;
+            }
+
+            RequestBody reqBody = RequestBody.create(MediaType.parse("image/*"), tempFile);
+            MultipartBody.Part part = MultipartBody.Part.createFormData("file", tempFile.getName(), reqBody);
+
+            apiService.uploadImage(part).enqueue(new Callback<Map<String, String>>() {
+                @Override
+                public void onResponse(Call<Map<String, String>> call, Response<Map<String, String>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        uploadedImageUrl = response.body().get("imageUrl");
+                        doSubmitPost(title, content, locationName);
+                    } else {
+                        Toast.makeText(CreatePostActivity.this, "Lỗi upload ảnh", Toast.LENGTH_SHORT).show();
+                        findViewById(R.id.btnPost).setEnabled(true);
+                    }
+                    tempFile.delete();
+                }
+
+                @Override
+                public void onFailure(Call<Map<String, String>> call, Throwable t) {
+                    Toast.makeText(CreatePostActivity.this, "Lỗi upload: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    findViewById(R.id.btnPost).setEnabled(true);
+                    tempFile.delete();
+                }
+            });
+        } catch (Exception e) {
+            Toast.makeText(this, "Lỗi xử lý ảnh", Toast.LENGTH_SHORT).show();
+            findViewById(R.id.btnPost).setEnabled(true);
+        }
+    }
+
+    private File createTempFileFromUri(Uri uri) {
+        try {
+            InputStream is = getContentResolver().openInputStream(uri);
+            if (is == null) return null;
+            File tempFile = new File(getCacheDir(), "upload_" + System.currentTimeMillis() + ".jpg");
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            byte[] buffer = new byte[4096];
+            int len;
+            while ((len = is.read(buffer)) > 0) {
+                fos.write(buffer, 0, len);
+            }
+            fos.close();
+            is.close();
+            return tempFile;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void doSubmitPost(String title, String content, String locationName) {
         String category;
         int checkedId = rgCategory.getCheckedRadioButtonId();
         if (checkedId == R.id.rbDacSan) category = "dac_san";
@@ -146,14 +267,12 @@ public class CreatePostActivity extends AppCompatActivity {
         else if (checkedId == R.id.rbGomChung) category = "gom_chung";
         else category = "nong_san";
 
-        // Determine region
         String region = null;
         int regionId = rgRegion.getCheckedRadioButtonId();
         if (regionId == R.id.rbMienBac) region = "MIEN_BAC";
         else if (regionId == R.id.rbMienTrung) region = "MIEN_TRUNG";
         else if (regionId == R.id.rbMienNam) region = "MIEN_NAM";
 
-        // Determine province
         String province = null;
         if (spinnerProvince.getSelectedItemPosition() > 0) {
             province = (String) spinnerProvince.getSelectedItem();
@@ -171,8 +290,9 @@ public class CreatePostActivity extends AppCompatActivity {
             body.put("latitude", latitude);
             body.put("longitude", longitude);
         }
-
-        findViewById(R.id.btnPost).setEnabled(false);
+        if (uploadedImageUrl != null) {
+            body.put("imageUrls", new ArrayList<>(Arrays.asList(uploadedImageUrl)));
+        }
 
         apiService.createPost(body).enqueue(new Callback<CommunityPost>() {
             @Override

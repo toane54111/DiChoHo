@@ -190,6 +190,8 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         btnPersonalInfo.setOnClickListener(v -> showPersonalInfoDialog());
 
         btnAddress.setOnClickListener(v ->

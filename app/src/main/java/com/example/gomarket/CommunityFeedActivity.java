@@ -189,34 +189,36 @@ public class CommunityFeedActivity extends AppCompatActivity
 
     private void setupCategoryChip(TextView chip, String category) {
         chip.setOnClickListener(v -> {
-            resetRegionChips();
             resetCategoryChips();
             chip.setBackgroundResource(R.drawable.bg_filter_active);
             chip.setTextColor(getColor(R.color.white));
             currentCategory = category;
-            currentRegion = null;
-            currentProvince = null;
             currentSearchQuery = null;
-            provinceContainer.setVisibility(View.GONE);
             currentPage = 0;
+            // Keep region filter active (don't reset)
             loadFeed();
         });
     }
 
     private void setupRegionChip(TextView chip, String region) {
         chip.setOnClickListener(v -> {
-            resetCategoryChips();
-            resetRegionChips();
-            chip.setBackgroundResource(R.drawable.bg_filter_active);
-            chip.setTextColor(getColor(R.color.white));
-            currentRegion = region;
-            currentCategory = null;
-            currentProvince = null;
+            // Toggle: click again to deselect
+            if (region.equals(currentRegion)) {
+                resetRegionChips();
+                currentRegion = null;
+                currentProvince = null;
+                provinceContainer.setVisibility(View.GONE);
+            } else {
+                resetRegionChips();
+                chip.setBackgroundResource(R.drawable.bg_filter_active);
+                chip.setTextColor(getColor(R.color.white));
+                currentRegion = region;
+                currentProvince = null;
+                showProvinceSpinner(region);
+            }
             currentSearchQuery = null;
             currentPage = 0;
-
-            // Show province spinner for selected region
-            showProvinceSpinner(region);
+            // Keep category filter active (don't reset)
             loadFeed();
         });
     }

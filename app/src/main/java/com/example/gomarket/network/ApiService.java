@@ -3,6 +3,7 @@ package com.example.gomarket.network;
 import com.example.gomarket.model.ChatMessage;
 import com.example.gomarket.model.CommunityPost;
 import com.example.gomarket.model.LocationResponse;
+import com.example.gomarket.model.LocalGuideResponse;
 import com.example.gomarket.model.LoginRequest;
 import com.example.gomarket.model.Order;
 import com.example.gomarket.model.OrderRequest;
@@ -22,11 +23,14 @@ import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
+import okhttp3.MultipartBody;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -156,6 +160,13 @@ public interface ApiService {
     @DELETE("cookbook/{id}")
     Call<Map<String, String>> deleteCookbookRecipe(@Path("id") long id, @Query("userId") long userId);
 
+    // ═══ AI Thổ Địa (Local Guide) ═══
+    @GET("local-guide/suggestions")
+    Call<LocalGuideResponse> getLocalGuideSuggestions(
+            @Query("userId") long userId,
+            @Query("lat") double lat,
+            @Query("lng") double lng);
+
     // ═══ Products (Từ điển vật giá) ═══
     @GET("products/search")
     Call<List<Product>> searchProducts(@Query("q") String query);
@@ -223,4 +234,9 @@ public interface ApiService {
 
     @GET("chat/conversations/{userId}")
     Call<List<Map<String, Object>>> getConversations(@Path("userId") long userId);
+
+    // ═══ Upload ═══
+    @Multipart
+    @POST("upload/image")
+    Call<Map<String, String>> uploadImage(@Part MultipartBody.Part file);
 }

@@ -61,8 +61,7 @@
         <activity android:name=".CreatePostActivity" android:exported="false" />
         <activity android:name=".PostDetailActivity" android:exported="false" />
 
-        <!-- Sổ tay nấu ăn - Cookbook activities -->
-        <activity android:name=".CookbookActivity" android:exported="false" />
+        <!-- Sổ tay nấu ăn - Cookbook activities (CookbookActivity already declared above) -->
         <activity android:name=".CookbookRecipeDetailActivity" android:exported="false" />
         <activity android:name=".CreateCookbookRecipeActivity" android:exported="false" />
 

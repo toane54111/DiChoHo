@@ -7,10 +7,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gomarket.util.VietnameseUtils;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class PostService {
@@ -75,38 +78,47 @@ public class PostService {
 
     public List<Post> getFeed(Double lat, Double lng, int page, String category, String region, String province) {
         List<Post> posts;
+        boolean hasCategory = category != null && !category.isEmpty();
+        boolean hasRegion = region != null && !region.isEmpty();
+        boolean hasProvince = province != null && !province.isEmpty();
 
         if (lat != null && lng != null) {
             posts = postRepository.findNearbyPosts(lat, lng, 20, page * 20);
-        } else if (province != null && !province.isEmpty() && region != null && !region.isEmpty()) {
-            Page<Post> p = postRepository.findByIsActiveTrueAndRegionAndProvinceOrderByCreatedAtDesc(
-                    region, province, PageRequest.of(page, 20));
-            posts = p.getContent();
-        } else if (province != null && !province.isEmpty()) {
-            Page<Post> p = postRepository.findByIsActiveTrueAndProvinceOrderByCreatedAtDesc(
-                    province, PageRequest.of(page, 20));
-            posts = p.getContent();
-        } else if (region != null && !region.isEmpty()) {
-            Page<Post> p = postRepository.findByIsActiveTrueAndRegionOrderByCreatedAtDesc(
-                    region, PageRequest.of(page, 20));
-            posts = p.getContent();
-        } else if (category != null && !category.isEmpty()) {
-            Page<Post> p = postRepository.findByIsActiveTrueAndCategoryOrderByCreatedAtDesc(
-                    category, PageRequest.of(page, 20));
-            posts = p.getContent();
+        } else if (hasCategory && hasRegion && hasProvince) {
+            posts = postRepository.findByCategoryAndRegionAndProvince(category, region, province, PageRequest.of(page, 20)).getContent();
+        } else if (hasCategory && hasRegion) {
+            posts = postRepository.findByCategoryAndRegion(category, region, PageRequest.of(page, 20)).getContent();
+        } else if (hasCategory && hasProvince) {
+            posts = postRepository.findByCategoryAndProvince(category, province, PageRequest.of(page, 20)).getContent();
+        } else if (hasRegion && hasProvince) {
+            posts = postRepository.findByIsActiveTrueAndRegionAndProvinceOrderByCreatedAtDesc(region, province, PageRequest.of(page, 20)).getContent();
+        } else if (hasRegion) {
+            posts = postRepository.findByIsActiveTrueAndRegionOrderByCreatedAtDesc(region, PageRequest.of(page, 20)).getContent();
+        } else if (hasProvince) {
+            posts = postRepository.findByIsActiveTrueAndProvinceOrderByCreatedAtDesc(province, PageRequest.of(page, 20)).getContent();
+        } else if (hasCategory) {
+            posts = postRepository.findByIsActiveTrueAndCategoryOrderByCreatedAtDesc(category, PageRequest.of(page, 20)).getContent();
         } else {
-            Page<Post> p = postRepository.findByIsActiveTrueOrderByCreatedAtDesc(
-                    PageRequest.of(page, 20));
-            posts = p.getContent();
+            posts = postRepository.findByIsActiveTrueOrderByCreatedAtDesc(PageRequest.of(page, 20)).getContent();
         }
 
         posts.forEach(post -> enrichPost(post, null));
         return posts;
     }
 
+    // Category display name mapping for search
+    private static final Map<String, String> CATEGORY_NAMES = new HashMap<>() {{
+        put("nong_san", "Nông sản");
+        put("dac_san", "Đặc sản");
+        put("rao_vat", "Rao vặt");
+        put("gom_chung", "Gom chung");
+    }};
+
     /**
      * RAG Search: Tìm bài đăng tương đồng ngữ nghĩa
      * "mực, tôm" sẽ match "hải sản tươi dưới biển lên"
+     * "ca phe" sẽ match "cà phê" (diacritics-aware)
+     * "nông sản" sẽ match category nong_san
      */
     public List<Post> searchPosts(String query) {
         // Thử vector search (RAG) trước
@@ -124,10 +136,76 @@ public class PostService {
             System.err.println("Vector search thất bại, fallback text search: " + e.getMessage());
         }
 
-        // Fallback: text-based search
-        List<Post> posts = postRepository.searchByText(query);
-        posts.forEach(post -> enrichPost(post, null));
-        return posts;
+        // Fallback: enhanced text search with diacritics + category matching
+        return searchByTextEnhanced(query);
+    }
+
+    /**
+     * Text search nâng cao: hỗ trợ không dấu + tìm theo category
+     * "ca phe" → match "cà phê"
+     * "nong san" → match category nông sản
+     */
+    private List<Post> searchByTextEnhanced(String query) {
+        // 1. Thử search bằng text gốc trước
+        List<Post> results = postRepository.searchByText(query);
+
+        // 2. Tìm theo category name (e.g. "nông sản" → category "nong_san")
+        String matchedCategory = findCategoryByQuery(query);
+        if (matchedCategory != null) {
+            List<Post> categoryPosts = postRepository
+                    .findByIsActiveTrueAndCategoryOrderByCreatedAtDesc(matchedCategory,
+                            org.springframework.data.domain.PageRequest.of(0, 20))
+                    .getContent();
+            // Merge, avoid duplicates
+            java.util.Set<Long> existingIds = results.stream().map(Post::getId).collect(Collectors.toSet());
+            for (Post p : categoryPosts) {
+                if (!existingIds.contains(p.getId())) {
+                    results.add(p);
+                }
+            }
+        }
+
+        // 3. Nếu kết quả ít, thử search không dấu (diacritics-free)
+        if (results.size() < 5) {
+            String normalized = VietnameseUtils.removeDiacritics(query);
+            if (!normalized.equals(query.toLowerCase().trim())) {
+                // Query có dấu, đã search rồi, skip
+            } else {
+                // Query không dấu → search trên tất cả posts bằng Java filter
+                List<Post> allActive = postRepository.findByIsActiveTrueOrderByCreatedAtDesc(
+                        org.springframework.data.domain.PageRequest.of(0, 200)).getContent();
+                java.util.Set<Long> existingIds = results.stream().map(Post::getId).collect(Collectors.toSet());
+                for (Post p : allActive) {
+                    if (existingIds.contains(p.getId())) continue;
+                    String titleNorm = VietnameseUtils.removeDiacritics(p.getTitle());
+                    String contentNorm = VietnameseUtils.removeDiacritics(p.getContent());
+                    String locationNorm = VietnameseUtils.removeDiacritics(p.getLocationName());
+                    String provinceNorm = VietnameseUtils.removeDiacritics(p.getProvince());
+                    if (titleNorm.contains(normalized) || contentNorm.contains(normalized)
+                            || locationNorm.contains(normalized) || provinceNorm.contains(normalized)) {
+                        results.add(p);
+                    }
+                    if (results.size() >= 20) break;
+                }
+            }
+        }
+
+        results.forEach(post -> enrichPost(post, null));
+        return results;
+    }
+
+    /** Map query text to category key (supports diacritics-free matching) */
+    private String findCategoryByQuery(String query) {
+        String queryNorm = VietnameseUtils.removeDiacritics(query);
+        for (Map.Entry<String, String> entry : CATEGORY_NAMES.entrySet()) {
+            String categoryNorm = VietnameseUtils.removeDiacritics(entry.getValue());
+            String categoryKey = entry.getKey().replace("_", " ");
+            if (queryNorm.contains(categoryNorm) || queryNorm.contains(categoryKey)
+                    || categoryNorm.contains(queryNorm)) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
     public Post getPost(Long id, Long viewerUserId) {

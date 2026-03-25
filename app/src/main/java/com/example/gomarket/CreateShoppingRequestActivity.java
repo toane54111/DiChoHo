@@ -571,11 +571,11 @@ public class CreateShoppingRequestActivity extends AppCompatActivity {
             }
         });
 
-        // Fill button → add selected products to shopping list
+        // Fill button → add selected products to shopping list (with price!)
         btnFill.setOnClickListener(v -> {
             for (Product product : selectedProducts) {
                 String unit = product.getUnit() != null ? product.getUnit() : "";
-                addItemRow(product.getName(), unit);
+                addItemRow(product.getName(), unit, product.getPrice());
             }
             Toast.makeText(this, "Đã thêm " + selectedProducts.size() + " món vào danh sách",
                     Toast.LENGTH_SHORT).show();
