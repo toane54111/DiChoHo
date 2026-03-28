@@ -29,6 +29,7 @@ import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -40,7 +41,7 @@ public class HomeActivity extends AppCompatActivity
 
     private MaterialCardView btnNotification, searchBar;
     private MaterialCardView btnWallet;
-    private TextView tvGreeting, tvAddress, tvWalletBalance;
+    private TextView tvGreeting, tvUserName, tvAddress, tvWalletBalance;
 
     private MaterialCardView btnCreateList, btnShopperMode;
 
@@ -63,8 +64,9 @@ public class HomeActivity extends AppCompatActivity
     // AI Thổ Địa — horizontal
     private LinearLayout containerSuggestionChips;
     private LinearLayout localGuideLoading;
-    private TextView tvLocalGuideSubtitle;
-    private MaterialCardView cardSuggestionDetail;
+    private TextView tvSeasonalLocationLine;
+    private TextView tvSeasonalHeadline;
+    private View cardSuggestionDetail;
     private TextView tvDetailEmoji, tvDetailName, tvDetailReason, tvDetailNoResults;
     private LinearLayout containerDetailPosts, listDetailPosts;
     private MaterialCardView btnDetailGomChung, btnDetailNhoMua;
@@ -103,6 +105,7 @@ public class HomeActivity extends AppCompatActivity
 
     private void initViews() {
         tvGreeting = findViewById(R.id.tvGreeting);
+        tvUserName = findViewById(R.id.tvUserName);
         tvAddress = findViewById(R.id.tvAddress);
         btnWallet = findViewById(R.id.btnWallet);
         tvWalletBalance = findViewById(R.id.tvWalletBalance);
@@ -112,7 +115,8 @@ public class HomeActivity extends AppCompatActivity
         // AI Thổ Địa
         containerSuggestionChips = findViewById(R.id.containerSuggestionChips);
         localGuideLoading = findViewById(R.id.localGuideLoading);
-        tvLocalGuideSubtitle = findViewById(R.id.tvLocalGuideSubtitle);
+        tvSeasonalLocationLine = findViewById(R.id.tvSeasonalLocationLine);
+        tvSeasonalHeadline = findViewById(R.id.tvSeasonalHeadline);
         cardSuggestionDetail = findViewById(R.id.cardSuggestionDetail);
         tvDetailEmoji = findViewById(R.id.tvDetailEmoji);
         tvDetailName = findViewById(R.id.tvDetailName);
@@ -204,11 +208,12 @@ public class HomeActivity extends AppCompatActivity
     }
 
     private void loadUserGreeting() {
+        tvGreeting.setText("Xin chào 👋");
         String name = session.getUserName();
         if (name != null && !name.isEmpty() && !name.equals("Người dùng")) {
-            tvGreeting.setText("Chào, " + name + "! 👋");
+            tvUserName.setText(name);
         } else {
-            tvGreeting.setText("Chào bạn! 👋");
+            tvUserName.setText("bạn");
         }
     }
 
@@ -221,12 +226,12 @@ public class HomeActivity extends AppCompatActivity
             public void onResponse(Call<Wallet> call, Response<Wallet> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     long balance = response.body().getBalance();
-                    tvWalletBalance.setText("💳 " + formatBalance(balance));
+                    tvWalletBalance.setText("🪙 " + formatBalance(balance));
                 }
             }
             @Override
             public void onFailure(Call<Wallet> call, Throwable t) {
-                tvWalletBalance.setText("💳 --");
+                tvWalletBalance.setText("🪙 --");
             }
         });
     }
@@ -411,13 +416,15 @@ public class HomeActivity extends AppCompatActivity
                     localGuideLoaded = true;
                     renderLocalGuideHorizontal(response.body());
                 } else {
-                    tvLocalGuideSubtitle.setText("Không thể tải gợi ý. Thử lại sau.");
+                    tvSeasonalLocationLine.setText("");
+                    tvSeasonalHeadline.setText("Không thể tải gợi ý. Thử lại sau.");
                 }
             }
             @Override
             public void onFailure(Call<LocalGuideResponse> call, Throwable t) {
                 localGuideLoading.setVisibility(View.GONE);
-                tvLocalGuideSubtitle.setText("Lỗi kết nối. Thử lại sau.");
+                tvSeasonalLocationLine.setText("");
+                tvSeasonalHeadline.setText("Lỗi kết nối. Thử lại sau.");
             }
         });
     }
@@ -425,12 +432,17 @@ public class HomeActivity extends AppCompatActivity
     private void renderLocalGuideHorizontal(LocalGuideResponse guide) {
         String location = guide.getLocationLabel() != null ? guide.getLocationLabel() : "Vị trí của bạn";
         String season = guide.getSeasonLabel() != null ? guide.getSeasonLabel() : "";
-        tvLocalGuideSubtitle.setText("📍 " + location + " — " + season);
+        String locLine = "📍 " + location.toUpperCase(Locale.ROOT);
+        if (season != null && !season.isEmpty()) {
+            locLine += " - " + season.toUpperCase(Locale.ROOT);
+        }
+        tvSeasonalLocationLine.setText(locLine);
 
         containerSuggestionChips.removeAllViews();
         containerSuggestionChips.setVisibility(View.VISIBLE);
 
         suggestionItems = guide.getSuggestions();
+        tvSeasonalHeadline.setText(buildSeasonalHeadline(suggestionItems));
         if (suggestionItems == null || suggestionItems.isEmpty()) return;
 
         for (int i = 0; i < suggestionItems.size(); i++) {
@@ -447,6 +459,21 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
+    private String buildSeasonalHeadline(List<LocalGuideResponse.SuggestionItem> items) {
+        if (items == null || items.isEmpty()) {
+            return "Khám phá đặc sản địa phương theo mùa 🌿";
+        }
+        if (items.size() == 1) {
+            return items.get(0).getName() + " đang vào mùa — đặc sản địa phương 🌿";
+        }
+        if (items.size() == 2) {
+            return items.get(0).getName() + " & " + items.get(1).getName()
+                    + " đang vào mùa — đặc sản địa phương 🌿";
+        }
+        return items.get(0).getName() + ", " + items.get(1).getName() + " & " + items.get(2).getName()
+                + " đang vào mùa — đặc sản địa phương 🌿";
+    }
+
     private View createSuggestionChip(LocalGuideResponse.SuggestionItem item, int index) {
         // Create a compact chip: emoji + name
         LinearLayout chip = new LinearLayout(this);
@@ -461,10 +488,10 @@ public class HomeActivity extends AppCompatActivity
 
         GradientDrawable bg = new GradientDrawable();
         bg.setCornerRadius(dp(20));
-        bg.setColor(Color.WHITE);
-        bg.setStroke(dp(1), Color.parseColor("#E0E0E0"));
+        bg.setColor(Color.parseColor("#F5F5F5"));
+        bg.setStroke(dp(1), Color.parseColor("#EEEEEE"));
         chip.setBackground(bg);
-        chip.setElevation(dp(2));
+        chip.setElevation(0);
         chip.setClickable(true);
         chip.setFocusable(true);
 
@@ -487,7 +514,7 @@ public class HomeActivity extends AppCompatActivity
         if (item.isHasResults() && item.getMatchedPosts() != null && !item.getMatchedPosts().isEmpty()) {
             TextView dot = new TextView(this);
             dot.setText(" •");
-            dot.setTextColor(Color.parseColor("#4CAF50"));
+            dot.setTextColor(Color.parseColor("#1A7A4A"));
             dot.setTextSize(14);
             chip.addView(dot);
         }
@@ -514,13 +541,22 @@ public class HomeActivity extends AppCompatActivity
             GradientDrawable bg = new GradientDrawable();
             bg.setCornerRadius(dp(20));
             if (i == selectedSuggestionIndex) {
-                bg.setColor(Color.parseColor("#FFF8E1"));
-                bg.setStroke(dp(2), Color.parseColor("#FF9800"));
+                bg.setColor(Color.parseColor("#E8F5EE"));
+                bg.setStroke(dp(2), Color.parseColor("#1A7A4A"));
             } else {
-                bg.setColor(Color.WHITE);
-                bg.setStroke(dp(1), Color.parseColor("#E0E0E0"));
+                bg.setColor(Color.parseColor("#F5F5F5"));
+                bg.setStroke(dp(1), Color.parseColor("#EEEEEE"));
             }
             chip.setBackground(bg);
+            if (chip instanceof LinearLayout && ((LinearLayout) chip).getChildCount() >= 2) {
+                View nameChild = ((LinearLayout) chip).getChildAt(1);
+                if (nameChild instanceof TextView) {
+                    ((TextView) nameChild).setTextColor(
+                            i == selectedSuggestionIndex
+                                    ? Color.parseColor("#1A7A4A")
+                                    : Color.parseColor("#212121"));
+                }
+            }
         }
     }
 
@@ -567,7 +603,7 @@ public class HomeActivity extends AppCompatActivity
         } else {
             containerDetailPosts.setVisibility(View.GONE);
             tvDetailNoResults.setVisibility(View.VISIBLE);
-            tvDetailNoResults.setText("Chưa có ai bán " + item.getName() + " quanh bạn. Bạn có đang thèm không?");
+            tvDetailNoResults.setText("Chưa có ai bán gần bạn. Đăng bán ngay?");
         }
 
         // Action buttons — luôn hiển thị cho cả 2 trường hợp

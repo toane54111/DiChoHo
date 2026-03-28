@@ -35,7 +35,10 @@
         </activity>
 
         <activity android:name=".RegisterActivity" android:exported="false" />
-        <activity android:name=".HomeActivity" android:exported="false" />
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Home" />
         <activity android:name=".ProfileActivity" android:exported="false" />
         <activity android:name=".AIChefActivity" android:exported="false" />
         <activity android:name=".RecipeDetailActivity" android:exported="false" />

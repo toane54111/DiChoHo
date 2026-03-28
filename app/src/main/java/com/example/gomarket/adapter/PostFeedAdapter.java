@@ -1,8 +1,9 @@
 package com.example.gomarket.adapter;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -56,6 +58,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         holder.tvLocation.setText(post.getLocationName() != null ? post.getLocationName() : "");
         holder.tvTime.setText(formatTime(post.getCreatedAt()));
         holder.tvCategory.setText(post.getCategoryDisplay());
+        applyCategoryTagStyle(holder.tvCategory, post.getCategoryDisplay());
         holder.tvTitle.setText(post.getTitle());
         holder.tvContent.setText(post.getContent());
 
@@ -66,6 +69,8 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
                 context.getColor(R.color.status_busy) : context.getColor(R.color.text_secondary));
         holder.tvLikeCount.setText(String.valueOf(post.getLikeCount()));
         holder.tvCommentCount.setText(String.valueOf(post.getCommentCount()));
+
+        applyAvatarRing(holder.ivAuthorAvatar, post.getCategoryDisplay());
 
         // Avatar
         if (post.getAuthorAvatar() != null && !post.getAuthorAvatar().isEmpty()) {
@@ -87,6 +92,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
 
         // Click listeners
         holder.itemView.setOnClickListener(v -> listener.onPostClick(post));
+        holder.tvSeeMore.setOnClickListener(v -> listener.onPostClick(post));
         holder.btnLike.setOnClickListener(v -> listener.onLikeClick(post, position));
         holder.btnComment.setOnClickListener(v -> listener.onCommentClick(post));
         holder.btnContact.setOnClickListener(v -> listener.onContactClick(post));
@@ -108,6 +114,41 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         notifyItemRangeInserted(start, morePosts.size());
     }
 
+    private void applyCategoryTagStyle(TextView tv, String categoryDisplay) {
+        String c = categoryDisplay != null ? categoryDisplay.toLowerCase() : "";
+        GradientDrawable bg = new GradientDrawable();
+        float r = 20f * context.getResources().getDisplayMetrics().density;
+        bg.setCornerRadius(r);
+        int bgColor;
+        int fgColor;
+        if (c.contains("nông")) {
+            bgColor = ContextCompat.getColor(context, R.color.home_feed_tag_nong_bg);
+            fgColor = ContextCompat.getColor(context, R.color.home_feed_tag_nong);
+        } else if (c.contains("đặc") || c.contains("dac")) {
+            bgColor = ContextCompat.getColor(context, R.color.home_feed_tag_dac_bg);
+            fgColor = ContextCompat.getColor(context, R.color.home_feed_tag_dac);
+        } else {
+            bgColor = Color.parseColor("#F5F5F5");
+            fgColor = Color.parseColor("#616161");
+        }
+        bg.setColor(bgColor);
+        tv.setBackground(bg);
+        tv.setTextColor(fgColor);
+    }
+
+    private void applyAvatarRing(ShapeableImageView avatar, String categoryDisplay) {
+        String c = categoryDisplay != null ? categoryDisplay.toLowerCase() : "";
+        int stroke = ContextCompat.getColor(context, R.color.divider);
+        if (c.contains("nông")) {
+            stroke = ContextCompat.getColor(context, R.color.home_feed_tag_nong);
+        } else if (c.contains("đặc") || c.contains("dac")) {
+            stroke = Color.parseColor("#D97706");
+        }
+        float d = context.getResources().getDisplayMetrics().density;
+        avatar.setStrokeWidth((int) (2 * d));
+        avatar.setStrokeColor(ColorStateList.valueOf(stroke));
+    }
+
     private String formatTime(String createdAt) {
         if (createdAt == null) return "";
         try {
@@ -121,7 +162,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
 
     static class PostViewHolder extends RecyclerView.ViewHolder {
         ShapeableImageView ivAuthorAvatar;
-        TextView tvAuthorName, tvLocation, tvTime, tvCategory, tvTitle, tvContent;
+        TextView tvAuthorName, tvLocation, tvTime, tvCategory, tvTitle, tvContent, tvSeeMore;
         MaterialCardView cardImage;
         ImageView ivPostImage;
         TextView tvLikeIcon, tvLikeCount, tvCommentCount;
@@ -136,6 +177,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
             tvCategory = itemView.findViewById(R.id.tvCategory);
             tvTitle = itemView.findViewById(R.id.tvTitle);
             tvContent = itemView.findViewById(R.id.tvContent);
+            tvSeeMore = itemView.findViewById(R.id.tvSeeMore);
             cardImage = itemView.findViewById(R.id.cardImage);
             ivPostImage = itemView.findViewById(R.id.ivPostImage);
             tvLikeIcon = itemView.findViewById(R.id.tvLikeIcon);
