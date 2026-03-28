@@ -22,9 +22,9 @@
 
     <style name="Theme.Home" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/home_primary</item>
-        <item name="colorPrimaryDark">@color/home_primary</item>
+        <item name="colorPrimaryDark">#008C3E</item>
         <item name="colorAccent">@color/home_accent</item>
-        <item name="android:statusBarColor">@color/home_primary</item>
+        <item name="android:statusBarColor">#008C3E</item>
         <item name="android:fontFamily">@font/be_vietnam_pro_family</item>
         <item name="fontFamily">@font/be_vietnam_pro_family</item>
     </style>

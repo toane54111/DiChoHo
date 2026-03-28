@@ -514,7 +514,7 @@ public class HomeActivity extends AppCompatActivity
         if (item.isHasResults() && item.getMatchedPosts() != null && !item.getMatchedPosts().isEmpty()) {
             TextView dot = new TextView(this);
             dot.setText(" •");
-            dot.setTextColor(Color.parseColor("#1A7A4A"));
+            dot.setTextColor(Color.parseColor("#00B14F"));
             dot.setTextSize(14);
             chip.addView(dot);
         }
@@ -541,8 +541,8 @@ public class HomeActivity extends AppCompatActivity
             GradientDrawable bg = new GradientDrawable();
             bg.setCornerRadius(dp(20));
             if (i == selectedSuggestionIndex) {
-                bg.setColor(Color.parseColor("#E8F5EE"));
-                bg.setStroke(dp(2), Color.parseColor("#1A7A4A"));
+                bg.setColor(Color.parseColor("#D4EDDA"));
+                bg.setStroke(dp(2), Color.parseColor("#00B14F"));
             } else {
                 bg.setColor(Color.parseColor("#F5F5F5"));
                 bg.setStroke(dp(1), Color.parseColor("#EEEEEE"));
@@ -553,7 +553,7 @@ public class HomeActivity extends AppCompatActivity
                 if (nameChild instanceof TextView) {
                     ((TextView) nameChild).setTextColor(
                             i == selectedSuggestionIndex
-                                    ? Color.parseColor("#1A7A4A")
+                                    ? Color.parseColor("#00B14F")
                                     : Color.parseColor("#212121"));
                 }
             }

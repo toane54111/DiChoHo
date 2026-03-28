@@ -484,10 +484,10 @@
                                                 android:id="@+id/tvDetailReason"
                                                 android:layout_width="wrap_content"
                                                 android:layout_height="wrap_content"
-                                                android:layout_marginTop="2dp"
-                                                android:lineSpacingMultiplier="1.25"
-                                                android:textColor="@color/home_body_muted"
-                                                android:textSize="12sp" />
+                                android:layout_marginTop="2dp"
+                                android:lineSpacingMultiplier="1.3"
+                                android:textColor="#444444"
+                                android:textSize="12sp" />
                                         </LinearLayout>
 
                                         <TextView
@@ -531,7 +531,7 @@
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
                                         android:layout_marginTop="8dp"
-                                        android:text="Chưa có ai bán món này quanh bạn."
+                                        android:text="Chưa có ai bán gần bạn. Đăng bán ngay?"
                                         android:textColor="@color/home_accent"
                                         android:textSize="11sp"
                                         android:textStyle="bold"
