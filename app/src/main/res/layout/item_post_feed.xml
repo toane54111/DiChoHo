@@ -4,18 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="12dp"
     android:layout_marginVertical="6dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="2dp">
+    app:cardCornerRadius="18dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="14dp">
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
 
-        <!-- Author row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -26,9 +26,11 @@
                 android:id="@+id/ivAuthorAvatar"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:padding="2dp"
                 android:scaleType="centerCrop"
                 android:src="@drawable/avatar_placeholder"
-                app:shapeAppearanceOverlay="@style/CircleImageView" />
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                app:strokeWidth="2dp" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -55,7 +57,7 @@
                         android:id="@+id/tvLocation"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/home_body_muted"
                         android:textSize="12sp"
                         tools:text="Gia Lai" />
 
@@ -63,63 +65,75 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
-                        android:text="•"
-                        android:textColor="@color/text_hint" />
+                        android:text="-"
+                        android:textColor="@color/home_greeting_muted" />
 
                     <TextView
                         android:id="@+id/tvTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_hint"
+                        android:textColor="@color/home_body_muted"
                         android:textSize="12sp"
-                        tools:text="2 giờ trước" />
+                        tools:text="27/03/2026" />
                 </LinearLayout>
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/tvCategory"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_trending_chip"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
-                android:textColor="@color/primary_dark"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                tools:text="Nông sản" />
         </LinearLayout>
 
-        <!-- Title -->
+        <TextView
+            android:id="@+id/tvCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@android:color/transparent"
+            android:letterSpacing="0.025"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:textColor="@color/home_feed_tag_nong"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            tools:text="Nông sản" />
+
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:lineSpacingMultiplier="1.4"
             android:textColor="@color/text_primary"
-            android:textSize="15sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             tools:text="Măng tươi mùa này ngon lắm bà con ơi" />
 
-        <!-- Content preview -->
         <TextView
             android:id="@+id/tvContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:ellipsize="end"
+            android:lineSpacingMultiplier="1.6"
             android:maxLines="3"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
+            android:textColor="@color/home_body_muted"
+            android:textSize="12sp"
             tools:text="Nhà em có 50kg măng le tươi, ai cần inbox em ship tận nơi..." />
 
-        <!-- Post image -->
+        <TextView
+            android:id="@+id/tvSeeMore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:paddingVertical="2dp"
+            android:text="Xem thêm"
+            android:textColor="@color/home_primary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardImage"
             android:layout_width="match_parent"
             android:layout_height="180dp"
             android:layout_marginTop="10dp"
             android:visibility="gone"
-            app:cardCornerRadius="12dp"
+            app:cardCornerRadius="13dp"
             app:cardElevation="0dp"
             tools:visibility="visible">
 
@@ -127,18 +141,16 @@
                 android:id="@+id/ivPostImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:contentDescription="Post image" />
+                android:contentDescription="Post image"
+                android:scaleType="centerCrop" />
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Divider -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="10dp"
             android:background="@color/divider" />
 
-        <!-- Actions row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -146,7 +158,6 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <!-- Like -->
             <LinearLayout
                 android:id="@+id/btnLike"
                 android:layout_width="0dp"
@@ -168,12 +179,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/home_body_muted"
                     android:textSize="13sp"
                     tools:text="12" />
             </LinearLayout>
 
-            <!-- Comment -->
             <LinearLayout
                 android:id="@+id/btnComment"
                 android:layout_width="0dp"
@@ -194,12 +204,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/home_body_muted"
                     android:textSize="13sp"
                     tools:text="5" />
             </LinearLayout>
 
-            <!-- Contact -->
             <LinearLayout
                 android:id="@+id/btnContact"
                 android:layout_width="0dp"
@@ -220,7 +229,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="Liên hệ"
-                    android:textColor="@color/primary"
+                    android:textColor="@color/home_primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>

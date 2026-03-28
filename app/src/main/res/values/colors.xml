@@ -40,4 +40,26 @@
     <!-- Quick Reply Tags -->
     <color name="tag_background">#E8F5E9</color>
     <color name="tag_text">#008F4C</color>
+
+    <!-- Home screen (Chợ đồng hương UI spec) -->
+    <color name="home_background">#F0F7F2</color>
+    <color name="home_primary">#00B14F</color>
+    <color name="home_accent">#FF6D00</color>
+    <color name="home_greeting_muted">#888888</color>
+    <color name="home_body_muted">#555555</color>
+    <color name="home_coin_bg">#FFF9E6</color>
+    <color name="home_coin_border">#FFD700</color>
+    <color name="home_coin_text">#B7860A</color>
+    <color name="home_search_bg">#EEF3EE</color>
+    <color name="home_chip_active_bg">#D4EDDA</color>
+    <color name="home_chip_inactive_bg">#F0F0F0</color>
+    <color name="home_nav_border">#DDDDDD</color>
+    <color name="home_nav_inactive">#AAAAAA</color>
+    <color name="home_seasonal_emoji_bg">#D4EDDA</color>
+    <color name="home_white_72">#CCFFFFFF</color>
+    <color name="home_arrow_muted">#80FFFFFF</color>
+    <color name="home_feed_tag_nong">#00A045</color>
+    <color name="home_feed_tag_nong_bg">#D4EDDA</color>
+    <color name="home_feed_tag_dac">#CC7000</color>
+    <color name="home_feed_tag_dac_bg">#FFE8C2</color>
 </resources>
