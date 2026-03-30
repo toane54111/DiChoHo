@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.gomarket.util.VietnameseUtils;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -115,29 +116,46 @@ public class PostService {
     }};
 
     /**
-     * RAG Search: Tìm bài đăng tương đồng ngữ nghĩa
-     * "mực, tôm" sẽ match "hải sản tươi dưới biển lên"
-     * "ca phe" sẽ match "cà phê" (diacritics-aware)
-     * "nông sản" sẽ match category nong_san
+     * Hybrid Search: Kết hợp Vector (RAG) + Text search
+     * Vector search tìm bài có embedding tương đồng (similarity >= 0.5)
+     * Text search tìm bài khớp keyword (kể cả bài không có embedding)
+     * Merge kết quả, vector results ưu tiên đứng trước
      */
     public List<Post> searchPosts(String query) {
-        // Thử vector search (RAG) trước
+        java.util.Set<Long> seenIds = new java.util.LinkedHashSet<>();
+        List<Post> results = new ArrayList<>();
+
+        // Bước 1: Vector search (RAG) — chỉ tìm bài có embedding + similarity >= 0.5
         try {
             float[] queryVector = embeddingService.embed(query);
             if (queryVector != null) {
                 String vectorStr = Arrays.toString(queryVector);
-                List<Post> posts = postRepository.searchByVector(vectorStr, 20);
-                if (!posts.isEmpty()) {
-                    posts.forEach(post -> enrichPost(post, null));
-                    return posts;
+                List<Post> vectorPosts = postRepository.searchByVector(vectorStr, 10);
+                for (Post p : vectorPosts) {
+                    if (seenIds.add(p.getId())) {
+                        results.add(p);
+                    }
                 }
             }
         } catch (Exception e) {
-            System.err.println("Vector search thất bại, fallback text search: " + e.getMessage());
+            System.err.println("Vector search thất bại: " + e.getMessage());
         }
 
-        // Fallback: enhanced text search with diacritics + category matching
-        return searchByTextEnhanced(query);
+        // Bước 2: Text search — tìm cả bài không có embedding
+        List<Post> textResults = searchByTextEnhanced(query);
+        for (Post p : textResults) {
+            if (seenIds.add(p.getId())) {
+                results.add(p);
+            }
+        }
+
+        // Limit 20 kết quả
+        if (results.size() > 20) {
+            results = new ArrayList<>(results.subList(0, 20));
+        }
+
+        results.forEach(post -> enrichPost(post, null));
+        return results;
     }
 
     /**
@@ -190,7 +208,6 @@ public class PostService {
             }
         }
 
-        results.forEach(post -> enrichPost(post, null));
         return results;
     }
 
@@ -281,6 +298,51 @@ public class PostService {
         });
     }
 
+    /**
+     * Re-embed tất cả bài đăng chưa có embedding
+     */
+    @Transactional
+    public int reEmbedAllPosts() {
+        List<Post> posts = postRepository.findAll();
+        int count = 0;
+        for (Post post : posts) {
+            if (post.getIsActive() != null && post.getIsActive() && post.getEmbedding() == null) {
+                try {
+                    String text = post.getTitle() + " " + (post.getContent() != null ? post.getContent() : "");
+                    float[] emb = embeddingService.embed(text);
+                    if (emb != null) {
+                        post.setEmbedding(emb);
+                        postRepository.save(post);
+                        count++;
+                        System.out.println("Embedded post #" + post.getId() + ": " + post.getTitle());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to embed post #" + post.getId() + ": " + e.getMessage());
+                }
+            }
+        }
+        System.out.println("Re-embedded " + count + " posts");
+        return count;
+    }
+
+    /**
+     * Force re-seed: xóa tất cả bài seed cũ (không có ảnh) rồi tạo lại với ảnh
+     */
+    @Transactional
+    public void forceReseed() {
+        // Xóa tất cả bài không có ảnh (= bài seed cũ)
+        List<Post> allPosts = postRepository.findAll();
+        int deleted = 0;
+        for (Post p : allPosts) {
+            if (p.getImages() == null || p.getImages().isEmpty()) {
+                postRepository.delete(p);
+                deleted++;
+            }
+        }
+        System.out.println("Deleted " + deleted + " old seed posts without images");
+        doSeed();
+    }
+
     @Transactional
     public void seedCommunityPosts() {
         // Xóa bài cũ không có province và seed lại
@@ -298,69 +360,73 @@ public class PostService {
             }
         });
 
+        doSeed();
+    }
+
+    private void doSeed() {
         Long userId = userRepository.findAll().stream()
                 .map(User::getId).findFirst().orElse(1L);
 
-        // {title, content, category, region, province, locationName}
+        // {title, content, category, region, province, locationName, imageFile}
         Object[][] seeds = {
             // ═══ MIỀN BẮC ═══
-            {"Bưởi Diễn đặc sản Hà Nội", "Bưởi Diễn chính gốc, vỏ mỏng, múi mọng nước, vị ngọt thanh. Mùa Tết bán sỉ lẻ, 50k/quả.", "nong_san", "MIEN_BAC", "Hà Nội", "Phúc Diễn, Bắc Từ Liêm"},
-            {"Bánh cốm Hàng Than", "Bánh cốm truyền thống phố Hàng Than, nhân đậu xanh dừa. Đặt trước 1 ngày.", "dac_san", "MIEN_BAC", "Hà Nội", "Hàng Than, Ba Đình"},
-            {"Ai cần mua đồ khô Hà Nội?", "Mình về quê tuần sau, ai cần mua miến dong, mộc nhĩ, nấm hương Bắc thì nhờ mình mua giúp.", "rao_vat", "MIEN_BAC", "Hà Nội", "Hoàn Kiếm"},
-            {"Chả mực Hạ Long chính gốc", "Chả mực giã tay truyền thống, thịt mực tươi 100%, dai giòn thơm. Ship đông lạnh giữ nguyên vị.", "dac_san", "MIEN_BAC", "Quảng Ninh", "Hạ Long"},
-            {"Vải thiều Bắc Giang xuất khẩu", "Vải thiều loại 1 xuất khẩu, quả to đều, ngọt thơm. Đặt sớm có giá tốt. Ship đông lạnh toàn quốc.", "nong_san", "MIEN_BAC", "Bắc Giang", "Lục Ngạn"},
-            {"Gom đơn vải thiều về Sài Gòn", "Mùa vải thiều sắp tới, gom đơn ship từ Bắc Giang vào Sài Gòn. Giá tại vườn + phí ship chia đều.", "gom_chung", "MIEN_BAC", "Bắc Giang", "Lục Ngạn"},
-            {"Nhãn lồng Hưng Yên chính vụ", "Nhãn lồng đầu mùa, cùi dày, hạt nhỏ, ngọt lịm. Đóng thùng xốp ship xa. Giá 45k/kg.", "nong_san", "MIEN_BAC", "Hưng Yên", "Khoái Châu"},
-            {"Gạo nếp cái hoa vàng Thái Bình", "Gạo nếp thơm dẻo, nấu xôi cực ngon. Nhà trồng 100% organic, không thuốc. 35k/kg.", "nong_san", "MIEN_BAC", "Thái Bình", "Kiến Xương"},
-            {"Phở bò Nam Định ship tận nơi", "Bộ nguyên liệu phở bò Nam Định chính gốc: bánh phở tươi + nước dùng + thịt bò. Nấu tại nhà 15 phút.", "dac_san", "MIEN_BAC", "Nam Định", "TP Nam Định"},
-            {"Hải sản tươi sống Hải Phòng", "Tôm sú, cua gạch, ghẹ, ngao hoa đánh bắt sáng nay. Ship đông lạnh giữ tươi, giá chợ đầu mối.", "nong_san", "MIEN_BAC", "Hải Phòng", "Đồ Sơn"},
-            {"Miến dong Bắc Kạn chính gốc", "Miến dong sợi dai, nấu không nát. Làm thủ công truyền thống. 60k/kg, mua 5kg free ship.", "dac_san", "MIEN_BAC", "Bắc Kạn", "Na Rì"},
-            {"Thịt trâu gác bếp Sơn La", "Thịt trâu hun khói gác bếp, đặc sản Tây Bắc. Nhậu lai rai hoặc làm quà tuyệt vời. 350k/kg.", "dac_san", "MIEN_BAC", "Sơn La", "Mộc Châu"},
-            {"Chè Thái Nguyên Tân Cương", "Chè búp Tân Cương loại 1, hương thơm đặc trưng. Hộp 200g giá 100k. Gom đơn giá sỉ.", "nong_san", "MIEN_BAC", "Thái Nguyên", "Tân Cương"},
-            {"Cam Cao Phong mùa mới thu hoạch", "Cam Cao Phong Hòa Bình, vỏ mỏng, ngọt lịm. Hàng tuyển, đóng thùng 10kg ship toàn quốc.", "nong_san", "MIEN_BAC", "Hòa Bình", "Cao Phong"},
-            {"Bánh đậu xanh Hải Dương", "Bánh đậu xanh Rồng Vàng chính hãng. Hộp 10 cái 40k. Mua làm quà biếu Tết.", "dac_san", "MIEN_BAC", "Hải Dương", "TP Hải Dương"},
+            {"Bưởi Diễn đặc sản Hà Nội", "Bưởi Diễn chính gốc, vỏ mỏng, múi mọng nước, vị ngọt thanh. Mùa Tết bán sỉ lẻ, 50k/quả.", "nong_san", "MIEN_BAC", "Hà Nội", "Phúc Diễn, Bắc Từ Liêm", "buoi.jpg"},
+            {"Bánh cốm Hàng Than", "Bánh cốm truyền thống phố Hàng Than, nhân đậu xanh dừa. Đặt trước 1 ngày.", "dac_san", "MIEN_BAC", "Hà Nội", "Hàng Than, Ba Đình", "banh_com.jpg"},
+            {"Ai cần mua đồ khô Hà Nội?", "Mình về quê tuần sau, ai cần mua miến dong, mộc nhĩ, nấm hương Bắc thì nhờ mình mua giúp.", "rao_vat", "MIEN_BAC", "Hà Nội", "Hoàn Kiếm", "mien_dong.jpg"},
+            {"Chả mực Hạ Long chính gốc", "Chả mực giã tay truyền thống, thịt mực tươi 100%, dai giòn thơm. Ship đông lạnh giữ nguyên vị.", "dac_san", "MIEN_BAC", "Quảng Ninh", "Hạ Long", "cha_muc.jpg"},
+            {"Vải thiều Bắc Giang xuất khẩu", "Vải thiều loại 1 xuất khẩu, quả to đều, ngọt thơm. Đặt sớm có giá tốt. Ship đông lạnh toàn quốc.", "nong_san", "MIEN_BAC", "Bắc Giang", "Lục Ngạn", "vai_thieu.jpg"},
+            {"Gom đơn vải thiều về Sài Gòn", "Mùa vải thiều sắp tới, gom đơn ship từ Bắc Giang vào Sài Gòn. Giá tại vườn + phí ship chia đều.", "gom_chung", "MIEN_BAC", "Bắc Giang", "Lục Ngạn", "vai_thieu.jpg"},
+            {"Nhãn lồng Hưng Yên chính vụ", "Nhãn lồng đầu mùa, cùi dày, hạt nhỏ, ngọt lịm. Đóng thùng xốp ship xa. Giá 45k/kg.", "nong_san", "MIEN_BAC", "Hưng Yên", "Khoái Châu", "nhan_long.jpg"},
+            {"Gạo nếp cái hoa vàng Thái Bình", "Gạo nếp thơm dẻo, nấu xôi cực ngon. Nhà trồng 100% organic, không thuốc. 35k/kg.", "nong_san", "MIEN_BAC", "Thái Bình", "Kiến Xương", "gao_nep.jpg"},
+            {"Phở bò Nam Định ship tận nơi", "Bộ nguyên liệu phở bò Nam Định chính gốc: bánh phở tươi + nước dùng + thịt bò. Nấu tại nhà 15 phút.", "dac_san", "MIEN_BAC", "Nam Định", "TP Nam Định", "pho_bo.jpg"},
+            {"Hải sản tươi sống Hải Phòng", "Tôm sú, cua gạch, ghẹ, ngao hoa đánh bắt sáng nay. Ship đông lạnh giữ tươi, giá chợ đầu mối.", "nong_san", "MIEN_BAC", "Hải Phòng", "Đồ Sơn", "hai_san.jpg"},
+            {"Miến dong Bắc Kạn chính gốc", "Miến dong sợi dai, nấu không nát. Làm thủ công truyền thống. 60k/kg, mua 5kg free ship.", "dac_san", "MIEN_BAC", "Bắc Kạn", "Na Rì", "mien_dong.jpg"},
+            {"Thịt trâu gác bếp Sơn La", "Thịt trâu hun khói gác bếp, đặc sản Tây Bắc. Nhậu lai rai hoặc làm quà tuyệt vời. 350k/kg.", "dac_san", "MIEN_BAC", "Sơn La", "Mộc Châu", "thit_trau_gac_bep.jpg"},
+            {"Chè Thái Nguyên Tân Cương", "Chè búp Tân Cương loại 1, hương thơm đặc trưng. Hộp 200g giá 100k. Gom đơn giá sỉ.", "nong_san", "MIEN_BAC", "Thái Nguyên", "Tân Cương", "che_thai_nguyen.jpg"},
+            {"Cam Cao Phong mùa mới thu hoạch", "Cam Cao Phong Hòa Bình, vỏ mỏng, ngọt lịm. Hàng tuyển, đóng thùng 10kg ship toàn quốc.", "nong_san", "MIEN_BAC", "Hòa Bình", "Cao Phong", "cam.jpg"},
+            {"Bánh đậu xanh Hải Dương", "Bánh đậu xanh Rồng Vàng chính hãng. Hộp 10 cái 40k. Mua làm quà biếu Tết.", "dac_san", "MIEN_BAC", "Hải Dương", "TP Hải Dương", "banh_dau_xanh.jpg"},
 
             // ═══ MIỀN TRUNG ═══
-            {"Cam Vinh ngon ngọt mùa mới", "Nhà em có 200kg cam Vinh, quả to, ngọt thanh, không hạt. Ship toàn quốc, mua nhiều giá sỉ.", "nong_san", "MIEN_TRUNG", "Nghệ An", "Quỳ Hợp"},
-            {"Mắm ruốc Huế gia truyền", "Mắm ruốc Huế làm thủ công, ủ 6 tháng, thơm đậm đà. Ăn với bún bò, cơm hến tuyệt vời. 40k/hũ 500g.", "dac_san", "MIEN_TRUNG", "Thừa Thiên Huế", "TP Huế"},
-            {"Tìm người ship bún bò Huế", "Mình ở Sài Gòn muốn nhờ ai ở Huế mua giúp bộ nguyên liệu bún bò (mắm ruốc, sả, ớt...) ship vào.", "rao_vat", "MIEN_TRUNG", "Thừa Thiên Huế", "TP Huế"},
-            {"Bánh tráng dẻo Quảng Nam", "Bánh tráng dẻo cuốn thịt heo, bánh tráng nướng chấm mắm nêm. Combo 1kg bánh tráng các loại 80k.", "dac_san", "MIEN_TRUNG", "Quảng Nam", "Đại Lộc"},
-            {"Mì Quảng Phú Chiêm chính gốc", "Bộ nguyên liệu mì Quảng: mì tươi, nước lèo, đậu phộng. Ship đông lạnh. 80k/phần 4 người.", "dac_san", "MIEN_TRUNG", "Quảng Nam", "Điện Bàn"},
-            {"Hải sản tươi Đà Nẵng", "Tôm hùm, cua Hoàng Đế, mực ống tươi sống từ biển Sơn Trà. Giao hàng trong ngày. Giá chợ đầu mối.", "nong_san", "MIEN_TRUNG", "Đà Nẵng", "Sơn Trà"},
-            {"Nước mắm Phan Thiết loại 1", "Nước mắm nhĩ 40 độ đạm, thơm ngon tự nhiên. Chai 500ml giá 50k. Thùng 12 chai giảm 20%.", "dac_san", "MIEN_TRUNG", "Bình Thuận", "Phan Thiết"},
-            {"Thanh long ruột đỏ Bình Thuận", "Thanh long ruột đỏ, quả đẹp đều, ngọt mát. Hàng vườn nhà, không thuốc. 25k/kg, 10kg free ship.", "nong_san", "MIEN_TRUNG", "Bình Thuận", "Hàm Thuận Nam"},
-            {"Bơ sáp Đắk Lắk ngon béo", "Bơ sáp 034, quả to 300-500g, dẻo béo ngậy. Ship nhanh để bơ chín đều. Giá 55k/kg.", "nong_san", "MIEN_TRUNG", "Đắk Lắk", "Buôn Ma Thuột"},
-            {"Cà phê Robusta Đắk Lắk", "Cà phê Robusta rang xay, đậm đà hương vị Tây Nguyên. 500g giá 80k. Mua 2kg giảm 15%.", "dac_san", "MIEN_TRUNG", "Đắk Lắk", "Cư M'gar"},
-            {"Sầu riêng Ri6 Đắk Nông", "Sầu riêng Ri6 chín cây, cơm vàng, hạt lép, ngọt sắc. Đóng thùng cẩn thận. Giá 85k/kg.", "nong_san", "MIEN_TRUNG", "Đắk Nông", "Đắk Mil"},
-            {"Măng le tươi Gia Lai", "Nhà em có 50kg măng le tươi, ai cần inbox ship tận nơi. Măng rừng tự nhiên, giòn ngon.", "nong_san", "MIEN_TRUNG", "Gia Lai", "Mang Yang"},
-            {"Cà phê Arabica Đà Lạt rang mộc", "Cà phê Arabica trồng 1400m, rang mộc 100%, hương chocolate nhẹ. 500g bột/hạt giá 120k.", "dac_san", "MIEN_TRUNG", "Lâm Đồng", "Đà Lạt"},
-            {"Khoai lang Đà Lạt organic", "Khoai lang Nhật Đà Lạt, trồng organic, ruột vàng bở ngọt. Thùng 5kg giá 80k. Ship toàn quốc.", "nong_san", "MIEN_TRUNG", "Lâm Đồng", "Đà Lạt"},
-            {"Dâu tây Đà Lạt tươi hái sáng", "Dâu tây chín đỏ, ngọt thơm, hái sáng ship chiều. Hộp 500g giá 70k. Mua làm sinh tố, kem.", "nong_san", "MIEN_TRUNG", "Lâm Đồng", "Đà Lạt"},
-            {"Nho Ninh Thuận ngọt giòn", "Nho xanh, nho đỏ Ninh Thuận, quả mọng tự nhiên. 35k/kg, thùng 5kg free ship.", "nong_san", "MIEN_TRUNG", "Ninh Thuận", "Ninh Phước"},
-            {"Yến sào Khánh Hòa chính gốc", "Yến sào Nha Trang, tổ yến thô đã làm sạch. 100g giá 1.2 triệu. Hàng chất lượng có giấy tờ.", "dac_san", "MIEN_TRUNG", "Khánh Hòa", "Nha Trang"},
-            {"Nem chua Thanh Hóa", "Nem chua truyền thống Thanh Hóa, chua cay vừa miệng. 100 cái giá 150k. Ship đông lạnh.", "dac_san", "MIEN_TRUNG", "Thanh Hóa", "TP Thanh Hóa"},
+            {"Cam Vinh ngon ngọt mùa mới", "Nhà em có 200kg cam Vinh, quả to, ngọt thanh, không hạt. Ship toàn quốc, mua nhiều giá sỉ.", "nong_san", "MIEN_TRUNG", "Nghệ An", "Quỳ Hợp", "cam.jpg"},
+            {"Mắm ruốc Huế gia truyền", "Mắm ruốc Huế làm thủ công, ủ 6 tháng, thơm đậm đà. Ăn với bún bò, cơm hến tuyệt vời. 40k/hũ 500g.", "dac_san", "MIEN_TRUNG", "Thừa Thiên Huế", "TP Huế", "mam_ruoc.jpg"},
+            {"Tìm người ship bún bò Huế", "Mình ở Sài Gòn muốn nhờ ai ở Huế mua giúp bộ nguyên liệu bún bò (mắm ruốc, sả, ớt...) ship vào.", "rao_vat", "MIEN_TRUNG", "Thừa Thiên Huế", "TP Huế", "bun_bo_hue.jpg"},
+            {"Bánh tráng dẻo Quảng Nam", "Bánh tráng dẻo cuốn thịt heo, bánh tráng nướng chấm mắm nêm. Combo 1kg bánh tráng các loại 80k.", "dac_san", "MIEN_TRUNG", "Quảng Nam", "Đại Lộc", "banh_trang.jpg"},
+            {"Mì Quảng Phú Chiêm chính gốc", "Bộ nguyên liệu mì Quảng: mì tươi, nước lèo, đậu phộng. Ship đông lạnh. 80k/phần 4 người.", "dac_san", "MIEN_TRUNG", "Quảng Nam", "Điện Bàn", "mi_quang.jpg"},
+            {"Hải sản tươi Đà Nẵng", "Tôm hùm, cua Hoàng Đế, mực ống tươi sống từ biển Sơn Trà. Giao hàng trong ngày. Giá chợ đầu mối.", "nong_san", "MIEN_TRUNG", "Đà Nẵng", "Sơn Trà", "hai_san.jpg"},
+            {"Nước mắm Phan Thiết loại 1", "Nước mắm nhĩ 40 độ đạm, thơm ngon tự nhiên. Chai 500ml giá 50k. Thùng 12 chai giảm 20%.", "dac_san", "MIEN_TRUNG", "Bình Thuận", "Phan Thiết", "nuoc_mam.jpg"},
+            {"Thanh long ruột đỏ Bình Thuận", "Thanh long ruột đỏ, quả đẹp đều, ngọt mát. Hàng vườn nhà, không thuốc. 25k/kg, 10kg free ship.", "nong_san", "MIEN_TRUNG", "Bình Thuận", "Hàm Thuận Nam", "thanh_long.jpg"},
+            {"Bơ sáp Đắk Lắk ngon béo", "Bơ sáp 034, quả to 300-500g, dẻo béo ngậy. Ship nhanh để bơ chín đều. Giá 55k/kg.", "nong_san", "MIEN_TRUNG", "Đắk Lắk", "Buôn Ma Thuột", "bo_sap.jpg"},
+            {"Cà phê Robusta Đắk Lắk", "Cà phê Robusta rang xay, đậm đà hương vị Tây Nguyên. 500g giá 80k. Mua 2kg giảm 15%.", "dac_san", "MIEN_TRUNG", "Đắk Lắk", "Cư M'gar", "ca_phe.jpg"},
+            {"Sầu riêng Ri6 Đắk Nông", "Sầu riêng Ri6 chín cây, cơm vàng, hạt lép, ngọt sắc. Đóng thùng cẩn thận. Giá 85k/kg.", "nong_san", "MIEN_TRUNG", "Đắk Nông", "Đắk Mil", "sau_rieng.jpg"},
+            {"Măng le tươi Gia Lai", "Nhà em có 50kg măng le tươi, ai cần inbox ship tận nơi. Măng rừng tự nhiên, giòn ngon.", "nong_san", "MIEN_TRUNG", "Gia Lai", "Mang Yang", "mang_le.jpg"},
+            {"Cà phê Arabica Đà Lạt rang mộc", "Cà phê Arabica trồng 1400m, rang mộc 100%, hương chocolate nhẹ. 500g bột/hạt giá 120k.", "dac_san", "MIEN_TRUNG", "Lâm Đồng", "Đà Lạt", "ca_phe.jpg"},
+            {"Khoai lang Đà Lạt organic", "Khoai lang Nhật Đà Lạt, trồng organic, ruột vàng bở ngọt. Thùng 5kg giá 80k. Ship toàn quốc.", "nong_san", "MIEN_TRUNG", "Lâm Đồng", "Đà Lạt", "khoai_lang.jpg"},
+            {"Dâu tây Đà Lạt tươi hái sáng", "Dâu tây chín đỏ, ngọt thơm, hái sáng ship chiều. Hộp 500g giá 70k. Mua làm sinh tố, kem.", "nong_san", "MIEN_TRUNG", "Lâm Đồng", "Đà Lạt", "dau_tay.jpg"},
+            {"Nho Ninh Thuận ngọt giòn", "Nho xanh, nho đỏ Ninh Thuận, quả mọng tự nhiên. 35k/kg, thùng 5kg free ship.", "nong_san", "MIEN_TRUNG", "Ninh Thuận", "Ninh Phước", "nho.jpg"},
+            {"Yến sào Khánh Hòa chính gốc", "Yến sào Nha Trang, tổ yến thô đã làm sạch. 100g giá 1.2 triệu. Hàng chất lượng có giấy tờ.", "dac_san", "MIEN_TRUNG", "Khánh Hòa", "Nha Trang", "yen_sao.jpg"},
+            {"Nem chua Thanh Hóa", "Nem chua truyền thống Thanh Hóa, chua cay vừa miệng. 100 cái giá 150k. Ship đông lạnh.", "dac_san", "MIEN_TRUNG", "Thanh Hóa", "TP Thanh Hóa", "nem_chua.jpg"},
 
             // ═══ MIỀN NAM ═══
-            {"Xoài cát Hòa Lộc Tiền Giang", "Xoài cát Hòa Lộc chín cây, thơm ngọt béo, không xơ. Đóng hộp quà tặng sang trọng. 80k/kg.", "nong_san", "MIEN_NAM", "Tiền Giang", "Cái Bè"},
-            {"Dừa xiêm Bến Tre tươi", "Dừa xiêm xanh, nước ngọt mát, cơm dừa dẻo thơm. Ship nguyên quả hoặc đã gọt. 15k/quả.", "nong_san", "MIEN_NAM", "Bến Tre", "Châu Thành"},
-            {"Kẹo dừa Bến Tre thủ công", "Kẹo dừa sữa, kẹo dừa đậu phộng, đủ vị. Hộp 500g giá 40k. Đặc sản miền Tây.", "dac_san", "MIEN_NAM", "Bến Tre", "TP Bến Tre"},
-            {"Chôm chôm Java Vĩnh Long", "Chôm chôm Java quả to, cùi dày tách hạt, ngọt lịm. Hàng vườn tươi ngon. 30k/kg.", "nong_san", "MIEN_NAM", "Vĩnh Long", "Bình Minh"},
-            {"Cá khô một nắng Cà Mau", "Cá lóc, cá sặc một nắng muối ớt, đặc sản miền Tây. Chiên giòn hoặc nướng đều ngon. 150k/kg.", "dac_san", "MIEN_NAM", "Cà Mau", "Năm Căn"},
-            {"Tôm khô Cà Mau loại 1", "Tôm khô size lớn, màu đỏ tự nhiên, không tẩm hóa chất. Ăn Tết, nấu súp đều ngon. 500k/kg.", "dac_san", "MIEN_NAM", "Cà Mau", "Ngọc Hiển"},
-            {"Bánh pía Sóc Trăng", "Bánh pía đậu xanh sầu riêng, thơm lừng béo ngậy. Hộp 4 cái 60k. Đặc sản miền Tây chính gốc.", "dac_san", "MIEN_NAM", "Sóc Trăng", "TP Sóc Trăng"},
-            {"Gom chung mua gạo ST25 giá sỉ", "Ai TP.HCM muốn mua gạo ST25 Sóc Trăng giá gốc thì gom chung. Đủ 100kg mình order luôn, 22k/kg.", "gom_chung", "MIEN_NAM", "Sóc Trăng", "Mỹ Xuyên"},
-            {"Mắm cá linh mùa nước nổi", "Mắm cá linh ủ truyền thống, thơm ngon đậm đà. Kho với cà tím, ăn cơm trắng là nhất. 55k/hũ.", "dac_san", "MIEN_NAM", "An Giang", "Châu Đốc"},
-            {"Mắm Châu Đốc các loại", "Mắm thái, mắm cá linh, mắm cá sặc. Đặc sản An Giang chính gốc. Combo 3 hũ 120k.", "dac_san", "MIEN_NAM", "An Giang", "Châu Đốc"},
-            {"Gom đơn mua trái cây miền Tây", "Ai ở Sài Gòn muốn mua trái cây miền Tây (măng cụt, chôm chôm, sầu riêng) inbox gom đơn ship tuần này.", "gom_chung", "MIEN_NAM", "TP. Hồ Chí Minh", "Quận 1"},
-            {"Bán mít Thái sấy dẻo homemade", "Mít Thái sấy dẻo tự làm, không đường không chất bảo quản. Túi 200g giá 45k. Ăn vặt healthy!", "dac_san", "MIEN_NAM", "Bình Dương", "Thuận An"},
-            {"Gom đơn hải sản Vũng Tàu", "Mình đi Vũng Tàu cuối tuần, ai cần mua tôm, mực, cá tươi thì inbox. Gom đủ 10 đơn mình chạy.", "gom_chung", "MIEN_NAM", "Bà Rịa - Vũng Tàu", "TP Vũng Tàu"},
-            {"Bưởi da xanh Đồng Nai", "Bưởi da xanh ruột hồng, ngọt mát, không hạt. Nhà vườn trực tiếp, 45k/quả.", "nong_san", "MIEN_NAM", "Đồng Nai", "Tân Phú"},
-            {"Sầu riêng Monthong Long Khánh", "Sầu riêng Monthong chín cây, cơm vàng dày, hạt lép. Giá tại vườn 75k/kg, ship tận nơi.", "nong_san", "MIEN_NAM", "Đồng Nai", "Long Khánh"},
-            {"Hủ tiếu Sa Đéc sấy khô", "Hủ tiếu Sa Đéc sợi trong, dai giòn. 500g giá 25k. Nấu nước lèo, xào đều ngon.", "dac_san", "MIEN_NAM", "Đồng Tháp", "Sa Đéc"},
-            {"Khô cá lóc Đồng Tháp", "Khô cá lóc phơi nắng tự nhiên, thịt dày, chiên giòn béo ngậy. 200k/kg.", "dac_san", "MIEN_NAM", "Đồng Tháp", "Tháp Mười"},
-            {"Bánh tráng trộn Tây Ninh", "Bánh tráng trộn đầy đủ topping: khô bò, trứng cút, sa tế. Bịch 50k. Ship TPHCM trong ngày.", "dac_san", "MIEN_NAM", "Tây Ninh", "Trảng Bàng"},
-            {"Măng cụt Lái Thiêu mùa mới", "Măng cụt Lái Thiêu vỏ đỏ, cùi trắng ngọt thanh. Hàng chợ đầu mối, 40k/kg.", "nong_san", "MIEN_NAM", "Bình Dương", "Thuận An"},
-            {"Trái cây mix miền Tây giá sỉ", "Combo trái cây miền Tây: xoài, chôm chôm, măng cụt, nhãn. Thùng 10kg giá 180k. Free ship TPHCM.", "gom_chung", "MIEN_NAM", "Cần Thơ", "Cái Răng"},
+            {"Xoài cát Hòa Lộc Tiền Giang", "Xoài cát Hòa Lộc chín cây, thơm ngọt béo, không xơ. Đóng hộp quà tặng sang trọng. 80k/kg.", "nong_san", "MIEN_NAM", "Tiền Giang", "Cái Bè", "xoai.jpg"},
+            {"Dừa xiêm Bến Tre tươi", "Dừa xiêm xanh, nước ngọt mát, cơm dừa dẻo thơm. Ship nguyên quả hoặc đã gọt. 15k/quả.", "nong_san", "MIEN_NAM", "Bến Tre", "Châu Thành", "dua.jpg"},
+            {"Kẹo dừa Bến Tre thủ công", "Kẹo dừa sữa, kẹo dừa đậu phộng, đủ vị. Hộp 500g giá 40k. Đặc sản miền Tây.", "dac_san", "MIEN_NAM", "Bến Tre", "TP Bến Tre", "keo_dua.jpg"},
+            {"Chôm chôm Java Vĩnh Long", "Chôm chôm Java quả to, cùi dày tách hạt, ngọt lịm. Hàng vườn tươi ngon. 30k/kg.", "nong_san", "MIEN_NAM", "Vĩnh Long", "Bình Minh", "chom_chom.jpg"},
+            {"Cá khô một nắng Cà Mau", "Cá lóc, cá sặc một nắng muối ớt, đặc sản miền Tây. Chiên giòn hoặc nướng đều ngon. 150k/kg.", "dac_san", "MIEN_NAM", "Cà Mau", "Năm Căn", "ca_kho.jpg"},
+            {"Tôm khô Cà Mau loại 1", "Tôm khô size lớn, màu đỏ tự nhiên, không tẩm hóa chất. Ăn Tết, nấu súp đều ngon. 500k/kg.", "dac_san", "MIEN_NAM", "Cà Mau", "Ngọc Hiển", "tom_kho.jpg"},
+            {"Bánh pía Sóc Trăng", "Bánh pía đậu xanh sầu riêng, thơm lừng béo ngậy. Hộp 4 cái 60k. Đặc sản miền Tây chính gốc.", "dac_san", "MIEN_NAM", "Sóc Trăng", "TP Sóc Trăng", "banh_pia.jpg"},
+            {"Gom chung mua gạo ST25 giá sỉ", "Ai TP.HCM muốn mua gạo ST25 Sóc Trăng giá gốc thì gom chung. Đủ 100kg mình order luôn, 22k/kg.", "gom_chung", "MIEN_NAM", "Sóc Trăng", "Mỹ Xuyên", "gao.jpg"},
+            {"Mắm cá linh mùa nước nổi", "Mắm cá linh ủ truyền thống, thơm ngon đậm đà. Kho với cà tím, ăn cơm trắng là nhất. 55k/hũ.", "dac_san", "MIEN_NAM", "An Giang", "Châu Đốc", "mam_ca.jpg"},
+            {"Mắm Châu Đốc các loại", "Mắm thái, mắm cá linh, mắm cá sặc. Đặc sản An Giang chính gốc. Combo 3 hũ 120k.", "dac_san", "MIEN_NAM", "An Giang", "Châu Đốc", "mam_ca.jpg"},
+            {"Gom đơn mua trái cây miền Tây", "Ai ở Sài Gòn muốn mua trái cây miền Tây (măng cụt, chôm chôm, sầu riêng) inbox gom đơn ship tuần này.", "gom_chung", "MIEN_NAM", "TP. Hồ Chí Minh", "Quận 1", "mang_cut.jpg"},
+            {"Bán mít Thái sấy dẻo homemade", "Mít Thái sấy dẻo tự làm, không đường không chất bảo quản. Túi 200g giá 45k. Ăn vặt healthy!", "dac_san", "MIEN_NAM", "Bình Dương", "Thuận An", "mit_say.jpg"},
+            {"Gom đơn hải sản Vũng Tàu", "Mình đi Vũng Tàu cuối tuần, ai cần mua tôm, mực, cá tươi thì inbox. Gom đủ 10 đơn mình chạy.", "gom_chung", "MIEN_NAM", "Bà Rịa - Vũng Tàu", "TP Vũng Tàu", "hai_san.jpg"},
+            {"Bưởi da xanh Đồng Nai", "Bưởi da xanh ruột hồng, ngọt mát, không hạt. Nhà vườn trực tiếp, 45k/quả.", "nong_san", "MIEN_NAM", "Đồng Nai", "Tân Phú", "buoi.jpg"},
+            {"Sầu riêng Monthong Long Khánh", "Sầu riêng Monthong chín cây, cơm vàng dày, hạt lép. Giá tại vườn 75k/kg, ship tận nơi.", "nong_san", "MIEN_NAM", "Đồng Nai", "Long Khánh", "sau_rieng.jpg"},
+            {"Hủ tiếu Sa Đéc sấy khô", "Hủ tiếu Sa Đéc sợi trong, dai giòn. 500g giá 25k. Nấu nước lèo, xào đều ngon.", "dac_san", "MIEN_NAM", "Đồng Tháp", "Sa Đéc", "hu_tieu.jpg"},
+            {"Khô cá lóc Đồng Tháp", "Khô cá lóc phơi nắng tự nhiên, thịt dày, chiên giòn béo ngậy. 200k/kg.", "dac_san", "MIEN_NAM", "Đồng Tháp", "Tháp Mười", "kho_ca_loc.jpg"},
+            {"Bánh tráng trộn Tây Ninh", "Bánh tráng trộn đầy đủ topping: khô bò, trứng cút, sa tế. Bịch 50k. Ship TPHCM trong ngày.", "dac_san", "MIEN_NAM", "Tây Ninh", "Trảng Bàng", "banh_trang_tron.jpg"},
+            {"Măng cụt Lái Thiêu mùa mới", "Măng cụt Lái Thiêu vỏ đỏ, cùi trắng ngọt thanh. Hàng chợ đầu mối, 40k/kg.", "nong_san", "MIEN_NAM", "Bình Dương", "Thuận An", "mang_cut.jpg"},
+            {"Trái cây mix miền Tây giá sỉ", "Combo trái cây miền Tây: xoài, chôm chôm, măng cụt, nhãn. Thùng 10kg giá 180k. Free ship TPHCM.", "gom_chung", "MIEN_NAM", "Cần Thơ", "Cái Răng", "xoai.jpg"},
         };
 
         for (Object[] s : seeds) {
@@ -373,9 +439,19 @@ public class PostService {
             post.setProvince((String) s[4]);
             post.setLocationName((String) s[5]);
             post.setIsActive(true);
-            postRepository.save(post);
+            Post saved = postRepository.save(post);
+
+            // Gắn ảnh seed nếu có
+            if (s.length > 6 && s[6] != null) {
+                String imageFile = (String) s[6];
+                String imageUrl = "/uploads/seed/" + imageFile;
+                PostImage img = new PostImage(imageUrl, 0);
+                img.setPost(saved);
+                saved.getImages().add(img);
+                postRepository.save(saved);
+            }
         }
-        System.out.println("Seeded " + seeds.length + " community posts with provinces");
+        System.out.println("Seeded " + seeds.length + " community posts with provinces and images");
     }
 
     /** Danh sách tỉnh thành theo vùng miền (63 tỉnh thành Việt Nam) */

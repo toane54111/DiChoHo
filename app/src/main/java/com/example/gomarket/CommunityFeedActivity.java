@@ -73,9 +73,16 @@ public class CommunityFeedActivity extends AppCompatActivity
         initViews();
         setupRecyclerView();
 
-        // Handle search query from SearchActivity
+        // Handle region filter from SearchActivity
+        String filterRegion = getIntent().getStringExtra("FILTER_REGION");
         String searchQuery = getIntent().getStringExtra("SEARCH_QUERY");
-        if (searchQuery != null && !searchQuery.isEmpty()) {
+
+        if (filterRegion != null) {
+            currentRegion = filterRegion;
+            activateRegionChip(filterRegion);
+            showProvinceSpinner(filterRegion);
+            loadFeed();
+        } else if (searchQuery != null && !searchQuery.isEmpty()) {
             currentSearchQuery = searchQuery;
             searchBarContainer.setVisibility(View.VISIBLE);
             etSearch.setText(searchQuery);
@@ -248,6 +255,18 @@ public class CommunityFeedActivity extends AppCompatActivity
         chipGomChung.setTextColor(getColor(R.color.text_secondary));
     }
 
+    private void activateRegionChip(String region) {
+        resetRegionChips();
+        TextView chip = null;
+        if ("MIEN_BAC".equals(region)) chip = chipMienBac;
+        else if ("MIEN_TRUNG".equals(region)) chip = chipMienTrung;
+        else if ("MIEN_NAM".equals(region)) chip = chipMienNam;
+        if (chip != null) {
+            chip.setBackgroundResource(R.drawable.bg_filter_active);
+            chip.setTextColor(getColor(R.color.white));
+        }
+    }
+
     private void resetRegionChips() {
         chipMienBac.setBackgroundResource(R.drawable.bg_filter_inactive);
         chipMienBac.setTextColor(getColor(R.color.text_secondary));
@@ -379,6 +398,7 @@ public class CommunityFeedActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         if (currentSearchQuery == null) {
+            currentPage = 0;
             loadFeed();
         }
     }

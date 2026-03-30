@@ -1,5 +1,6 @@
 package com.gomarket.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import com.pgvector.PGvector;
@@ -40,6 +41,7 @@ public class Product {
      * Vector embedding 1024 chiều từ Ollama bge-m3 (local, đa ngôn ngữ)
      * Dùng cho RAG: tìm sản phẩm bằng cosine similarity
      */
+    @JsonIgnore
     @Column(name = "embedding", columnDefinition = "vector(1024)")
     @Convert(converter = com.gomarket.config.VectorTypeConverter.class)
     private float[] embedding;

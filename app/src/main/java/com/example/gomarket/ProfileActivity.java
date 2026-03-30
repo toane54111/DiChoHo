@@ -194,8 +194,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         btnPersonalInfo.setOnClickListener(v -> showPersonalInfoDialog());
 
-        btnAddress.setOnClickListener(v ->
-                Toast.makeText(this, "Địa chỉ của tôi", Toast.LENGTH_SHORT).show());
+        btnAddress.setOnClickListener(v -> showAddressDialog());
 
         btnWallet.setOnClickListener(v -> startActivity(new Intent(this, WalletActivity.class)));
 
@@ -205,11 +204,9 @@ public class ProfileActivity extends AppCompatActivity {
         btnOrderHistory.setOnClickListener(v ->
                 startActivity(new Intent(this, OrderListActivity.class)));
 
-        btnSettings.setOnClickListener(v ->
-                Toast.makeText(this, "Cài đặt", Toast.LENGTH_SHORT).show());
+        btnSettings.setOnClickListener(v -> showSettingsDialog());
 
-        btnHelp.setOnClickListener(v ->
-                Toast.makeText(this, "Trợ giúp", Toast.LENGTH_SHORT).show());
+        btnHelp.setOnClickListener(v -> showHelpDialog());
 
         btnLogout.setOnClickListener(v -> {
             sessionManager.logout();
@@ -219,6 +216,175 @@ public class ProfileActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+    }
+
+    private void showAddressDialog() {
+        String name = sessionManager.getUserName();
+
+        StringBuilder info = new StringBuilder();
+        info.append("📍  Địa chỉ mặc định:\n");
+        info.append("     Chưa thiết lập\n\n");
+        info.append("🏠  Địa chỉ nhà:\n");
+        info.append("     Chưa thiết lập\n\n");
+        info.append("🏢  Địa chỉ công ty:\n");
+        info.append("     Chưa thiết lập\n\n");
+        info.append("💡  Mẹo: Khi tạo đơn đi chợ hộ, bạn có thể chọn vị trí giao trên bản đồ.");
+
+        new AlertDialog.Builder(this)
+                .setTitle("Địa chỉ của tôi")
+                .setMessage(info.toString())
+                .setPositiveButton("Đóng", null)
+                .show();
+    }
+
+    private void showSettingsDialog() {
+        String[] items = {
+                "🔔  Thông báo đẩy                    Bật",
+                "🌙  Chế độ tối                              Tắt",
+                "🌐  Ngôn ngữ                             Tiếng Việt",
+                "📍  Chia sẻ vị trí                          Bật",
+                "💾  Xóa bộ nhớ đệm",
+                "📋  Điều khoản sử dụng",
+                "🔒  Chính sách bảo mật"
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle("Cài đặt")
+                .setItems(items, (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            Toast.makeText(this, "Thông báo đẩy: đang bật", Toast.LENGTH_SHORT).show();
+                            break;
+                        case 1:
+                            Toast.makeText(this, "Chế độ tối chưa hỗ trợ", Toast.LENGTH_SHORT).show();
+                            break;
+                        case 2:
+                            Toast.makeText(this, "Hiện chỉ hỗ trợ Tiếng Việt", Toast.LENGTH_SHORT).show();
+                            break;
+                        case 3:
+                            Toast.makeText(this, "Chia sẻ vị trí: đang bật", Toast.LENGTH_SHORT).show();
+                            break;
+                        case 4:
+                            Toast.makeText(this, "Đã xóa bộ nhớ đệm", Toast.LENGTH_SHORT).show();
+                            break;
+                        case 5:
+                        case 6:
+                            showTermsDialog(which == 6);
+                            break;
+                    }
+                })
+                .setPositiveButton("Đóng", null)
+                .show();
+    }
+
+    private void showTermsDialog(boolean isPrivacy) {
+        String title = isPrivacy ? "Chính sách bảo mật" : "Điều khoản sử dụng";
+        String content;
+        if (isPrivacy) {
+            content = "🔒 CHÍNH SÁCH BẢO MẬT - GoMarket\n\n" +
+                    "1. Thu thập dữ liệu\n" +
+                    "Chúng tôi thu thập thông tin cá nhân (tên, SĐT, email) và vị trí để cung cấp dịch vụ đi chợ hộ.\n\n" +
+                    "2. Sử dụng dữ liệu\n" +
+                    "Dữ liệu được sử dụng để: xử lý đơn hàng, kết nối người mua - shopper, gợi ý sản phẩm phù hợp.\n\n" +
+                    "3. Bảo mật\n" +
+                    "Thông tin của bạn được mã hóa và bảo vệ. Chúng tôi không chia sẻ dữ liệu với bên thứ ba.\n\n" +
+                    "4. Quyền của bạn\n" +
+                    "Bạn có quyền xem, chỉnh sửa hoặc xóa dữ liệu cá nhân bất cứ lúc nào.";
+        } else {
+            content = "📋 ĐIỀU KHOẢN SỬ DỤNG - GoMarket\n\n" +
+                    "1. Dịch vụ\n" +
+                    "GoMarket cung cấp nền tảng kết nối người mua hàng với người đi chợ hộ (shopper).\n\n" +
+                    "2. Tài khoản\n" +
+                    "Người dùng chịu trách nhiệm bảo mật tài khoản và mọi hoạt động trên tài khoản.\n\n" +
+                    "3. Thanh toán\n" +
+                    "Hỗ trợ thanh toán COD và ví điện tử. Phí dịch vụ được hiển thị rõ trước khi đặt đơn.\n\n" +
+                    "4. Hủy đơn\n" +
+                    "Đơn hàng có thể hủy trước khi shopper bắt đầu mua sắm. Tiền sẽ được hoàn vào ví.\n\n" +
+                    "5. Trách nhiệm\n" +
+                    "GoMarket không chịu trách nhiệm về chất lượng hàng hóa từ chợ/cửa hàng.";
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(content)
+                .setPositiveButton("Đã hiểu", null)
+                .show();
+    }
+
+    private void showHelpDialog() {
+        String[] items = {
+                "❓  Cách tạo đơn đi chợ hộ",
+                "🛒  Cách trở thành Shopper",
+                "💰  Cách nạp tiền vào ví",
+                "📦  Theo dõi đơn hàng",
+                "🏪  Đăng bài Chợ Đồng Hương",
+                "🤖  Sử dụng AI Thổ Địa",
+                "📞  Liên hệ hỗ trợ"
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle("Trợ giúp")
+                .setItems(items, (dialog, which) -> {
+                    String[] answers = {
+                            "🛍️ TẠO ĐƠN ĐI CHỢ HỘ\n\n" +
+                            "1. Bấm \"Nhờ đi chợ hộ\" trên trang chủ\n" +
+                            "2. Chọn vị trí giao hàng trên bản đồ\n" +
+                            "3. Thêm nguyên liệu cần mua (có gợi ý tự động)\n" +
+                            "4. Đặt ngân sách và phí shopper\n" +
+                            "5. Chọn thanh toán COD hoặc Ví\n" +
+                            "6. Xác nhận đơn và chờ shopper nhận",
+
+                            "🏃 TRỞ THÀNH SHOPPER\n\n" +
+                            "1. Vào Hồ sơ → Thông tin cá nhân\n" +
+                            "2. Vai trò của bạn phải là \"Shopper\"\n" +
+                            "3. Bật trạng thái Online trên Dashboard\n" +
+                            "4. Các đơn hàng gần bạn (15km) sẽ hiển thị\n" +
+                            "5. Nhận đơn và bắt đầu mua sắm",
+
+                            "💳 NẠP TIỀN VÀO VÍ\n\n" +
+                            "1. Vào Ví của tôi từ Hồ sơ hoặc trang chủ\n" +
+                            "2. Bấm \"Nạp tiền\"\n" +
+                            "3. Nhập số tiền cần nạp\n" +
+                            "4. Xác nhận giao dịch\n" +
+                            "5. Số dư sẽ cập nhật ngay lập tức",
+
+                            "📍 THEO DÕI ĐƠN HÀNG\n\n" +
+                            "1. Sau khi đặt đơn, bạn sẽ vào màn hình theo dõi\n" +
+                            "2. Trạng thái đơn: Chờ → Đã nhận → Đang mua → Đang giao → Hoàn thành\n" +
+                            "3. Xem vị trí shopper trên bản đồ realtime\n" +
+                            "4. Chat trực tiếp với shopper trong đơn\n" +
+                            "5. Đánh giá sao khi hoàn thành",
+
+                            "🏪 ĐĂNG BÀI CHỢ ĐỒNG HƯƠNG\n\n" +
+                            "1. Vào Chợ Đồng Hương từ trang chủ\n" +
+                            "2. Bấm nút + để tạo bài mới\n" +
+                            "3. Chọn danh mục (nông sản, đặc sản, gom chung...)\n" +
+                            "4. Chọn vùng miền và tỉnh thành\n" +
+                            "5. Thêm ảnh và nội dung\n" +
+                            "6. Đăng bài để mọi người thấy",
+
+                            "🤖 SỬ DỤNG AI THỔ ĐỊA\n\n" +
+                            "AI Thổ Địa gợi ý đặc sản theo:\n" +
+                            "• Vị trí hiện tại của bạn\n" +
+                            "• Thời tiết và mùa vụ\n" +
+                            "• Khẩu vị cá nhân\n\n" +
+                            "Gợi ý hiển thị trên trang chủ. Bấm vào chip để xem chi tiết và bài đăng liên quan.",
+
+                            "📞 LIÊN HỆ HỖ TRỢ\n\n" +
+                            "📧 Email: support@gomarket.vn\n" +
+                            "📱 Hotline: 1900 xxxx\n" +
+                            "🕐 Giờ làm việc: 8:00 - 22:00\n\n" +
+                            "Hoặc gửi phản hồi qua mục Cài đặt trong ứng dụng."
+                    };
+
+                    new AlertDialog.Builder(this)
+                            .setTitle(items[which].substring(4).trim())
+                            .setMessage(answers[which])
+                            .setPositiveButton("Đã hiểu", null)
+                            .show();
+                })
+                .setPositiveButton("Đóng", null)
+                .show();
     }
 
     private void showPersonalInfoDialog() {

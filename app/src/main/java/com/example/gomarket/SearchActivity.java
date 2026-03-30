@@ -158,17 +158,17 @@ public class SearchActivity extends AppCompatActivity {
     private void setupRegionCards() {
         findViewById(R.id.cardMienBac).setOnClickListener(v -> {
             Intent intent = new Intent(this, CommunityFeedActivity.class);
-            intent.putExtra("SEARCH_QUERY", "Miền Bắc");
+            intent.putExtra("FILTER_REGION", "MIEN_BAC");
             startActivity(intent);
         });
         findViewById(R.id.cardMienTrung).setOnClickListener(v -> {
             Intent intent = new Intent(this, CommunityFeedActivity.class);
-            intent.putExtra("SEARCH_QUERY", "Miền Trung");
+            intent.putExtra("FILTER_REGION", "MIEN_TRUNG");
             startActivity(intent);
         });
         findViewById(R.id.cardMienNam).setOnClickListener(v -> {
             Intent intent = new Intent(this, CommunityFeedActivity.class);
-            intent.putExtra("SEARCH_QUERY", "Miền Nam");
+            intent.putExtra("FILTER_REGION", "MIEN_NAM");
             startActivity(intent);
         });
     }

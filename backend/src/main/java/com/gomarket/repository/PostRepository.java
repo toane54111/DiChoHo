@@ -46,12 +46,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     /**
      * RAG: Vector search trên posts — tìm bài đăng tương đồng ngữ nghĩa
+     * Chỉ trả về bài có similarity >= 0.5
      */
     @Query(value = """
         SELECT p.*, (1 - (p.embedding <=> cast(:vector as vector))) as similarity
         FROM posts p
         WHERE p.is_active = true
         AND p.embedding IS NOT NULL
+        AND (1 - (p.embedding <=> cast(:vector as vector))) >= 0.5
         ORDER BY p.embedding <=> cast(:vector as vector) ASC
         LIMIT :limit
         """, nativeQuery = true)

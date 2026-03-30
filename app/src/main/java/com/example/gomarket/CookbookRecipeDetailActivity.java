@@ -4,12 +4,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.bumptech.glide.Glide;
 
 import com.example.gomarket.model.CookbookComment;
 import com.example.gomarket.model.CookbookRecipe;
@@ -33,7 +36,8 @@ public class CookbookRecipeDetailActivity extends AppCompatActivity {
     private TextView tvTitle, tvAuthor, tvDescription, tvCost;
     private TextView tvLikeIcon, tvLikeCount, tvCommentTitle;
     private LinearLayout layoutIngredients, layoutSteps, layoutComments, contentLayout;
-    private View btnLike, btnAddToCart, btnSendComment;
+    private View btnLike, btnAddToCart, btnSendComment, cardImage;
+    private ImageView ivRecipeImage;
     private EditText etComment;
     private ProgressBar progressBar;
 
@@ -76,6 +80,8 @@ public class CookbookRecipeDetailActivity extends AppCompatActivity {
         btnSendComment = findViewById(R.id.btnSendComment);
         etComment = findViewById(R.id.etComment);
         progressBar = findViewById(R.id.progressBar);
+        cardImage = findViewById(R.id.cardImage);
+        ivRecipeImage = findViewById(R.id.ivRecipeImage);
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         btnLike.setOnClickListener(v -> toggleLike());
@@ -116,6 +122,16 @@ public class CookbookRecipeDetailActivity extends AppCompatActivity {
 
     private void displayRecipe() {
         contentLayout.setVisibility(View.VISIBLE);
+
+        // Load recipe image
+        String imageUrl = recipe.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            cardImage.setVisibility(View.VISIBLE);
+            String fullUrl = ApiClient.getFullImageUrl(imageUrl);
+            Glide.with(this).load(fullUrl).centerCrop().into(ivRecipeImage);
+        } else {
+            cardImage.setVisibility(View.GONE);
+        }
 
         tvTitle.setText(recipe.getTitle());
         tvAuthor.setText(recipe.isSystemRecipe() ? "📖 GoMarket" : "👤 " + recipe.getAuthorName());

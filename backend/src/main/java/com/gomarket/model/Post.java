@@ -1,7 +1,9 @@
 package com.gomarket.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -38,12 +40,13 @@ public class Post {
     @Column(name = "province")
     private String province;
 
+    @JsonIgnore
     @Column(name = "embedding", columnDefinition = "vector(1024)")
     @Convert(converter = com.gomarket.config.VectorTypeConverter.class)
     private float[] embedding;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PostImage> images;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<PostImage> images = new ArrayList<>();
 
     @Column(name = "is_active")
     private Boolean isActive = true;

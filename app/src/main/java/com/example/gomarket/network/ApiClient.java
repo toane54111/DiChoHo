@@ -227,7 +227,7 @@ public class ApiClient {
             OkHttpClient client = new OkHttpClient.Builder()
                     .connectTimeout(15, TimeUnit.SECONDS)
                     .readTimeout(60, TimeUnit.SECONDS)
-                    .writeTimeout(15, TimeUnit.SECONDS)
+                    .writeTimeout(60, TimeUnit.SECONDS)
                     .addInterceptor(loggingInterceptor)
                     .addInterceptor(new Interceptor() {
                         @Override
@@ -239,7 +239,6 @@ public class ApiClient {
                             if (token != null && !token.isEmpty()) {
                                 builder.header("Authorization", "Bearer " + token);
                             }
-                            builder.header("Content-Type", "application/json");
 
                             return chain.proceed(builder.build());
                         }

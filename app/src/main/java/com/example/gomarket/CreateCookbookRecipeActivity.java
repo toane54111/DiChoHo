@@ -292,15 +292,27 @@ public class CreateCookbookRecipeActivity extends AppCompatActivity {
                 doSubmitRecipe(userId, title, ingredients, steps, totalCost);
                 return;
             }
+
+            // Decode and compress image to avoid exceeding upload size limit
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(is);
+            is.close();
+            if (bitmap == null) {
+                doSubmitRecipe(userId, title, ingredients, steps, totalCost);
+                return;
+            }
+            int maxDim = 1280;
+            int w = bitmap.getWidth(), h = bitmap.getHeight();
+            if (w > maxDim || h > maxDim) {
+                float scale = (float) maxDim / Math.max(w, h);
+                bitmap = android.graphics.Bitmap.createScaledBitmap(bitmap,
+                        Math.round(w * scale), Math.round(h * scale), true);
+            }
             File tempFile = new File(getCacheDir(), "upload_" + System.currentTimeMillis() + ".jpg");
             FileOutputStream fos = new FileOutputStream(tempFile);
-            byte[] buffer = new byte[4096];
-            int len;
-            while ((len = is.read(buffer)) > 0) fos.write(buffer, 0, len);
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, fos);
             fos.close();
-            is.close();
 
-            RequestBody reqBody = RequestBody.create(MediaType.parse("image/*"), tempFile);
+            RequestBody reqBody = RequestBody.create(MediaType.parse("image/jpeg"), tempFile);
             MultipartBody.Part part = MultipartBody.Part.createFormData("file", tempFile.getName(), reqBody);
 
             apiService.uploadImage(part).enqueue(new Callback<Map<String, String>>() {

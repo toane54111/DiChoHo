@@ -68,10 +68,27 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
+                <!-- Recipe Image -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
+
+                    <ImageView
+                        android:id="@+id/ivRecipeImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp"
+                        android:scaleType="centerCrop" />
+                </com.google.android.material.card.MaterialCardView>
+
                 <!-- Title Card -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp">
 

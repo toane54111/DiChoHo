@@ -424,6 +424,13 @@ public class HomeActivity extends AppCompatActivity
 
     private void renderLocalGuideHorizontal(LocalGuideResponse guide) {
         String location = guide.getLocationLabel() != null ? guide.getLocationLabel() : "Vị trí của bạn";
+        // Rút gọn tên thành phố dài
+        location = location.replace("Thành phố Hồ Chí Minh", "TP. Hồ Chí Minh")
+                           .replace("Thành Phố Hồ Chí Minh", "TP. Hồ Chí Minh")
+                           .replace("Thành phố Hà Nội", "TP. Hà Nội")
+                           .replace("Thành phố Đà Nẵng", "TP. Đà Nẵng")
+                           .replace("Thành phố Cần Thơ", "TP. Cần Thơ")
+                           .replace("Thành phố Hải Phòng", "TP. Hải Phòng");
         String season = guide.getSeasonLabel() != null ? guide.getSeasonLabel() : "";
         tvLocalGuideSubtitle.setText("📍 " + location + " — " + season);
 
@@ -469,7 +476,7 @@ public class HomeActivity extends AppCompatActivity
         chip.setFocusable(true);
 
         TextView emojiView = new TextView(this);
-        emojiView.setText(item.getEmoji() != null ? item.getEmoji() : "🍽️");
+        emojiView.setText(resolveEmoji(item.getEmoji(), item.getName()));
         emojiView.setTextSize(18);
         chip.addView(emojiView);
 
@@ -527,7 +534,7 @@ public class HomeActivity extends AppCompatActivity
     private void showSuggestionDetail(LocalGuideResponse.SuggestionItem item) {
         cardSuggestionDetail.setVisibility(View.VISIBLE);
 
-        tvDetailEmoji.setText(item.getEmoji() != null ? item.getEmoji() : "🍽️");
+        tvDetailEmoji.setText(resolveEmoji(item.getEmoji(), item.getName()));
         tvDetailName.setText(item.getName());
         tvDetailReason.setText(item.getReason());
 
@@ -591,5 +598,57 @@ public class HomeActivity extends AppCompatActivity
 
     private int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    /**
+     * Kiểm tra emoji từ Gemini có hợp lệ không, nếu không thì tra từ tên sản phẩm.
+     * Gemini đôi khi trả text như "Durian" thay vì emoji thật.
+     */
+    private String resolveEmoji(String emoji, String name) {
+        // Kiểm tra emoji hợp lệ: emoji thật thường có ≤ 2 ký tự (hoặc codepoint > 0x1F000)
+        if (emoji != null && !emoji.isEmpty() && emoji.length() <= 2) {
+            int cp = emoji.codePointAt(0);
+            if (cp > 0x1F000 || cp > 0x2600) return emoji; // Unicode emoji range
+        }
+
+        // Fallback: tra theo tên sản phẩm
+        if (name == null) return "🍽️";
+        String lower = name.toLowerCase();
+
+        if (lower.contains("sầu riêng") || lower.contains("durian")) return "🥑";
+        if (lower.contains("xoài") || lower.contains("mango")) return "🥭";
+        if (lower.contains("bưởi") || lower.contains("pomelo")) return "🍊";
+        if (lower.contains("cam")) return "🍊";
+        if (lower.contains("vải") || lower.contains("lychee")) return "🍒";
+        if (lower.contains("nhãn") || lower.contains("longan")) return "🫐";
+        if (lower.contains("dừa") || lower.contains("coconut")) return "🥥";
+        if (lower.contains("cà phê") || lower.contains("coffee")) return "☕";
+        if (lower.contains("chè") || lower.contains("trà") || lower.contains("tea")) return "🍵";
+        if (lower.contains("gạo") || lower.contains("cơm") || lower.contains("rice")) return "🍚";
+        if (lower.contains("phở") || lower.contains("bún") || lower.contains("mì")) return "🍜";
+        if (lower.contains("bánh")) return "🥮";
+        if (lower.contains("tôm") || lower.contains("shrimp")) return "🦐";
+        if (lower.contains("cua") || lower.contains("crab")) return "🦀";
+        if (lower.contains("cá") || lower.contains("fish")) return "🐟";
+        if (lower.contains("hải sản") || lower.contains("seafood")) return "🦞";
+        if (lower.contains("gà") || lower.contains("chicken")) return "🍗";
+        if (lower.contains("bò") || lower.contains("beef")) return "🥩";
+        if (lower.contains("heo") || lower.contains("thịt")) return "🥩";
+        if (lower.contains("rau") || lower.contains("vegetable")) return "🥬";
+        if (lower.contains("ớt") || lower.contains("chili")) return "🌶️";
+        if (lower.contains("dâu") || lower.contains("strawberry")) return "🍓";
+        if (lower.contains("nho") || lower.contains("grape")) return "🍇";
+        if (lower.contains("thanh long") || lower.contains("dragon")) return "🐉";
+        if (lower.contains("măng cụt") || lower.contains("mangosteen")) return "🟣";
+        if (lower.contains("chôm chôm") || lower.contains("rambutan")) return "🔴";
+        if (lower.contains("mắm") || lower.contains("nước mắm")) return "🫙";
+        if (lower.contains("khoai")) return "🍠";
+        if (lower.contains("bơ") || lower.contains("avocado")) return "🥑";
+        if (lower.contains("nem") || lower.contains("chả giò")) return "🥟";
+        if (lower.contains("lẩu") || lower.contains("hotpot")) return "🍲";
+        if (lower.contains("yến")) return "🪺";
+        if (lower.contains("mít") || lower.contains("jackfruit")) return "🍈";
+
+        return "🍽️";
     }
 }

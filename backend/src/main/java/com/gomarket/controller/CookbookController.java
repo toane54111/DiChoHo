@@ -92,6 +92,13 @@ public class CookbookController {
         return ResponseEntity.ok(cookbookService.getComments(id));
     }
 
+    /** POST /api/cookbook/re-seed — Xóa tất cả và tạo lại dữ liệu mẫu */
+    @PostMapping("/re-seed")
+    public ResponseEntity<?> reSeed() {
+        cookbookService.forceReseedRecipes();
+        return ResponseEntity.ok(Map.of("message", "Re-seeded cookbook recipes with images"));
+    }
+
     /** DELETE /api/cookbook/{id} — Xóa công thức */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteRecipe(@PathVariable Long id,

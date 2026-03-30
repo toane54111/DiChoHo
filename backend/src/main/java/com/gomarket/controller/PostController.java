@@ -27,7 +27,8 @@ public class PostController {
         try {
             Post post = postService.createPost(body);
             return ResponseEntity.ok(post);
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -98,6 +99,20 @@ public class PostController {
     @GetMapping("/{id}/comments")
     public ResponseEntity<List<PostComment>> getComments(@PathVariable Long id) {
         return ResponseEntity.ok(postService.getComments(id));
+    }
+
+    /** POST /api/posts/re-embed — Re-embed tất cả bài chưa có embedding */
+    @PostMapping("/re-embed")
+    public ResponseEntity<?> reEmbedAllPosts() {
+        int count = postService.reEmbedAllPosts();
+        return ResponseEntity.ok(Map.of("message", "Re-embedded " + count + " posts"));
+    }
+
+    /** POST /api/posts/re-seed — Xóa bài seed cũ và tạo lại với ảnh */
+    @PostMapping("/re-seed")
+    public ResponseEntity<?> reSeed() {
+        postService.forceReseed();
+        return ResponseEntity.ok(Map.of("message", "Re-seeded community posts with images"));
     }
 
     /** DELETE /api/posts/{id} — Xóa bài đăng (soft delete) */

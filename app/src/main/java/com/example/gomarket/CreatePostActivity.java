@@ -28,6 +28,9 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.card.MaterialCardView;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -211,8 +214,10 @@ public class CreatePostActivity extends AppCompatActivity {
                 return;
             }
 
-            RequestBody reqBody = RequestBody.create(MediaType.parse("image/*"), tempFile);
+            RequestBody reqBody = RequestBody.create(MediaType.parse("image/jpeg"), tempFile);
             MultipartBody.Part part = MultipartBody.Part.createFormData("file", tempFile.getName(), reqBody);
+
+            android.util.Log.d("CreatePost", "Uploading image: " + tempFile.length() + " bytes");
 
             apiService.uploadImage(part).enqueue(new Callback<Map<String, String>>() {
                 @Override
@@ -221,7 +226,10 @@ public class CreatePostActivity extends AppCompatActivity {
                         uploadedImageUrl = response.body().get("imageUrl");
                         doSubmitPost(title, content, locationName);
                     } else {
-                        Toast.makeText(CreatePostActivity.this, "Lỗi upload ảnh", Toast.LENGTH_SHORT).show();
+                        String errorBody = "";
+                        try { if (response.errorBody() != null) errorBody = response.errorBody().string(); } catch (Exception ignored) {}
+                        android.util.Log.e("CreatePost", "Upload failed: code=" + response.code() + " body=" + errorBody);
+                        Toast.makeText(CreatePostActivity.this, "Lỗi upload ảnh: " + response.code(), Toast.LENGTH_LONG).show();
                         findViewById(R.id.btnPost).setEnabled(true);
                     }
                     tempFile.delete();
@@ -244,15 +252,26 @@ public class CreatePostActivity extends AppCompatActivity {
         try {
             InputStream is = getContentResolver().openInputStream(uri);
             if (is == null) return null;
+
+            // Decode and compress image to avoid exceeding upload size limit
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            is.close();
+            if (bitmap == null) return null;
+
+            // Resize if too large (max 1280px on longest side)
+            int maxDim = 1280;
+            int w = bitmap.getWidth();
+            int h = bitmap.getHeight();
+            if (w > maxDim || h > maxDim) {
+                float scale = (float) maxDim / Math.max(w, h);
+                bitmap = Bitmap.createScaledBitmap(bitmap,
+                        Math.round(w * scale), Math.round(h * scale), true);
+            }
+
             File tempFile = new File(getCacheDir(), "upload_" + System.currentTimeMillis() + ".jpg");
             FileOutputStream fos = new FileOutputStream(tempFile);
-            byte[] buffer = new byte[4096];
-            int len;
-            while ((len = is.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
-            }
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fos);
             fos.close();
-            is.close();
             return tempFile;
         } catch (Exception e) {
             return null;

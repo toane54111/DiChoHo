@@ -10,8 +10,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.gomarket.R;
 import com.example.gomarket.model.CookbookRecipe;
+import com.example.gomarket.network.ApiClient;
 
 import java.util.List;
 
@@ -42,6 +44,16 @@ public class CookbookRecipeAdapter extends RecyclerView.Adapter<CookbookRecipeAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CookbookRecipe recipe = recipes.get(position);
+
+        // Load image
+        String imageUrl = recipe.getImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            holder.ivRecipeImage.setVisibility(View.VISIBLE);
+            String fullUrl = ApiClient.getFullImageUrl(imageUrl);
+            Glide.with(context).load(fullUrl).centerCrop().into(holder.ivRecipeImage);
+        } else {
+            holder.ivRecipeImage.setVisibility(View.GONE);
+        }
 
         holder.tvTitle.setText(recipe.getTitle());
         holder.tvDescription.setText(recipe.getDescription());
@@ -77,10 +89,12 @@ public class CookbookRecipeAdapter extends RecyclerView.Adapter<CookbookRecipeAd
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvDescription, tvCost, tvAuthor;
         TextView tvLikeIcon, tvLikeCount, tvCommentCount;
+        ImageView ivRecipeImage;
         View layoutLike;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
+            ivRecipeImage = itemView.findViewById(R.id.ivRecipeImage);
             tvTitle = itemView.findViewById(R.id.tvRecipeTitle);
             tvDescription = itemView.findViewById(R.id.tvRecipeDesc);
             tvCost = itemView.findViewById(R.id.tvRecipeCost);
