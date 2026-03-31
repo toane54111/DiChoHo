@@ -60,46 +60,11 @@ public class RecipeDetailActivity extends AppCompatActivity {
     }
 
     private void loadRecipeData() {
-        // Nhận data từ Intent (JSON string) - có thể là RecipeResponse hoặc Recipe
         String recipeJson = getIntent().getStringExtra("recipe_json");
         if (recipeJson != null) {
             try {
-                // Thử parse như RecipeResponse trước (từ AIChefActivity)
-                com.example.gomarket.model.RecipeResponse fullResponse =
-                        gson.fromJson(recipeJson, com.example.gomarket.model.RecipeResponse.class);
-                if (fullResponse != null && fullResponse.getRecipe() != null) {
-                    recipe = fullResponse.getRecipe();
-                    // Map matched products vào ingredients nếu có
-                    if (fullResponse.getProducts() != null && recipe.getIngredients() != null) {
-                        java.util.List<com.example.gomarket.model.Product> products = fullResponse.getProducts();
-                        for (Recipe.Ingredient ing : recipe.getIngredients()) {
-                            for (com.example.gomarket.model.Product p : products) {
-                                if (p.getName().toLowerCase().contains(ing.getName().toLowerCase())
-                                        || ing.getName().toLowerCase().contains(p.getName().toLowerCase())) {
-                                    ing.setMatchedProduct(p);
-                                    break;
-                                }
-                            }
-                        }
-                        // Tính tổng chi phí từ products nếu chưa có
-                        if (recipe.getTotalCost() <= 0) {
-                            double sum = 0;
-                            for (com.example.gomarket.model.Product p : products) {
-                                sum += p.getPrice();
-                            }
-                            recipe.setTotalCost(sum);
-                        }
-                    }
-                } else {
-                    // Fallback: parse như Recipe đơn
-                    recipe = gson.fromJson(recipeJson, Recipe.class);
-                }
-            } catch (Exception e) {
-                // Fallback: parse như Recipe đơn
-                try {
-                    recipe = gson.fromJson(recipeJson, Recipe.class);
-                } catch (Exception ignored) {}
-            }
+                recipe = gson.fromJson(recipeJson, Recipe.class);
+            } catch (Exception ignored) {}
         }
 
         if (recipe == null) {

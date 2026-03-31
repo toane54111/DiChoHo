@@ -9,15 +9,13 @@ import com.example.gomarket.model.Order;
 import com.example.gomarket.model.OrderRequest;
 import com.example.gomarket.model.PostComment;
 import com.example.gomarket.model.Product;
-import com.example.gomarket.model.RecipeRequest;
-import com.example.gomarket.model.RecipeResponse;
 import com.example.gomarket.model.RegisterRequest;
 import com.example.gomarket.model.ShoppingRequest;
 import com.example.gomarket.model.ShopperReview;
 import com.example.gomarket.model.User;
 import com.example.gomarket.model.Wallet;
 import com.example.gomarket.model.WalletTransaction;
-import com.example.gomarket.model.WeatherData;
+
 
 import java.util.List;
 import java.util.Map;
@@ -121,16 +119,6 @@ public interface ApiService {
 
     @DELETE("posts/{id}")
     Call<Map<String, String>> deletePost(@Path("id") long id, @Query("userId") long userId);
-
-    // ═══ Recipe - AI Chef ═══
-    @GET("recipe/weather")
-    Call<WeatherData> getWeather(@Query("latitude") double lat, @Query("longitude") double lng);
-
-    @POST("recipe/suggest")
-    Call<RecipeResponse> suggestRecipe(@Body RecipeRequest request);
-
-    @POST("recipe/to-shopping-request")
-    Call<ShoppingRequest> recipeToShoppingRequest(@Body Map<String, Object> body);
 
     // ═══ Cookbook (Sổ tay nấu ăn) ═══
     @POST("cookbook")
