@@ -4,13 +4,14 @@
 
 ## Tổng quan
 
-GoMarket là nền tảng thương mại cộng đồng với 7 chức năng chính:
+GoMarket là nền tảng thương mại cộng đồng với 8 chức năng chính:
 
 | Chức năng | Mô tả |
 |-----------|-------|
 | **Đi Chợ Hộ** | Tạo đơn nhờ người khác đi chợ, theo dõi realtime trên bản đồ |
 | **Chợ Đồng Hương** | Chợ cộng đồng mua bán nông sản, đặc sản 63 tỉnh thành |
 | **AI Thổ Địa** | Gợi ý đặc sản cá nhân hóa theo vị trí + thời tiết + khẩu vị |
+| **AI Chef** | Gợi ý món ăn thông minh dựa trên thời tiết realtime |
 | **Sổ Tay Nấu Ăn** | 30 công thức nấu ăn hệ thống + cộng đồng, có ảnh minh họa |
 | **Ví Điện Tử** | Nạp tiền, thanh toán, đóng băng/hoàn tiền tự động |
 | **Chat** | Nhắn tin realtime giữa người mua và shopper trong đơn hàng |
@@ -156,6 +157,12 @@ Pipeline 4 bước:
 
 Hiển thị dạng chip ngang trên Home, cache 24h per user.
 
+### AI Chef (Gợi ý món ăn)
+
+- Gợi ý món dựa trên thời tiết realtime + vị trí
+- Gemini LLM trả về công thức + nguyên liệu + giá ước tính
+- Chuyển đổi nguyên liệu → đơn đi chợ hộ trực tiếp
+
 ### Sổ Tay Nấu Ăn (Cookbook)
 
 - 3 tab: Gợi ý hệ thống (20 món) / Cộng đồng (10 món) / Cá nhân
@@ -182,6 +189,7 @@ DiChoHo/
 │       ├── OrderWaitingActivity             # Theo dõi đơn realtime
 │       ├── CommunityFeedActivity            # Chợ đồng hương
 │       ├── CreatePostActivity               # Đăng bài + ảnh
+│       ├── AIChefActivity                   # Gợi ý món AI
 │       ├── CookbookActivity                 # Sổ tay nấu ăn (3 tab)
 │       ├── WalletActivity                   # Ví điện tử
 │       ├── OrderChatActivity                # Chat trong đơn
@@ -202,6 +210,7 @@ DiChoHo/
 │       │   ├── ShoppingRequestController   # /api/shopping-requests
 │       │   ├── PostController              # /api/posts
 │       │   ├── CookbookController          # /api/cookbook
+│       │   ├── RecipeController            # /api/recipe (AI Chef)
 │       │   ├── LocalGuideController        # /api/local-guide (AI Thổ Địa)
 │       │   ├── ProductController           # /api/products
 │       │   ├── WalletController            # /api/wallet
@@ -258,6 +267,8 @@ DiChoHo/
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
 | GET | `/api/local-guide/suggestions` | AI Thổ Địa gợi ý |
+| GET | `/api/recipe/weather` | Lấy thời tiết |
+| POST | `/api/recipe/suggest` | AI Chef gợi ý món |
 | GET | `/api/cookbook/suggestions` | Công thức hệ thống |
 | GET | `/api/cookbook/community` | Công thức cộng đồng |
 | POST | `/api/cookbook/re-seed` | Re-seed công thức |
